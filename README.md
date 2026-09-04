@@ -1,4 +1,4 @@
-# 몰락자 — Normal Mode v0.9.0
+# 몰락자 — Normal Mode v0.9.1
 
 모바일 우선 텍스트 RPG 프로토타입.
 

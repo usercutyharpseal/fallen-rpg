@@ -60,7 +60,7 @@ const ENDINGS = {
 
 function freshState() {
   return {
-    version: 90,
+    version: 91,
     classId: null,
     p: null,
     sceneId: 'intro',
@@ -69,6 +69,8 @@ function freshState() {
     inventory: [],
     socialUsed: {},
     runUsed: {},
+    escapeAttempted: false,
+    escapeSerial: 0,
     talkCount: {},
     encounterMods: {},
     entered: {},
@@ -139,7 +141,7 @@ const SCENES = {
       state.flags.gangsterKilled = true; gainGold(20);
       resolve('attack', 'roadsideAftermath', '깡패가 골목 바닥에 쓰러졌다. 거지들은 환호한다.');
     },
-    runSuccess() { resolve('run', 'roadsideAftermath', '당신은 이 일과 아무 상관도 없는 사람처럼 골목을 빠져나왔다.'); }
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   gangsterAngry: scene('gangsterAngry', {
@@ -148,7 +150,7 @@ const SCENES = {
     socialDisabled:true,
     talk() { toast('“훔친 돈부터 내놔. 아니면 비켜.”'); },
     attackWin(){ state.flags.gangsterKilled=true; gainGold(20); resolve('attack','roadsideAftermath','결국 주먹과 칼로 끝났다.'); },
-    runSuccess(){ resolve('run','roadsideAftermath','더 악화되기 전에 골목을 빠져나왔다.'); }
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   shop: scene('shop', {
@@ -174,7 +176,7 @@ const SCENES = {
     socialSuccess(){ state.flags.kingdomFriendly=true; state.relation.kingdom+=2; resolve('social','cityEntry','경비병은 당신을 믿고 성문을 열었다.'); },
     socialFail(){ state.flags.gateSuspicious=true; go('gateSuspicious','처세 실패 · 경비병이 통행세 8골드를 요구한다.'); },
     attackWin(){ state.flags.guardKilled=true; state.flags.kingdomHostile=true; state.relation.kingdom-=4; gainGold(30); resolve('attack','cityAlarm','경종이 울린다. 당신은 피 묻은 채 성문을 넘었다.'); },
-    runSuccess(){ resolve('run',forestEscapeScene(),'성벽을 등지고 숲길 쪽으로 방향을 틀었다.'); }
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   gateSuspicious: scene('gateSuspicious', {
@@ -183,7 +185,7 @@ const SCENES = {
     choices:() => state.p.gold >= 8 ? [c('통행세 8골드를 낸다','골드를 잃지만 싸움은 피한다.',()=>{spendGold(8);state.relation.kingdom+=1;resolve('talk','cityEntry','경비병이 길을 비켜준다.');})] : [],
     talk(){ toast('“8골드. 더 할 말 없다.”'); },
     attackWin(){ state.flags.guardKilled=true;state.flags.kingdomHostile=true;state.relation.kingdom-=4;gainGold(30);resolve('attack','cityAlarm','경비병을 쓰러뜨리고 강제로 진입했다.'); },
-    runSuccess(){ resolve('run',forestEscapeScene(),'통행세 대신 숲길을 택했다.'); }
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   citySquare: scene('citySquare', {
@@ -212,7 +214,7 @@ const SCENES = {
     socialSuccess(){ state.relation.kingdom+=2; gainGold(state.classId==='noble'?10:5); resolve('social','citySquare','시민은 당신을 믿고 작은 도움까지 건넸다.'); },
     socialFail(){ state.relation.kingdom--; go('citizenSuspicious','처세 실패 · 시민이 큰 소리로 경비를 부르려 한다.'); },
     attackWin(){ state.flags.citizenKilled=true;state.flags.kingdomHostile=true;state.relation.kingdom-=6;gainGold(12);resolve('attack','guardResponse','시민이 쓰러지자 비명이 시장을 가른다.'); },
-    runSuccess(){ resolve('run','citySquare','시민과 엮이지 않고 자리를 떴다.'); }
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   citizenSuspicious: scene('citizenSuspicious', {
@@ -220,7 +222,7 @@ const SCENES = {
     text:`“경비! 여기 수상한 사람이—”\n\n시민이 뒤로 물러난다. 처세는 이미 실패했다.`,
     talk(){ state.flags.citizenEscaped=true; queueOutcome('말을 붙잡는 사이 시민이 경비 초소로 달려갔다.\n\n당신을 향한 경비의 발소리가 가까워진다.', 'guardResponse'); },
     attackWin(){ state.flags.citizenKilled=true;state.flags.kingdomHostile=true;state.relation.kingdom-=6;resolve('attack','guardResponse','목격자는 사라졌지만 이미 늦었다. 경비가 달려온다.'); },
-    runSuccess(){ resolve('run','citySquare','사람들 틈으로 사라졌다. 아직 왕국 전체가 적대하진 않는다.'); }
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   cityAlarm: scene('cityAlarm', {
@@ -236,7 +238,7 @@ const SCENES = {
     socialSuccess(){ state.relation.kingdom-=1; resolve('social','citySquare','간신히 다른 사람을 범인으로 몰았다. 하지만 의심은 남았다.'); },
     socialFail(){ state.flags.kingdomHostile=true; state.relation.kingdom-=2; go('guardFurious','처세 실패 · 경비가 즉시 검을 뽑았다.'); },
     attackWin(){ state.flags.guardResponseKilled=true;state.flags.kingdomHostile=true;state.relation.kingdom-=4;gainGold(36);resolve('attack','captainEnraged','경비까지 쓰러졌다. 이제 친위대장이 직접 움직인다.'); },
-    runSuccess(){ state.flags.kingdomHostile=true; resolve('run',forestEscapeScene(),'왕국에서 달아나 숲으로 몸을 숨겼다.'); }
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   guardFurious: scene('guardFurious', {
@@ -244,7 +246,7 @@ const SCENES = {
     text:`“입은 그만 놀려.”\n경비가 검을 뽑아 당신의 퇴로를 압박한다.`,
     talk(){ toast('대답 대신 검끝이 움직였다.'); },
     attackWin(){ state.flags.guardResponseKilled=true;state.flags.kingdomHostile=true;gainGold(36);resolve('attack','captainEnraged','경비가 쓰러지자 더 무거운 발소리가 들려온다.'); },
-    runSuccess(){ resolve('run',forestEscapeScene(),'도망쳐 숲으로 숨어들었다.'); }
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   captainEnraged: scene('captainEnraged', {
@@ -258,7 +260,7 @@ const SCENES = {
     socialSuccess(){ resolve('social','oldVeteran','그는 당신을 용서하지 않았다. 다만 더 큰 판단을 위해 검을 잠시 거뒀다.'); },
     socialFail(){ state.flags.captainTalkPenalty=(state.flags.captainTalkPenalty||0)+2; toast('처세 실패 · 친위대장의 분노가 더 커졌다. 공격력 +2','bad'); render(); save(); },
     attackWin(){ state.flags.captainKilled=true;state.relation.kingdom-=8;gainGold(80);resolve('attack','lootRoyalShop','친위대장마저 쓰러졌다. 왕궁으로 향하는 길이 열렸다.'); },
-    runSuccess(){ resolve('run',forestEscapeScene(),'친위대장의 추격을 떨치고 왕국 밖으로 빠져나왔다.'); }
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   lootRoyalShop: scene('lootRoyalShop', {
@@ -283,7 +285,7 @@ const SCENES = {
     socialFail(){ state.flags.oldGuardBuff=(state.flags.oldGuardBuff||0)+3; toast('처세 실패 · 아르벤이 당신의 수를 읽었다. 공격력 +3','bad'); render();save(); },
     enemyMod(e){ e.atk += state.flags.oldGuardBuff||0; return e; },
     attackWin(){ state.flags.oldGuardKilled=true;gainGold(150);resolve('attack',null,'전설이 무릎을 꿇었다.\n\n왕궁을 지킬 마지막 칼이 사라졌다. 노인은 마지막 숨을 내쉬며 왕궁 쪽을 바라본다.', '지배자'); },
-    runSuccess(){ resolve('run',forestEscapeScene(),'전설과 싸우는 대신 왕국을 떠났다.'); }
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   kingAudience: scene('kingAudience', {
@@ -312,7 +314,7 @@ const SCENES = {
     socialSuccess(){ state.relation.bandits++; resolve('social','royalSupply','싸움을 피하면서 도적단의 위치를 알아냈다.'); },
     socialFail(){ go('banditScoutCornered','처세 실패 · 정찰병이 지원 신호를 보내려 한다.'); },
     attackWin(){ gainGold(24);resolve('attack','royalSupply','정찰병을 제거하고 도적단의 흔적을 확보했다.'); },
-    runSuccess(){ resolve('run','citySquare','정찰 임무를 포기하고 왕국으로 돌아왔다.'); }
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   banditScoutCornered: scene('banditScoutCornered', {
@@ -320,7 +322,7 @@ const SCENES = {
     text:`도적이 손가락을 입에 가져간다.\n지원 신호가 울리기 전에 결정을 내려야 한다.`,
     talk(){ toast('대화할 시간은 끝났다.'); },
     attackWin(){gainGold(24);resolve('attack','royalSupply','지원 신호가 울리기 전에 정찰병을 쓰러뜨렸다.');},
-    runSuccess(){resolve('run','citySquare','임무를 포기하고 돌아갔다.');}
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   royalSupply: scene('royalSupply', {
@@ -354,7 +356,7 @@ const SCENES = {
     },
     socialFail(){ state.flags.bossAngry=true;go('banditBossAngry','처세 실패 · 세리아가 칼을 뽑았다. 다시 속일 기회는 없다.'); },
     attackWin(){state.flags.banditBossKilled=true;gainGold(110);resolve('attack',null,'세리아가 쓰러졌다.\n\n도적단의 깃발이 내려가고, 왕국으로 돌아갈 길만 남았다.', '명예 회복');},
-    runSuccess(){resolve('run','banditTruce','세리아와의 결판을 피했다. 전쟁은 아직 끝나지 않았다.');}
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   banditBossAngry: scene('banditBossAngry', {
@@ -362,7 +364,7 @@ const SCENES = {
     text:`“말로 시간을 벌 생각은 버려.”\n세리아가 칼을 뽑는다.`,
     talk(){toast('세리아는 더 이상 대답하지 않는다.');},
     attackWin(){state.flags.banditBossKilled=true;gainGold(110);resolve('attack',null,'두목을 쓰러뜨렸다.\n\n남은 도적들은 무기를 버리거나 숲으로 흩어진다.', '명예 회복');},
-    runSuccess(){resolve('run','banditTruce','싸움을 피하고 숲 깊은 곳으로 달아났다.');}
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   banditTruce: scene('banditTruce', {
@@ -373,8 +375,8 @@ const SCENES = {
         if(canFriendEnding()) finish('모두와 친구');
         else go('kingdomGate');
       }),
-      c('도적단과 왕국을 공격한다','반란 루트로 전환.',()=>{state.flags.rebel=true;go('rebelMarch');})
-    ]
+      !state.flags.rebellionRetreated && c('도적단과 왕국을 공격한다','반란 루트로 전환.',()=>{state.flags.rebel=true;go('rebelMarch');})
+    ].filter(Boolean)
   }),
 
   rebelMarch: scene('rebelMarch', {
@@ -391,7 +393,7 @@ const SCENES = {
     socialFail(){ state.flags.captainRebelBuff=(state.flags.captainRebelBuff||0)+2;toast('처세 실패 · 친위대의 사기가 올랐다. 공격력 +2','bad');render();save(); },
     enemyMod(e){ e.atk += (state.flags.captainRebelBuff||0); if(state.flags.captainWeakened)e.atk=Math.max(1,e.atk-3);return e;},
     attackWin(){state.flags.captainKilled=true;gainGold(80);resolve('attack','kingEnraged','친위대장이 쓰러진다. 왕이 직접 전장으로 내려온다.');},
-    runSuccess(){resolve('run',forestEscapeScene(),'반란을 버리고 숲으로 달아났다.');}
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   kingEnraged: scene('kingEnraged', {
@@ -402,7 +404,26 @@ const SCENES = {
     socialFail(){state.flags.kingBuff=(state.flags.kingBuff||0)+3;toast('처세 실패 · 왕의 공격력 +3','bad');render();save();},
     enemyMod(e){e.atk+=(state.flags.kingBuff||0);if(state.flags.kingShaken)e.atk=Math.max(1,e.atk-2);return e;},
     attackWin(){gainGold(180);resolve('attack',null,'왕이 쓰러졌다.\n\n성문 위의 깃발이 천천히 내려가고, 반란군의 함성이 왕궁을 덮는다.', '반란');},
-    runSuccess(){resolve('run',forestEscapeScene(),'결판 직전 전장을 이탈했다.');}
+    runSuccess(){ handleEscapeSuccess(); }
+  }),
+
+
+  kingdomEscape: scene('kingdomEscape', {
+    chapter:'ESCAPE', location:'왕국 외곽 · 폐쇄된 수로', art:'crossroad',
+    text:()=>`성벽의 경종이 멀어질 때까지 달렸다.\n\n왕국 안으로 돌아가는 길은 당분간 위험하다. 뒤에서는 수색대의 횃불이 움직이고, 앞에는 숲으로 이어지는 오래된 수로와 버려진 길만 남아 있다.\n\n이번 도주는 이전 사건을 되돌리지 않는다. 이미 지나온 인물과 사건은 그대로 지나온 것으로 남는다.`,
+    choices:() => [
+      c('숲의 우회로로 빠진다','현재 진행도에 맞는 숲 구간으로 이어진다.',()=>go(forestProgressScene(true))),
+      (state.relation.bandits>=2 || state.flags.banditTruce || state.flags.rebel) && c('도적단 쪽 연락망을 찾는다','도적단과 접점이 있다면 휴전 지점으로 향한다.',()=>go('banditTruce'))
+    ].filter(Boolean)
+  }),
+
+  rebelRetreat: scene('rebelRetreat', {
+    chapter:'REBELLION · RETREAT', location:'왕국과 숲 사이 · 후퇴로', art:'crossroad',
+    text:()=>`전장의 함성은 뒤로 멀어진다.\n\n당신은 결판을 포기하고 살아남는 쪽을 택했다. 반란군도 왕국군도 지금의 당신을 완전히 믿지 않는다. 같은 전투로 곧장 되돌아가 다시 도망치는 일은 없다.\n\n남은 길은 칼을 거두고 양쪽 사이의 틈을 찾는 것뿐이다.`,
+    choices:() => [
+      c('도적단과 다시 접촉한다','재공격이 아니라 휴전과 협상 쪽으로 돌아간다.',()=>{state.flags.rebellionRetreated=true;go('banditTruce');}),
+      c('숲 깊은 곳으로 몸을 숨긴다','후반 숲 진행 지점으로 빠져나간다.',()=>{state.flags.rebellionRetreated=true;go(forestProgressScene(true));})
+    ]
   }),
 
   forestMerchant: scene('forestMerchant', {
@@ -413,7 +434,7 @@ const SCENES = {
     socialSuccess(){state.flags.merchantAlive=true;state.relation.merchants+=1;addItem('상인의 물약',1);addItem('은빛 브로치',1);resolve('social','forestRoad','로벤은 혀를 차면서도 물약과 작은 브로치를 건넨다.\n\n상인의 물약 +1 / 은빛 브로치 +1. 다음 협상에서 쓸 만한 물건이다.');},
     socialFail(){state.flags.merchantAlive=true;state.relation.merchants-=1;go('merchantOffended','처세 실패 · 상인이 가격을 두 배로 부르며 등을 돌린다.');},
     attackWin(){state.flags.merchantKilled=true;state.relation.merchants-=6;gainGold(45);addItem('상인의 물약',1);resolve('attack','forestRoad','상인의 짐수레를 털었다. 이 일은 상인협회에 알려질 것이다.');},
-    runSuccess(){state.flags.merchantAlive=true;resolve('run','forestRoad','상인을 지나쳐 숲 안쪽으로 들어갔다.');}
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   merchantOffended: scene('merchantOffended', {
@@ -444,7 +465,7 @@ const SCENES = {
     socialSuccess(){state.flags.officer1Allied=true;state.relation.bandits+=2;state.flags.merchantAbandoned=true;resolve('social','officer2','상인을 두고 가는 조건으로 도적단과의 충돌을 피했다.');},
     socialFail(){state.flags.officer1Angry=true;go('officer1Angry','처세 실패 · 간부가 로벤을 다치게 하고 칼을 겨눈다.');},
     attackWin(){state.flags.officer1Killed=true;state.relation.bandits-=3;gainGold(48);state.relation.merchants+=3;addItem('철제 부적',1);resolve('attack','officer2','간부를 쓰러뜨리고 로벤을 구했다. 상인은 철제 부적을 보상으로 건넸다.');},
-    runSuccess(){state.flags.merchantAbandoned=true;resolve('run','officer2','로벤을 남겨두고 도적단의 시야에서 빠져나왔다.');}
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   officer1Angry: scene('officer1Angry', {
@@ -452,7 +473,7 @@ const SCENES = {
     text:`로벤이 신음한다.\n“이제 거래는 끝났어.”`,
     talk(){toast('간부는 더 이상 협상하지 않는다.');},
     attackWin(){state.flags.officer1Killed=true;state.relation.bandits-=3;state.relation.merchants+=2;gainGold(48);resolve('attack','officer2','간부를 쓰러뜨리고 상인을 풀어줬다.');},
-    runSuccess(){state.flags.merchantAbandoned=true;resolve('run','officer2','상인을 두고 도망쳤다.');}
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   officer2: scene('officer2', {
@@ -463,7 +484,7 @@ const SCENES = {
     socialSuccess(){state.flags.officer2Allied=true;state.relation.bandits+=2;resolve('social','banditCampLife','당신은 적이 아니라는 인상을 심는 데 성공했다.');},
     socialFail(){state.flags.officer2Angry=true;go('officer2Angry','처세 실패 · 붉은 모자가 웃으며 칼을 뽑는다.');},
     attackWin(){state.flags.officer2Killed=true;state.relation.bandits-=3;gainGold(52);resolve('attack','banditCampLife','두 번째 간부도 쓰러졌다. 세리아의 본거지가 가까워진다.');},
-    runSuccess(){resolve('run','banditCampLife','돌다리를 돌아 우회했다.');}
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   officer2Angry: scene('officer2Angry', {
@@ -471,7 +492,7 @@ const SCENES = {
     text:`“그럴듯했는데 아쉽네.”\n붉은 모자가 칼날을 낮게 세운다.`,
     talk(){toast('그녀는 웃기만 한다.');},
     attackWin(){state.flags.officer2Killed=true;state.relation.bandits-=3;gainGold(52);resolve('attack','banditCampLife','두 번째 간부가 쓰러졌다.');},
-    runSuccess(){resolve('run','banditCampLife','돌다리를 버리고 숲을 가로질러 달아났다.');}
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   guildNovice: scene('guildNovice', {
@@ -481,7 +502,7 @@ const SCENES = {
     socialSuccess(){state.relation.merchants++;resolve('social','forestBeforeBoss','당신은 임시 협력자일 뿐이라고 둘러댔다.');},
     socialFail(){state.relation.merchants--;go('guildNoviceAngry','처세 실패 · 기사가 협회에 신호를 보냈다.');},
     attackWin(){state.flags.noviceKilled=true;state.relation.merchants-=5;gainGold(42);resolve('attack','forestBeforeBoss','초급 기사가 쓰러졌다. 이 죽음은 나중에 대가를 요구할 것이다.');},
-    runSuccess(){resolve('run','forestBeforeBoss','교역로를 벗어나 숲으로 사라졌다.');}
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   guildNoviceAngry: scene('guildNoviceAngry', {
@@ -489,7 +510,7 @@ const SCENES = {
     text:`“협회에 보고했다.”\n초급 기사가 검을 뽑는다.`,
     talk(){toast('설명할 기회는 끝났다.');},
     attackWin(){state.flags.noviceKilled=true;state.relation.merchants-=5;gainGold(42);resolve('attack','forestBeforeBoss','기사를 쓰러뜨렸다. 상인협회가 반드시 움직일 것이다.');},
-    runSuccess(){resolve('run','forestBeforeBoss','기사를 피해 숲으로 달아났다.');}
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   forestBeforeBoss: scene('forestBeforeBoss', {
@@ -507,7 +528,7 @@ const SCENES = {
     talk(){state.flags.midKnightBuff=(state.flags.midKnightBuff||0)+3;toast('대화를 시도한 틈을 읽혔다. 중급 기사 공격력 +3','bad');render();save();},
     enemyMod(e){e.atk+=(state.flags.midKnightBuff||0);return e;},
     attackWin(){state.flags.midKnightKilled=true;state.relation.merchants-=4;gainGold(95);resolve('attack','banditBossForest','중급 기사까지 쓰러졌다. 상인협회와의 관계는 돌이킬 수 없다.');},
-    runSuccess(){state.flags.midKnightEscaped=true;resolve('run','banditBossForest','중급 기사의 추격을 따돌리고 본거지 안으로 뛰어들었다.');}
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   banditBossForest: scene('banditBossForest', {
@@ -526,7 +547,7 @@ const SCENES = {
     },
     socialFail(){go('banditBossAngryForest','처세 실패 · 세리아는 당신이 어느 편도 아니라고 판단했다.');},
     attackWin(){state.flags.banditBossKilled=true;state.relation.bandits-=5;gainGold(110);resolve('attack',null,'세리아를 쓰러뜨렸다.\n\n왕국은 당신의 공을 인정할 수밖에 없다.', '명예 회복');},
-    runSuccess(){resolve('run','friendBridge','결판을 미루고 본거지를 빠져나왔다.');}
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   banditBossAngryForest: scene('banditBossAngryForest', {
@@ -534,7 +555,7 @@ const SCENES = {
     text:`“그만. 넌 네 입으로 네 편을 정했어.”\n세리아가 단검을 든다.`,
     talk(){toast('더 이상 대화는 통하지 않는다.');},
     attackWin(){state.flags.banditBossKilled=true;gainGold(110);resolve('attack',null,'세리아가 쓰러졌다.\n\n본거지의 소란이 잦아들고 살아남은 자들이 무기를 버린다.', '명예 회복');},
-    runSuccess(){resolve('run','friendBridge','세리아와의 싸움을 피하고 왕국 방향으로 이동했다.');}
+    runSuccess(){ handleEscapeSuccess(); }
   }),
 
   friendBridge: scene('friendBridge', {
@@ -545,8 +566,8 @@ const SCENES = {
         if(canFriendEnding(true)) finish('모두와 친구');
         else go('kingdomGate');
       }),
-      c('도적단에 돌아가 왕국을 공격한다','반란으로 끝을 본다.',()=>{state.flags.rebel=true;go('rebelMarch');})
-    ]
+      !state.flags.rebellionRetreated && c('도적단에 돌아가 왕국을 공격한다','반란으로 끝을 본다.',()=>{state.flags.rebel=true;go('rebelMarch');})
+    ].filter(Boolean)
   }),
 
   beggarCamp: scene('beggarCamp', {
@@ -943,7 +964,7 @@ function render() {
     $('talkInfo').textContent=talkLabel();
     $('socialInfo').textContent = sc.socialDisabled ? '사용 불가' : state.socialUsed[state.sceneId] ? '이미 시도함' : `성공률 ${socialChance(enemy,sc)}%`;
     const rc = runChance(enemy);
-    const runAlreadyUsed=!!state.runUsed?.[state.sceneId];
+    const runAlreadyUsed=!!state.escapeAttempted;
     $('runInfo').textContent = runLabel(enemy, rc);
     const socialBtn = document.querySelector('[data-game-action="social"]');
     socialBtn.classList.toggle('locked-action', !!sc.socialDisabled);
@@ -1038,15 +1059,69 @@ function runChance(enemy) {
 
 function runLabel(enemy, chance) {
   const mine=effectiveSpeed(), foe=Number(enemy?.speed||0);
-  if(state.runUsed?.[state.sceneId]) return `이미 시도함 · 속도 ${mine} : ${foe}`;
+  if(state.escapeAttempted) return `이번 조우에서 이미 시도함 · 속도 ${mine} : ${foe}`;
   if(chance===100) return `속도 ${mine} > ${foe} · 반드시 성공`;
   if(chance===0) return `속도 ${mine} ≤ ${foe} · 도망 불가`;
   return `도둑 특성 · ${chance}% · 1회 (${mine} : ${foe})`;
 }
 
-function forestEscapeScene(){
-  // 이미 숲의 상인을 지나간 세이브라면 도망할 때 같은 상인을 다시 만나지 않는다.
-  return state.entered?.forestMerchant ? 'forestRoad' : 'forestMerchant';
+function forestProgressScene(skipMerchant=false){
+  // 도망 때문에 이미 끝낸 핵심 사건으로 되감기지 않도록 가장 앞선 안전 지점을 고른다.
+  if(state.entered?.friendBridge || state.flags.banditTruce || state.entered?.banditBossForest || state.entered?.banditBossRoyal) return 'friendBridge';
+  if(state.entered?.midKnight) return 'banditBossForest';
+  if(state.entered?.forestBeforeBoss || state.entered?.guildNovice || state.entered?.guildNoviceAngry) return 'forestBeforeBoss';
+  if(state.entered?.banditCampLife || state.entered?.officer2 || state.entered?.officer2Angry) return 'banditCampLife';
+  if(state.entered?.forestRoad || state.entered?.forestMerchant || skipMerchant) return 'forestRoad';
+  return 'forestMerchant';
+}
+function isLateDiplomacy(){
+  return !!(state.flags.banditTruce || state.flags.bossTalked || state.flags.rebelOfferReady || state.entered?.banditBossRoyal || state.entered?.banditBossForest || state.entered?.friendBridge || state.flags.rebel);
+}
+const ESCAPE_ROUTES = {
+  gangster:          {to:'roadsideAftermath', text:'당신은 이 일과 아무 상관도 없는 사람처럼 골목을 빠져나왔다.'},
+  gangsterAngry:     {to:'roadsideAftermath', text:'더 악화되기 전에 골목을 빠져나왔다.'},
+  kingdomGate:       {to:()=>isLateDiplomacy()?'friendBridge':forestProgressScene(false), text:'성벽을 등지고 다른 길을 택했다. 지나온 사건으로 되돌아가지는 않는다.'},
+  gateSuspicious:    {to:()=>isLateDiplomacy()?'friendBridge':forestProgressScene(false), text:'통행세 대신 성벽 바깥길로 빠졌다.'},
+  citizen:           {to:'citySquare', text:'시민과 엮이지 않고 군중 속으로 물러났다.'},
+  citizenSuspicious: {to:'citySquare', text:'경비가 오기 전에 사람들 틈으로 사라졌다.'},
+  guardResponse:     {to:'kingdomEscape', text:'수색대가 길을 봉쇄하기 전에 왕국 외곽 수로로 빠졌다.', before(){state.flags.kingdomHostile=true;}},
+  guardFurious:      {to:'kingdomEscape', text:'검끝을 피해 골목을 가로질러 왕국 외곽까지 달아났다.', before(){state.flags.kingdomHostile=true;}},
+  captainEnraged:    {to:'kingdomEscape', text:'친위대장 레오른의 추격을 떨치고 폐쇄된 수로까지 빠져나왔다.', before(){state.flags.kingdomHostile=true;state.flags.escapedCaptain=true;}},
+  oldVeteran:        {to:'kingdomEscape', text:'아르벤과 결판을 내지 않고 왕궁 계단에서 물러났다.', before(){state.flags.escapedOldGuard=true;}},
+  banditScoutRoyal:  {to:'citySquare', text:'정찰 임무를 포기하고 왕국으로 돌아왔다.'},
+  banditScoutCornered:{to:'citySquare',text:'지원 신호가 울리기 전에 왕국 쪽으로 후퇴했다.'},
+  banditBossRoyal:   {to:'banditTruce', text:'세리아와의 결판을 미뤘다. 전쟁은 아직 끝나지 않았다.'},
+  banditBossAngry:   {to:'banditTruce', text:'세리아의 칼을 피해 본거지 밖으로 빠져나왔다.'},
+  captainRebel:      {to:'rebelRetreat', text:'반란군의 진격에서 이탈해 후퇴로로 빠졌다.', before(){state.flags.rebellionRetreated=true;}},
+  kingEnraged:       {to:'rebelRetreat', text:'왕과의 마지막 결판을 포기하고 전장을 이탈했다.', before(){state.flags.rebellionRetreated=true;state.flags.escapedKing=true;}},
+  forestMerchant:    {to:'forestRoad', text:'로벤을 지나쳐 숲 안쪽으로 들어갔다.', before(){state.flags.merchantAlive=true;}},
+  merchantCaptured:  {to:'officer2', text:'로벤을 남겨두고 도적단의 시야에서 빠져나왔다.', before(){state.flags.merchantAbandoned=true;}},
+  officer1Angry:     {to:'officer2', text:'상인을 두고 도망쳐 다음 갈림길까지 달렸다.', before(){state.flags.merchantAbandoned=true;}},
+  officer2:          {to:'banditCampLife', text:'돌다리를 돌아 우회해 도적단 야영지 외곽으로 이동했다.'},
+  officer2Angry:     {to:'banditCampLife', text:'돌다리를 버리고 숲을 가로질러 야영지 외곽으로 빠졌다.'},
+  guildNovice:       {to:'forestBeforeBoss', text:'교역로를 벗어나 본거지 외곽 숲으로 사라졌다.'},
+  guildNoviceAngry:  {to:'forestBeforeBoss', text:'초급 기사의 추격을 피해 본거지 외곽까지 달아났다.'},
+  midKnight:         {to:'banditBossForest', text:'중급 기사의 추격을 따돌리고 도적단 본거지 안으로 뛰어들었다.', before(){state.flags.midKnightEscaped=true;}},
+  banditBossForest:  {to:'friendBridge', text:'세리아와의 결판을 미루고 본거지를 빠져나왔다.'},
+  banditBossAngryForest:{to:'friendBridge',text:'세리아와의 싸움을 피해 왕국과 숲 사이 다리로 이동했다.'}
+};
+function handleEscapeSuccess(){
+  const route=ESCAPE_ROUTES[state.sceneId];
+  if(!route){
+    console.error('[ESCAPE] missing route for',state.sceneId);
+    queueOutcome('도망에는 성공했지만 이동 경로를 찾지 못했다. 이 장면은 안전하게 유지된다.',null);
+    return;
+  }
+  if(route.before) route.before();
+  const target=typeof route.to==='function'?route.to():route.to;
+  if(!target || !SCENES[target] || target===state.sceneId){
+    console.error('[ESCAPE] invalid target',state.sceneId,target);
+    queueOutcome('도망 경로가 꼬이는 것을 막기 위해 현재 장면에서 멈췄다.',null);
+    return;
+  }
+  state.flags.lastEscapeFrom=state.sceneId;
+  state.flags.lastEscapeTo=target;
+  resolve('run',target,route.text||'도망에 성공했다.');
 }
 
 function gameAction(type) {
@@ -1061,12 +1136,11 @@ function gameAction(type) {
     return;
   }
   if(type==='run') {
-    state.runUsed ||= {};
-    if(state.runUsed[state.sceneId]) return;
+    if(state.escapeAttempted) return;
     const chance=runChance(enemy);
     if(chance<=0) return;
     // 한 조우에서 도주 판정은 딱 한 번만 한다.
-    state.runUsed[state.sceneId]=true;
+    state.escapeAttempted=true;
     if(chance===100 || Math.random()*100<chance){
       state.stats.runSuccess++;fx('good');floatText('도주 성공');
       if(sc.runSuccess)sc.runSuccess();else resolve('run',null,'도망쳤다.');
@@ -1218,7 +1292,7 @@ function continueOutcome(){
   if(p.next){ go(p.next); return; }
   render();
 }
-function go(id, msg='') { if(!SCENES[id])return; state.pending=null; if(id!==state.sceneId&&state.encounterMods)delete state.encounterMods[state.sceneId]; state.sceneId=id; state.lastToast=msg; state.stats.progress++; save(); enter(id); }
+function go(id, msg='') { if(!SCENES[id])return; state.pending=null; const changed=id!==state.sceneId; if(changed&&state.encounterMods)delete state.encounterMods[state.sceneId]; if(changed){state.escapeAttempted=false;state.escapeSerial=(state.escapeSerial||0)+1;} state.sceneId=id; state.lastToast=msg; state.stats.progress++; save(); enter(id); }
 function enter(id) {
   showScreen('gameScreen');
   const sc=SCENES[id];
@@ -1318,12 +1392,15 @@ function normalizeLoadedState(data){
   merged.relation={...base.relation,...(data.relation||{})};
   merged.socialUsed={...(data.socialUsed||{})};
   merged.runUsed={...(data.runUsed||{})};
+  // v0.9.0의 runUsed는 장면 단위라 재방문 시 잘못 잠길 수 있었다. 구버전 세이브는 새 조우로 취급한다.
+  merged.escapeAttempted=Number(data.version||0)>=91 ? !!data.escapeAttempted : false;
+  merged.escapeSerial=Number(data.escapeSerial||0);
   merged.talkCount={...(data.talkCount||{})};
   merged.encounterMods={...(data.encounterMods||{})};
   merged.entered={...(data.entered||{})};
   merged.inventory=Array.isArray(data.inventory)?data.inventory:[];
   merged.stats={...base.stats,...(data.stats||{})};
-  merged.version=90;
+  merged.version=91;
   return merged;
 }
 function save(){localStorage.setItem(SAVE_KEY,JSON.stringify(state));updateMenuSaveInfo();}

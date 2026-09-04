@@ -211,7 +211,7 @@ app.post('/api/score', async (req, res) => {
 app.get('/api/health', (_req, res) => res.json({ ok:true, storage:CLOUD_ENABLED?'cloud':'local' }));
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n몰락자 Normal Mode v0.9.0`);
+  console.log(`\n몰락자 Normal Mode v0.9.1`);
   console.log(`http://localhost:${PORT}`);
   console.log(`랭킹 저장: ${CLOUD_ENABLED ? 'Supabase 영구 DB' : '로컬 파일 (SUPABASE 환경변수 미설정)'}\n`);
 });
