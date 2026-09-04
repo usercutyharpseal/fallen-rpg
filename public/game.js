@@ -4,7 +4,7 @@ const SAVE_KEY = 'fallen_normal_v08';
 const PLAYER_ID_KEY = 'fallen_player_id';
 const PENDING_KEY = 'fallen_pending_scores';
 const META_KEY = 'fallen_meta_v1';
-const GAME_VERSION = 101;
+const GAME_VERSION = 102;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, necromancer:3, dictator:5 };
 function loadMeta(){
@@ -873,7 +873,7 @@ const SCENES = {
 
   banditBossForest: scene('banditBossForest', {
     chapter:'FOREST ROUTE · FINAL', location:'도적단 본거지', art:'boss', enemy:'banditBoss',
-    text:`세리아가 지도 위에 꽂힌 단검을 뽑는다.\n\n“내 간부들을 죽였든, 친구가 됐든 결국 여기까지 왔네.”\n“그래서 넌 어느 편이지?”${classReaction('banditBossForest')}`,
+    text:`세리아가 지도 위에 꽂힌 단검을 뽑는다.\n\n“내 간부들을 죽였든, 친구가 됐든 결국 여기까지 왔네.”\n“그래서 넌 어느 편이지?”`,
     talk(){state.flags.bossTalked=true;state.relation.bandits++;toast('세리아는 왕국을 공격할 계획과 그 이유를 모두 털어놓는다.','good');render();save();},
     choices(){
       const arr=[];

@@ -21,7 +21,7 @@
         <div id="continueInfo" class="continue-info">저장된 여정 없음</div>
         <button class="btn" data-action="leaderboard">노말 모드 기록</button>
       </div>
-      <div class="version">NORMAL MODE · v0.9.12</div>
+      <div class="version">NORMAL MODE · v0.9.13</div>
       <div id="storageInfo" class="storage-info">랭킹 저장 상태 확인 중…</div>
     </section>
 
@@ -118,6 +118,13 @@
   <div id="flash" class="flash"></div>
   <div id="floatLayer" class="float-layer"></div>
 
-  <script src="/game.js"></script>
+  <script>
+    window.addEventListener('error', function(e){
+      var info=document.getElementById('storageInfo');
+      if(info){info.textContent='초기화 오류 · 새로고침 후에도 계속되면 업데이트 필요';info.className='storage-info cloud-error';}
+      console.error('[BOOT]', e.error||e.message);
+    });
+  </script>
+  <script src="/game.js?v=0913"></script>
 </body>
 </html>
