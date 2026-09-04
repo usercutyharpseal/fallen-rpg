@@ -58,9 +58,139 @@ const ENDINGS = {
   '지배자': { icon:'♛', kind:'LEGEND END', bonus:15000, epilogue:'전설마저 쓰러졌다.\n왕좌를 지킬 자도, 당신에게 명령할 자도 더는 남지 않았다.' }
 };
 
+
+const BAD_ENDINGS = {
+  gangster: {
+    title:'첫 칼날', kind:'BAD END · 빈민가', art:'gangster', bonus:0,
+    epilogue:'몰락한 뒤 처음 맞닥뜨린 싸움은 생각보다 짧았다.\n거지들의 변명도, 깡패의 분노도 이제 당신과는 상관없는 이야기가 되었다.\n이름을 되찾기도 전에 당신의 여정은 뒷골목의 젖은 돌바닥에서 멈췄다.'
+  },
+  gangsterAngry: {
+    title:'말이 끝난 자리', kind:'BAD END · 빈민가', art:'gangster', bonus:0,
+    epilogue:'한 번 어긋난 말은 끝내 주먹보다 무거워졌다.\n깡패는 더 이상 설명을 듣지 않았고, 당신에게도 다시 고를 시간은 오지 않았다.\n빈민가 사람들은 다음 날 그 골목을 평소처럼 지나갔다.'
+  },
+  kingdomGate: {
+    title:'성문 밖의 이름', kind:'BAD END · 왕국', art:'gate', bonus:120,
+    epilogue:'성벽은 눈앞에 있었지만 당신은 끝내 그 안으로 들어가지 못했다.\n경비병은 쓰러진 당신을 잠시 바라본 뒤 검문을 다시 시작했다.\n왕국은 당신의 귀환을 알지 못한 채 하루를 이어갔다.'
+  },
+  gateSuspicious: {
+    title:'의심은 칼보다 빨랐다', kind:'BAD END · 왕국', art:'gate', bonus:160,
+    epilogue:'거짓말 한마디가 성문의 공기를 바꿨다.\n의심을 거두지 않은 경비병은 당신에게 두 번째 기회를 주지 않았다.\n당신의 이름은 입국 명부 어디에도 남지 않았다.'
+  },
+  citizen: {
+    title:'한 사람의 저항', kind:'BAD END · 왕국', art:'citizen', bonus:80,
+    epilogue:'약해 보이는 상대를 고른 순간, 싸움은 이미 예상과 달라져 있었다.\n시장 사람들은 비명을 질렀고 곧 누군가 경비를 부르러 달려갔다.\n당신은 왕국의 중심에서 이름 대신 소란만 남겼다.'
+  },
+  citizenSuspicious: {
+    title:'군중 속의 몰락', kind:'BAD END · 왕국', art:'city', bonus:120,
+    epilogue:'주변의 시선이 하나둘 모이더니 어느 순간 도망칠 틈도 사라졌다.\n당신이 마지막으로 본 것은 물러서는 시민들과 좁아지는 원뿐이었다.\n왕국은 당신을 영웅도 악당도 아닌, 짧은 소동으로 기억했다.'
+  },
+  guardResponse: {
+    title:'경종 아래에서', kind:'BAD END · 적대 왕국', art:'alarm', bonus:280,
+    epilogue:'경종은 멈추지 않았다.\n한 명을 쓰러뜨려도 다음 창끝이 나타났고, 결국 수가 힘을 이겼다.\n당신이 만든 공포는 남았지만 그 공포의 주인은 더 이상 움직이지 않았다.'
+  },
+  guardFurious: {
+    title:'더 들을 말은 없다', kind:'BAD END · 적대 왕국', art:'alarm', bonus:320,
+    epilogue:'말로 벌 수 있는 시간은 이미 모두 써버렸다.\n분노한 경비병은 당신의 다음 문장을 기다리지 않았다.\n왕궁으로 이어지는 길은 피 한 줄기와 함께 닫혔다.'
+  },
+  captainEnraged: {
+    title:'친위대장의 판결', kind:'BAD END · 친위대장', art:'captain', bonus:700,
+    epilogue:'레오른은 당신을 쓰러뜨리고도 환호하지 않았다.\n그는 한동안 당신 뒤에 남은 시체들을 바라보다가 조용히 검을 거뒀다.\n“이걸로 끝이다.”\n당신이 왕국에 남긴 마지막 기억은 그의 차가운 판결이었다.'
+  },
+  oldVeteran: {
+    title:'전설은 늙지 않았다', kind:'BAD END · 전설', art:'oldguard', bonus:1450,
+    epilogue:'세월은 그의 머리를 희게 만들었지만 검끝까지 무디게 하지는 못했다.\n당신이 빈틈이라 믿은 순간, 아르벤의 칼은 이미 승부를 끝낸 뒤였다.\n왕국이 전설이라 부르던 이름의 뜻을 당신은 가장 비싼 방식으로 이해했다.'
+  },
+  banditScoutRoyal: {
+    title:'목책길의 매복', kind:'BAD END · 도적단', art:'bandits', bonus:260,
+    epilogue:'정찰병 하나쯤이라 생각했던 판단은 틀렸다.\n숲은 그의 움직임을 숨겨주었고, 왕국의 지원은 너무 멀리 있었다.\n명예를 되찾으려던 길은 이름 없는 목책 옆에서 끝났다.'
+  },
+  banditScoutCornered: {
+    title:'울리지 못한 신호', kind:'BAD END · 도적단', art:'bandits', bonus:320,
+    epilogue:'지원 신호가 울리기 전에 끝내려 했지만, 먼저 끝난 것은 당신 쪽이었다.\n정찰병은 한참 뒤에야 손가락을 입에서 떼었다.\n숲에는 짧은 싸움의 흔적만 남았다.'
+  },
+  banditBossRoyal: {
+    title:'명예의 값', kind:'BAD END · 세리아', art:'boss', bonus:1050,
+    epilogue:'왕국은 당신에게 명예를 되찾을 기회를 주었다.\n세리아는 그 명예가 몇 명의 목숨 값인지 물었다.\n당신은 끝내 답하지 못했고, 붉은 천막 위의 깃발은 그대로 남았다.'
+  },
+  banditBossAngry: {
+    title:'대화가 끝난 뒤', kind:'BAD END · 세리아', art:'boss', bonus:1100,
+    epilogue:'세리아는 더 이상 당신의 말을 듣지 않았다.\n칼을 뽑은 뒤의 그녀는 질문도 변명도 필요로 하지 않았다.\n왕국에 돌아갈 명예도, 숲에서 고를 편도 이제 남지 않았다.'
+  },
+  captainRebel: {
+    title:'무너진 성문 앞에서', kind:'BAD END · 반란', art:'captain', bonus:1100,
+    epilogue:'성문은 부서졌지만 친위대장은 무너지지 않았다.\n레오른은 반란군의 함성 한가운데서 당신을 막아섰고, 결국 한 걸음도 비켜주지 않았다.\n뒤따르던 자들의 기세도 당신과 함께 꺾였다.'
+  },
+  kingEnraged: {
+    title:'왕의 마지막 분노', kind:'BAD END · 왕', art:'kingrage', bonus:1550,
+    epilogue:'왕관보다 먼저 보인 것은 분노한 인간의 얼굴이었다.\n에드란은 왕국이 무너지는 소리를 들으면서도 검을 놓지 않았다.\n당신이 왕좌 바로 앞까지 가져온 반란은, 마지막 몇 걸음을 남기고 멈췄다.'
+  },
+  forestMerchant: {
+    title:'값을 잘못 매긴 자', kind:'BAD END · 숲', art:'merchant', bonus:80,
+    epilogue:'로벤은 전사가 아니었다. 그러나 살아남는 법은 알고 있었다.\n쉬운 상대라 생각한 순간 당신은 상인이 숨겨둔 마지막 수를 보았다.\n숲길의 거래는 그렇게 가장 비싼 값을 치렀다.'
+  },
+  merchantCaptured: {
+    title:'갈고리의 경고', kind:'BAD END · 도적단', art:'capture', bonus:520,
+    epilogue:'갈고리는 처음부터 경고했다. 상인 하나 때문에 목숨을 걸지 말라고.\n당신은 그 말을 듣지 않았고, 로벤은 묶인 채 끝까지 그 광경을 지켜봐야 했다.\n숲의 소문에는 구조자의 이름 대신 실패한 싸움만 남았다.'
+  },
+  officer1Angry: {
+    title:'끝난 거래', kind:'BAD END · 도적단', art:'capture', bonus:560,
+    epilogue:'협상은 이미 끝났고 남은 것은 갈고리 모양의 칼뿐이었다.\n한 번 틀어진 거래는 다시 열리지 않았다.\n상인과 도적 모두 당신의 마지막 선택을 기억하게 됐다.'
+  },
+  officer2: {
+    title:'붉은 모자의 미소', kind:'BAD END · 도적단', art:'officer', bonus:620,
+    epilogue:'붉은 모자는 마지막 순간까지 웃고 있었다.\n당신이 그녀의 속도를 따라잡았다고 생각했을 때 이미 칼날은 다른 방향에서 들어왔다.\n돌다리 아래 물소리가 싸움의 끝을 삼켰다.'
+  },
+  officer2Angry: {
+    title:'아쉽네, 정말', kind:'BAD END · 도적단', art:'officer', bonus:660,
+    epilogue:'“그럴듯했는데 아쉽네.”\n그 말이 그녀가 남긴 마지막 대화였다.\n처세로 벌지 못한 틈을 칼로도 되찾지 못했고, 돌다리는 다시 조용해졌다.'
+  },
+  guildNovice: {
+    title:'초급이라는 착각', kind:'BAD END · 상인협회', art:'guild', bonus:430,
+    epilogue:'방패의 문장보다 ‘초급’이라는 말이 먼저 눈에 들어온 것이 실수였다.\n기사는 서툴렀지만 물러서지 않았고, 당신은 그 끈질김을 끝까지 견디지 못했다.\n협회에는 짧은 전투 보고서 한 장이 올라갔다.'
+  },
+  guildNoviceAngry: {
+    title:'신호 이후', kind:'BAD END · 상인협회', art:'guild', bonus:470,
+    epilogue:'이미 협회에 신호는 보내진 뒤였다.\n설명도 도망도 늦었고, 초급 기사는 자신이 해야 할 일을 끝까지 해냈다.\n당신의 이름은 이후 추격 명단에 오를 필요조차 없었다.'
+  },
+  midKnight: {
+    title:'협회의 추격자는 멈추지 않는다', kind:'BAD END · 중급 기사', art:'midknight', bonus:1250,
+    epilogue:'그는 복수를 위해 소리치지도, 당신을 모욕하지도 않았다.\n초급 기사의 죽음을 확인하듯 차분하게 검을 휘둘렀고, 한 번 읽은 움직임을 두 번 허용하지 않았다.\n상인협회의 추격은 여기서 끝났다. 당신과 함께.'
+  },
+  banditBossForest: {
+    title:'세리아의 마지막 질문', kind:'BAD END · 세리아', art:'boss', bonus:1150,
+    epilogue:'“그래서 넌 어느 편이지?”\n당신은 왕국도 도적단도 완전히 택하지 않은 채 그녀 앞에 섰다.\n끝내 답을 내놓지 못하자 세리아는 자신의 방식으로 결론을 냈다.\n숲은 또 한 명의 방랑자를 삼켰다.'
+  },
+  banditBossAngryForest: {
+    title:'네 편은 네가 정했다', kind:'BAD END · 세리아', art:'boss', bonus:1200,
+    epilogue:'세리아는 당신의 편을 묻는 일을 그만뒀다.\n“넌 네 입으로 이미 정했어.”\n그 뒤에는 긴 설명도 두 번째 협상도 없었다.\n본거지의 횃불은 당신이 쓰러진 뒤에도 밤새 타올랐다.'
+  }
+};
+
+function badEndingForCurrentScene() {
+  const exact = BAD_ENDINGS[state.sceneId];
+  if (exact) return exact;
+  const sc = SCENES[state.sceneId];
+  const enemy = getEnemy(sc);
+  const byEnemy = {
+    gangster:'gangster', gateGuard:'kingdomGate', citizen:'citizen', alarmGuard:'guardResponse',
+    captain:'captainEnraged', oldGuard:'oldVeteran', banditScout:'banditScoutRoyal',
+    banditOfficer1:'merchantCaptured', banditOfficer2:'officer2', noviceKnight:'guildNovice',
+    midKnight:'midKnight', banditBoss:'banditBossForest', king:'kingEnraged'
+  };
+  if (sc?.enemy && BAD_ENDINGS[byEnemy[sc.enemy]]) return BAD_ENDINGS[byEnemy[sc.enemy]];
+  if (enemy?.name === '떠돌이 상인 로벤') return BAD_ENDINGS.forestMerchant;
+  return { title:'이름 없는 최후', kind:'BAD END', art:sc?.art||'exile', bonus:0,
+    epilogue:'여정은 예상하지 못한 곳에서 끊겼다.\n당신이 남긴 선택과 소문만이 다음 사람들의 이야기 속에 희미하게 남는다.' };
+}
+
+function endingProfile(name) {
+  if (state.flags.deathEnding && state.flags.deathEnding.title === name) return state.flags.deathEnding;
+  return ENDINGS[name] || ENDINGS['BAD END'];
+}
+
 function freshState() {
   return {
-    version: 91,
+    version: 92,
     classId: null,
     p: null,
     sceneId: 'intro',
@@ -1315,21 +1445,34 @@ function canFriendEnding(loose=false){
 function finish(name) {
   if(state.ended)return; state.ended=true; state.stats.ending=name;
   state.stats.survivors = ['merchantAlive','gangsterPeace'].filter(f=>state.flags[f]).length + (!state.flags.citizenKilled?1:0) + (!state.flags.captainKilled?1:0);
+  const e=endingProfile(name);
+  state.stats.endingBonus=Number(e.bonus||0);
   save();
-  const e=ENDINGS[name]||ENDINGS['BAD END'];
-  $('endingArt').textContent=e.icon;$('endKind').textContent=e.kind;$('endTitle').textContent=name;$('endEpilogue').textContent=e.epilogue;
+  $('endingArt').classList.toggle('bad-ending-art', !!e.bad);
+  $('endingArt').innerHTML=e.art ? art(e.art) : `<span class="ending-glyph">${escapeHtml(e.icon||'†')}</span>`;
+  $('endKind').textContent=e.kind;$('endTitle').textContent=name;$('endEpilogue').textContent=e.epilogue;
   $('playStyle').textContent=`플레이 스타일 · ${playStyle()}`;
   $('endScore').textContent=clientScore().toLocaleString();
-  $('endStats').innerHTML=`${name==='BAD END' && state.flags.deathReason?`<b>사망 원인</b> · ${escapeHtml(state.flags.deathReason)}<br><br>`:''}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>`;
-  fx(name==='BAD END'?'bad':'good');showScreen('endScreen');
+  const deathBlock=e.bad&&state.flags.deathReason?`<b>최후의 순간</b> · ${escapeHtml(state.flags.deathReason)}<br><b>사망 장소</b> · ${escapeHtml(SCENES[state.flags.deathScene]?.location||'알 수 없는 장소')}<br><b>배드엔딩 보정</b> · +${Number(e.bonus||0).toLocaleString()}<br><br>`:'';
+  $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>`;
+  fx(e.bad?'bad':'good');showScreen('endScreen');
 }
-function die(reason){state.p.hp=0;state.flags.deathReason=reason;state.lastToast=reason;finish('BAD END');}
+function die(reason){
+  state.p.hp=0;
+  const profile={...badEndingForCurrentScene(),bad:true};
+  state.flags.deathReason=reason;
+  state.flags.deathScene=state.sceneId;
+  state.flags.deathEnemy=getEnemy(SCENES[state.sceneId])?.name||'';
+  state.flags.deathEnding=profile;
+  state.lastToast=reason;
+  finish(profile.title);
+}
 function playStyle(){
   const s=state.stats;
   const pairs=[['전투광',s.kills*3+s.riskyWins*2],['협상가',s.socialSuccess*3+s.talkSolved],['생존가',s.runSuccess*4],['탐색가',s.secrets*5+s.talkSolved],['파괴자',s.eliteKills*5+s.kills]];
   pairs.sort((a,b)=>b[1]-a[1]);return pairs[0][1]===0?'방랑자':pairs[0][0];
 }
-function clientScore(){const s=state.stats,b=ENDINGS[s.ending]?.bonus||0;return Math.max(0,Math.floor(s.progress*115+s.goldEarned*3+state.p.gold*1.2+s.kills*170+s.eliteKills*950+s.riskyWins*650+(s.comebackWins||0)*900+s.talkSolved*170+s.socialSuccess*185+s.runSuccess*85+s.secrets*500+(s.growths||0)*140+s.survivors*220-s.socialFail*25+b));}
+function clientScore(){const s=state.stats,b=Number(endingProfile(s.ending)?.bonus||s.endingBonus||0);return Math.max(0,Math.floor(s.progress*115+s.goldEarned*3+state.p.gold*1.2+s.kills*170+s.eliteKills*950+s.riskyWins*650+(s.comebackWins||0)*900+s.talkSolved*170+s.socialSuccess*185+s.runSuccess*85+s.secrets*500+(s.growths||0)*140+s.survivors*220-s.socialFail*25+b));}
 
 // ---------- Inventory / shop ----------
 const ITEMS = {
@@ -1400,7 +1543,7 @@ function normalizeLoadedState(data){
   merged.entered={...(data.entered||{})};
   merged.inventory=Array.isArray(data.inventory)?data.inventory:[];
   merged.stats={...base.stats,...(data.stats||{})};
-  merged.version=91;
+  merged.version=92;
   return merged;
 }
 function save(){localStorage.setItem(SAVE_KEY,JSON.stringify(state));updateMenuSaveInfo();}

@@ -18,6 +18,33 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const ENDING_BONUS = {
   'BAD END': 0,
+  '첫 칼날': 0,
+  '말이 끝난 자리': 0,
+  '성문 밖의 이름': 120,
+  '의심은 칼보다 빨랐다': 160,
+  '한 사람의 저항': 80,
+  '군중 속의 몰락': 120,
+  '경종 아래에서': 280,
+  '더 들을 말은 없다': 320,
+  '친위대장의 판결': 700,
+  '전설은 늙지 않았다': 1450,
+  '목책길의 매복': 260,
+  '울리지 못한 신호': 320,
+  '명예의 값': 1050,
+  '대화가 끝난 뒤': 1100,
+  '무너진 성문 앞에서': 1100,
+  '왕의 마지막 분노': 1550,
+  '값을 잘못 매긴 자': 80,
+  '갈고리의 경고': 520,
+  '끝난 거래': 560,
+  '붉은 모자의 미소': 620,
+  '아쉽네, 정말': 660,
+  '초급이라는 착각': 430,
+  '신호 이후': 470,
+  '협회의 추격자는 멈추지 않는다': 1250,
+  '세리아의 마지막 질문': 1150,
+  '네 편은 네가 정했다': 1200,
+  '이름 없는 최후': 0,
   '명예 회복': 5000,
   '반란': 10000,
   '모두와 친구': 12000,
@@ -211,7 +238,7 @@ app.post('/api/score', async (req, res) => {
 app.get('/api/health', (_req, res) => res.json({ ok:true, storage:CLOUD_ENABLED?'cloud':'local' }));
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n몰락자 Normal Mode v0.9.1`);
+  console.log(`\n몰락자 Normal Mode v0.9.2`);
   console.log(`http://localhost:${PORT}`);
   console.log(`랭킹 저장: ${CLOUD_ENABLED ? 'Supabase 영구 DB' : '로컬 파일 (SUPABASE 환경변수 미설정)'}\n`);
 });
