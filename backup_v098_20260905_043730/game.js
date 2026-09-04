@@ -4,7 +4,7 @@ const SAVE_KEY = 'fallen_normal_v08';
 const PLAYER_ID_KEY = 'fallen_player_id';
 const PENDING_KEY = 'fallen_pending_scores';
 const META_KEY = 'fallen_meta_v1';
-const GAME_VERSION = 98;
+const GAME_VERSION = 97;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, necromancer:3, dictator:5 };
 function loadMeta(){
@@ -212,106 +212,6 @@ function endingProfile(name) {
   return ENDINGS[name] || ENDINGS['BAD END'];
 }
 
-// ---------- v0.9.8: persistent world / resolved encounter guard ----------
-// actor = the person, episode = one concrete meeting with that person.
-// A dead actor can never return. A resolved episode can never be farmed again.
-const ENCOUNTER_META = {
-  gangster:{actor:'gangster',episode:'gangster_intro'}, gangsterAngry:{actor:'gangster',episode:'gangster_intro'},
-  kingdomGate:{actor:'gateGuard',episode:'gate_check'}, gateSuspicious:{actor:'gateGuard',episode:'gate_check'},
-  citizen:{actor:'citizen',episode:'citizen_market'}, citizenSuspicious:{actor:'citizen',episode:'citizen_market'},
-  guardResponse:{actor:'alarmGuard',episode:'guard_response'}, guardFurious:{actor:'alarmGuard',episode:'guard_response'},
-  captainEnraged:{actor:'captain',episode:'captain_purge'}, oldVeteran:{actor:'oldGuard',episode:'old_guard'},
-  banditScoutRoyal:{actor:'banditScout',episode:'scout_royal'}, banditScoutCornered:{actor:'banditScout',episode:'scout_royal'},
-  banditBossRoyal:{actor:'banditBoss',episode:'seria_final'}, banditBossAngry:{actor:'banditBoss',episode:'seria_final'},
-  captainRebel:{actor:'captain',episode:'captain_rebel'}, kingEnraged:{actor:'king',episode:'king_rebel'},
-  forestMerchant:{actor:'merchant',episode:'merchant_intro'},
-  merchantCaptured:{actor:'officer1',episode:'officer1_capture'}, officer1Angry:{actor:'officer1',episode:'officer1_capture'},
-  officer2:{actor:'officer2',episode:'officer2_bridge'}, officer2Angry:{actor:'officer2',episode:'officer2_bridge'},
-  guildNovice:{actor:'noviceKnight',episode:'guild_novice'}, guildNoviceAngry:{actor:'noviceKnight',episode:'guild_novice'},
-  midKnight:{actor:'midKnight',episode:'guild_mid'},
-  banditBossForest:{actor:'banditBoss',episode:'seria_final'}, banditBossAngryForest:{actor:'banditBoss',episode:'seria_final'}
-};
-const ACTOR_NAMES = {
-  gangster:'거리의 깡패', gateGuard:'왕국 경비병', citizen:'왕국 시민', alarmGuard:'출동한 경비병',
-  captain:'친위대장 레오른', oldGuard:'아르벤', banditScout:'도적단 정찰병', banditBoss:'세리아', king:'왕 에드란',
-  merchant:'로벤', officer1:'갈고리', officer2:'붉은 모자', noviceKnight:'상인협회 초급 기사', midKnight:'상인협회 중급 기사'
-};
-const LEGACY_DEAD_FLAGS = {
-  gangsterKilled:'gangster', guardKilled:'gateGuard', citizenKilled:'citizen', guardResponseKilled:'alarmGuard',
-  captainKilled:'captain', oldGuardKilled:'oldGuard', merchantKilled:'merchant', officer1Killed:'officer1',
-  officer2Killed:'officer2', noviceKilled:'noviceKnight', midKnightKilled:'midKnight', banditBossKilled:'banditBoss'
-};
-const RECOVERY_FALLBACK = {
-  gangster:'roadsideAftermath', gangsterAngry:'roadsideAftermath', kingdomGate:'cityEntry', gateSuspicious:'cityEntry',
-  citizen:'citySquare', citizenSuspicious:'citySquare', guardResponse:'captainEnraged', guardFurious:'captainEnraged',
-  captainEnraged:'kingdomEscape', oldVeteran:'kingAudience', banditScoutRoyal:'royalSupply', banditScoutCornered:'royalSupply',
-  banditBossRoyal:'friendBridge', banditBossAngry:'friendBridge', captainRebel:'rebelRetreat', kingEnraged:'rebelRetreat',
-  forestMerchant:'forestRoad', merchantCaptured:'officer2', officer1Angry:'officer2', officer2:'banditCampLife', officer2Angry:'banditCampLife',
-  guildNovice:'forestBeforeBoss', guildNoviceAngry:'forestBeforeBoss', midKnight:'banditBossForest',
-  banditBossForest:'friendBridge', banditBossAngryForest:'friendBridge'
-};
-function worldShape(w={}){
-  return {
-    deadActors:{...(w.deadActors||{})}, encounters:{...(w.encounters||{})}, escapeUsed:{...(w.escapeUsed||{})},
-    anomalies:{undertakerSeen:!!w.anomalies?.undertakerSeen,trackerSeen:!!w.anomalies?.trackerSeen},
-    invalidReturns:Number(w.invalidReturns||0), recovery:w.recovery||null
-  };
-}
-function metaForScene(id=state.sceneId){return ENCOUNTER_META[id]||null;}
-function encounterKey(id=state.sceneId){return metaForScene(id)?.episode||id;}
-function socialUseKey(id=state.sceneId){return encounterKey(id);}
-function escapeWasUsed(id=state.sceneId){return !!state.world?.escapeUsed?.[encounterKey(id)];}
-function setEscapeUsed(id=state.sceneId){state.world ||= worldShape();state.world.escapeUsed[encounterKey(id)]=true;state.escapeAttempted=true;}
-function markEncounterResolution(method,next,ending,onlyIfUnset=false){
-  const meta=metaForScene(); if(!meta || (!next && !ending)) return;
-  state.world ||= worldShape();
-  const old=state.world.encounters[meta.episode]; if(onlyIfUnset && old?.resolved)return;
-  const status=method==='attack'?'dead':method==='run'?'escaped':method==='social'?'social':'talked';
-  state.world.encounters[meta.episode]={resolved:true,status,actor:meta.actor,sceneId:state.sceneId,next:next||'',ending:ending||'',at:Number(state.stats?.progress||0)};
-  if(status==='dead')state.world.deadActors[meta.actor]={sceneId:state.sceneId,at:Number(state.stats?.progress||0),name:ACTOR_NAMES[meta.actor]||meta.actor};
-}
-function recoveryTarget(ctx){
-  const t=ctx?.next; if(t && SCENES[t] && !['undertakerMorten','trackerRian','emptyAftermath','brokenTrail'].includes(t))return t;
-  const fb=RECOVERY_FALLBACK[ctx?.attemptedScene]; if(fb && SCENES[fb])return fb;
-  if(state.flags?.rebel)return 'rebelRetreat';
-  if(state.entered?.friendBridge)return 'friendBridge';
-  if(state.entered?.forestRoad)return forestProgressScene(true);
-  if(state.entered?.citySquare)return 'citySquare';
-  return 'roadsideAftermath';
-}
-function recoveryActorName(){const ctx=state.world?.recovery;return ACTOR_NAMES[ctx?.actor]||'그 사람';}
-function recoverFromAnomaly(){
-  const ctx=state.world?.recovery; const target=recoveryTarget(ctx);
-  state.world.recovery=null; state.pending=null; state.lastToast=''; state.escapeAttempted=false;
-  state.sceneId=target; save(); enter(target);
-}
-function maybeReplaceResolvedEncounter(id){
-  if(state.pending||state.ended||['undertakerMorten','trackerRian','emptyAftermath','brokenTrail'].includes(id))return false;
-  const meta=ENCOUNTER_META[id]; if(!meta)return false;
-  state.world ||= worldShape();
-  const dead=state.world.deadActors[meta.actor]; const rec=state.world.encounters[meta.episode];
-  if(!dead && !rec?.resolved)return false;
-  const ctx={actor:meta.actor,episode:meta.episode,attemptedScene:id,status:dead?'dead':rec.status,next:rec?.next||'',at:Date.now()};
-  state.world.invalidReturns=(state.world.invalidReturns||0)+1;state.world.recovery=ctx;
-  let special;
-  if(dead){special=state.world.anomalies.undertakerSeen?'emptyAftermath':'undertakerMorten';state.world.anomalies.undertakerSeen=true;}
-  else{special=state.world.anomalies.trackerSeen?'brokenTrail':'trackerRian';state.world.anomalies.trackerSeen=true;}
-  state.sceneId=special;state.lastToast='';state.pending=null;save();showScreen('gameScreen');render();fx(dead?'ash':'trail');return true;
-}
-function migrateLegacyWorld(merged,data){
-  merged.world=worldShape(data.world||{});
-  for(const [flag,actor] of Object.entries(LEGACY_DEAD_FLAGS))if(merged.flags?.[flag]&&!merged.world.deadActors[actor])merged.world.deadActors[actor]={sceneId:'legacy',at:0,name:ACTOR_NAMES[actor]||actor};
-  if(merged.flags?.gangsterPeace&&!merged.world.encounters.gangster_intro)merged.world.encounters.gangster_intro={resolved:true,status:'social',actor:'gangster',sceneId:'gangster',next:'roadsideAftermath',at:0};
-  if(merged.flags?.kingdomFriendly&&merged.entered?.cityEntry&&!merged.world.encounters.gate_check)merged.world.encounters.gate_check={resolved:true,status:'social',actor:'gateGuard',sceneId:'kingdomGate',next:'cityEntry',at:0};
-  if(merged.flags?.merchantAlive&&merged.entered?.forestRoad&&!merged.flags?.merchantKilled&&!merged.world.encounters.merchant_intro)merged.world.encounters.merchant_intro={resolved:true,status:'talked',actor:'merchant',sceneId:'forestMerchant',next:'forestRoad',at:0};
-  if(merged.flags?.officer1Allied&&merged.entered?.officer2&&!merged.world.encounters.officer1_capture)merged.world.encounters.officer1_capture={resolved:true,status:'social',actor:'officer1',sceneId:'merchantCaptured',next:'officer2',at:0};
-  if(merged.flags?.officer2Allied&&merged.entered?.banditCampLife&&!merged.world.encounters.officer2_bridge)merged.world.encounters.officer2_bridge={resolved:true,status:'social',actor:'officer2',sceneId:'officer2',next:'banditCampLife',at:0};
-  if(data.flags?.lastEscapeFrom&&data.flags?.lastEscapeTo){const m=ENCOUNTER_META[data.flags.lastEscapeFrom];if(m&&!merged.world.encounters[m.episode])merged.world.encounters[m.episode]={resolved:true,status:'escaped',actor:m.actor,sceneId:data.flags.lastEscapeFrom,next:data.flags.lastEscapeTo,at:0};}
-  for(const [sid,v] of Object.entries(data.socialUsed||{}))if(v){const k=ENCOUNTER_META[sid]?.episode||sid;merged.socialUsed[k]=true;}
-  if(data.escapeAttempted){const k=ENCOUNTER_META[data.sceneId]?.episode||data.sceneId;if(k)merged.world.escapeUsed[k]=true;}
-  return merged;
-}
-
 function freshState() {
   return {
     version: GAME_VERSION,
@@ -330,7 +230,6 @@ function freshState() {
     talkRisk: {},
     encounterMods: {},
     entered: {},
-    world: worldShape(),
     lastToast: '',
     pending: null,
     ended: false,
@@ -826,36 +725,6 @@ const SCENES = {
       }),
       !state.flags.rebellionRetreated && c('도적단에 돌아가 왕국을 공격한다','반란으로 끝을 본다.',()=>{state.flags.rebel=true;go('rebelMarch');})
     ].filter(Boolean)
-  }),
-
-  undertakerMorten: scene('undertakerMorten', {
-    chapter:'남겨진 자리', location:'다시 돌아온 자리', art:'undertaker',
-    text:()=>`분명 ${recoveryActorName()}이 있던 자리다. 하지만 사람 대신 젖은 흙 냄새와 흰 천 한 장이 남아 있다.\n\n검은 외투를 입은 사내가 무릎을 꿇고 마지막 매듭을 묶는다. 장의사 모르텐. 그는 당신을 한 번 보고는 다시 손을 움직인다.\n\n“죽은 사람은 기다려주지 않아. 돌아온 건 산 사람 쪽이지.”\n\n그가 덮은 천 아래에서는 아무 움직임도 없다. 지나간 선택은 그대로 지나가 있었다.`,
-    choices:()=>[
-      !state.flags.mortenSpoken && c('장의사에게 묻는다','',()=>{state.flags.mortenSpoken=true;state.stats.secrets++;queueOutcome(`모르텐은 삽자루에 턱을 괸다.\n\n“난 시체를 데려갈 뿐이야. 네가 두고 간 결과까지 치워주진 않아.”\n\n그는 ${recoveryActorName()}이 어디로 갔느냐는 질문에는 대답하지 않는다. 대신 발밑의 흙을 한 번 더 다진다.`,null);}),
-      c('흔적을 뒤로한다','',()=>recoverFromAnomaly())
-    ].filter(Boolean)
-  }),
-
-  trackerRian: scene('trackerRian', {
-    chapter:'되짚은 길', location:'겹쳐진 발자국', art:'tracker',
-    text:()=>`같은 길을 되짚었지만 ${recoveryActorName()}은 보이지 않는다. 대신 길목의 나무에 짧은 칼자국이 세 개 나 있다.\n\n그 아래, 회색 망토를 걸친 여자가 발자국을 살피고 있다. 추적자 리안. 그녀는 고개도 들지 않은 채 말한다.\n\n“한 번 떠난 사람을 같은 자리에서 두 번 만날 순 없어.”\n\n당신이 속였든, 달아났든, 좋게 헤어졌든 그 조우는 이미 끝났다. 남은 것은 다음 길뿐이다.`,
-    choices:()=>[
-      !state.flags.rianSpoken && c('누굴 쫓고 있냐고 묻는다','',()=>{state.flags.rianSpoken=true;state.stats.secrets++;queueOutcome(`리안이 마른 흙을 손가락으로 문지른다.\n\n“사람이 아니라 반복되는 흔적을 쫓아. 같은 발자국이 같은 곳에서 자꾸 시작되면 누군가는 길을 잘못 기억하고 있다는 뜻이거든.”\n\n그녀는 당신이 가야 할 방향을 턱으로 가리킨다.`,null);}),
-      c('앞길로 간다','',()=>recoverFromAnomaly())
-    ].filter(Boolean)
-  }),
-
-  emptyAftermath: scene('emptyAftermath', {
-    chapter:'남겨진 자리', location:'비워진 자리', art:'grave',
-    text:()=>`${recoveryActorName()}이 있던 자리에는 아무도 없다.\n\n흙은 이미 굳었고, 장의사가 남긴 흰 실 한 가닥만 돌 틈에 걸려 있다. 죽은 사람은 다시 서 있지 않는다.\n\n바람이 빈 자리를 지나 다음 길 쪽으로 분다.`,
-    choices:()=>[c('계속 간다','',()=>recoverFromAnomaly())]
-  }),
-
-  brokenTrail: scene('brokenTrail', {
-    chapter:'되짚은 길', location:'끊긴 흔적', art:'trail',
-    text:()=>`${recoveryActorName()}의 흔적은 여기서 끊겨 있다.\n\n누군가 칼끝으로 나무껍질에 화살표 하나를 새겨두었다. 리안의 표식이다. 같은 자리를 맴돌아도 떠난 사람은 돌아오지 않는다.\n\n화살표는 오직 앞쪽만 가리킨다.`,
-    choices:()=>[c('표식을 따라간다','',()=>recoverFromAnomaly())]
   }),
 
   beggarCamp: scene('beggarCamp', {
@@ -1357,13 +1226,13 @@ function render() {
     $('attackInfo').textContent = `승률 ${attackChance(enemy)}%`;
     $('talkInfo').textContent=talkLabel();
     const classSocialBlocked=state.classId==='spellsword';
-    $('socialInfo').textContent = classSocialBlocked ? '사용할 수 없다' : sc.socialDisabled ? '통하지 않는다' : state.socialUsed[socialUseKey()] ? '이미 시도했다' : `성공 ${socialChance(enemy,sc)}%`;
+    $('socialInfo').textContent = classSocialBlocked ? '사용할 수 없다' : sc.socialDisabled ? '통하지 않는다' : state.socialUsed[state.sceneId] ? '이미 시도했다' : `성공 ${socialChance(enemy,sc)}%`;
     const rc = runChance(enemy);
-    const runAlreadyUsed=escapeWasUsed();
+    const runAlreadyUsed=!!state.escapeAttempted;
     $('runInfo').textContent = runLabel(enemy, rc);
     const socialBtn = document.querySelector('[data-game-action="social"]');
     socialBtn.classList.toggle('locked-action', !!sc.socialDisabled || state.classId==='spellsword');
-    socialBtn.classList.toggle('used', !!state.socialUsed[socialUseKey()]);
+    socialBtn.classList.toggle('used', !!state.socialUsed[state.sceneId]);
     const runBtn=document.querySelector('[data-game-action="run"]');
     runBtn.classList.toggle('locked-action', rc===0 || runAlreadyUsed);
     runBtn.classList.toggle('used', runAlreadyUsed);
@@ -1389,8 +1258,6 @@ function render() {
     }
   }
   $('sceneCard').classList.toggle('deep-dialogue', !!talkProfile() && (state.talkCount[state.sceneId]||0)>0);
-  $('sceneCard').classList.toggle('aftermath-dead',['undertaker','grave'].includes(sc.art));
-  $('sceneCard').classList.toggle('aftermath-trail',['tracker','trail'].includes(sc.art));
   $('choiceArea').innerHTML = choices.filter(Boolean).map((x,i)=>`<button class="choice-btn" data-choice="${i}"><b>${escapeHtml(x.label)}</b></button>`).join('');
   [...document.querySelectorAll('[data-choice]')].forEach(btn => {
     btn.onclick = () => { if(!state.pending) choices[Number(btn.dataset.choice)].fn(); };
@@ -1404,12 +1271,12 @@ function art(kind) {
     alarm:['#26171a','#5d252b','#b64b4f'], captain:['#1b202a','#4d5668','#c9d0dc'], oldguard:['#17191d','#47443c','#c1ae7d'], king:['#251d1d','#6f3434','#d1aa55'],
     barracks:['#1e2429','#515c62','#a89a78'], bandits:['#1c251f','#40543f','#a35a44'], camp:['#24241e','#615a3d','#d0a55b'], banditcamp:['#182018','#3f5233','#b06d44'],
     boss:['#241b21','#613343','#c65e72'], rebel:['#281619','#6d262e','#d16b56'], kingrage:['#2b1516','#761f25','#dc9b4d'], merchant:['#24251e','#626142','#cfb06a'],
-    forest:['#111d18','#284b36','#78975d'], capture:['#151e19','#3b4939','#a65a3b'], officer:['#231b1d','#5a3037','#bd614e'], guild:['#1d2327','#45535d','#a9b9c2'], midknight:['#171b20','#36424f','#bdc8d4'],crossroad:['#1b1e20','#45413d','#b49663'],undertaker:['#17191d','#3a3c40','#b8b1a4'],tracker:['#151c1d','#31484a','#8eb3ad'],grave:['#151719','#34363a','#8b8f92'],trail:['#121918','#2d403b','#789b8c']
+    forest:['#111d18','#284b36','#78975d'], capture:['#151e19','#3b4939','#a65a3b'], officer:['#231b1d','#5a3037','#bd614e'], guild:['#1d2327','#45535d','#a9b9c2'], midknight:['#171b20','#36424f','#bdc8d4'],crossroad:['#1b1e20','#45413d','#b49663']
   };
   const p = palettes[kind] || palettes.exile;
   const moon = ['forest','bandits','banditcamp','capture','officer','boss','crossroad'].includes(kind);
   const castle = ['gate','city','alarm','captain','oldguard','king','kingrage','barracks','rebel'].includes(kind);
-  const figures = ['beggars','gangster','citizen','captain','oldguard','boss','merchant','officer','guild','midknight','king','kingrage','undertaker','tracker'].includes(kind);
+  const figures = ['beggars','gangster','citizen','captain','oldguard','boss','merchant','officer','guild','midknight','king','kingrage'].includes(kind);
   return `<svg viewBox="0 0 600 280" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
     <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop stop-color="${p[1]}"/><stop offset="1" stop-color="${p[0]}"/></linearGradient><filter id="blur"><feGaussianBlur stdDeviation="9"/></filter></defs>
     <rect width="600" height="280" fill="url(#g)"/>
@@ -1468,7 +1335,7 @@ function runChance(enemy) {
 }
 
 function runLabel(enemy, chance) {
-  if(escapeWasUsed()) return '이미 시도했다';
+  if(state.escapeAttempted) return '이미 시도했다';
   if(chance===100) return '반드시 성공';
   if(chance===0) return '도망 불가';
   return `성공 ${chance}%`;
@@ -1538,20 +1405,19 @@ function gameAction(type) {
   if(type==='talk') { handleTalk(sc); return; }
   if(type==='social') {
     if(state.classId==='spellsword'){toast('마검사는 처세하지 않는다.');return;}
-    const socialKey=socialUseKey();
-    if(sc.socialDisabled || state.socialUsed[socialKey]) return;
-    state.socialUsed[socialKey]=true;
+    if(sc.socialDisabled || state.socialUsed[state.sceneId]) return;
+    state.socialUsed[state.sceneId]=true;
     const chance=socialChance(enemy,sc);
     if(Math.random()*100<chance){state.stats.socialSuccess++;if(state.classId==='dictator')gainTyranny('social');fx('good');floatText('처세 성공');if(sc.socialSuccess)sc.socialSuccess();else resolve('social',null,'처세에 성공했다.');}
     else {state.stats.socialFail++;fx('bad');floatText('처세 실패');if(sc.socialFail)sc.socialFail();else {toast('처세에 실패했다. 같은 방법은 다시 통하지 않는다.','bad');render();save();}}
     return;
   }
   if(type==='run') {
-    if(escapeWasUsed()) return;
+    if(state.escapeAttempted) return;
     const chance=runChance(enemy);
     if(chance<=0) return;
     // 한 조우에서 도주 판정은 딱 한 번만 한다.
-    setEscapeUsed();
+    state.escapeAttempted=true;
     if(chance===100 || Math.random()*100<chance){
       state.stats.runSuccess++;fx('good');floatText('도주 성공');
       if(sc.runSuccess)sc.runSuccess();else resolve('run',null,'도망쳤다.');
@@ -1729,12 +1595,10 @@ function finishBattleWin(sc,enemy,chance,comeback,comebackRoll=null){
 
 function resolve(method,next,msg,ending=null) {
   state.stats.progress++;
-  markEncounterResolution(method,next,ending,false);
   if(state.classId==='knight' && method!=='social' && method!=='run') { state.p.atk++; msg += '\n\n물러서지 않았다. 칼끝이 조금 더 단단해졌다. 공격력 +1'; floatText('공격력 +1'); }
   queueOutcome(msg||'행동의 결과가 정해졌다.', next, ending);
 }
 function queueOutcome(msg,next=null,ending=null) {
-  if(next||ending)markEncounterResolution('talk',next,ending,true);
   state.lastToast=msg||'';
   state.pending={next,ending};
   save(); render();
@@ -1749,10 +1613,9 @@ function continueOutcome(){
   if(p.next){ go(p.next); return; }
   render();
 }
-function go(id, msg='') { if(!SCENES[id])return; state.pending=null; if(maybeReplaceResolvedEncounter(id))return; const changed=id!==state.sceneId; if(changed&&state.encounterMods)delete state.encounterMods[state.sceneId]; if(changed){state.escapeAttempted=false;state.escapeSerial=(state.escapeSerial||0)+1;} state.sceneId=id; state.lastToast=msg; state.stats.progress++; save(); enter(id); }
+function go(id, msg='') { if(!SCENES[id])return; state.pending=null; const changed=id!==state.sceneId; if(changed&&state.encounterMods)delete state.encounterMods[state.sceneId]; if(changed){state.escapeAttempted=false;state.escapeSerial=(state.escapeSerial||0)+1;} state.sceneId=id; state.lastToast=msg; state.stats.progress++; save(); enter(id); }
 function enter(id) {
   showScreen('gameScreen');
-  if(maybeReplaceResolvedEncounter(id))return;
   const sc=SCENES[id];
   if(!state.entered[id]){state.entered[id]=true;if(sc.onFirstEnter)sc.onFirstEnter();}
   render();
@@ -1941,7 +1804,6 @@ function normalizeLoadedState(data){
   merged.talkRisk={...(data.talkRisk||{})};
   merged.encounterMods={...(data.encounterMods||{})};
   merged.entered={...(data.entered||{})};
-  merged.world=worldShape(data.world||{});
   merged.inventory=Array.isArray(data.inventory)?data.inventory:[];
   merged.stats={...base.stats,...(data.stats||{})};
   merged.stats.overTalks=Number(data.stats?.overTalks||0);
@@ -1949,7 +1811,7 @@ function normalizeLoadedState(data){
   merged.stats.tyranny=Number(data.stats?.tyranny||0);
   merged.runId=String(data.runId||base.runId);
   merged.version=GAME_VERSION;
-  return migrateLegacyWorld(merged,data);
+  return merged;
 }
 function save(){localStorage.setItem(SAVE_KEY,JSON.stringify(state));updateMenuSaveInfo();}
 function saveAndExit(){
@@ -2123,7 +1985,7 @@ document.addEventListener('click',e=>{
   const ga=e.target.closest('[data-game-action]')?.dataset.gameAction;
   if(ga)gameAction(ga);
 });
-window.selectClass=selectClass;window.recoverFromAnomaly=recoverFromAnomaly;window.summonWraith=summonWraith;window.openShop=openShop;window.openBag=openBag;window.openEncounterItems=openEncounterItems;window.closeModal=closeModal;window.continueOutcome=continueOutcome;window.saveAndExit=saveAndExit;
+window.selectClass=selectClass;window.summonWraith=summonWraith;window.openShop=openShop;window.openBag=openBag;window.openEncounterItems=openEncounterItems;window.closeModal=closeModal;window.continueOutcome=continueOutcome;window.saveAndExit=saveAndExit;
 
 updateMenuSaveInfo();
 updateStorageStatus();

@@ -61,12 +61,3 @@ button,input{font:inherit}button{color:inherit}button:disabled{opacity:.36}
 
 /* v0.9.3 verified ranking registration */
 .rank-submit-status{margin:10px 0 4px;padding:13px 14px;border-radius:12px;border:1px solid #343842;background:#0d1015;text-align:left;font-size:12px;line-height:1.65}.rank-submit-status.hidden{display:none}.rank-submit-status.success{display:block;border-color:#315744;background:#0c1712;color:#cce9d8}.rank-submit-status.keep{display:block;border-color:#65593b;background:#17140d;color:#eadfbd}.rank-submit-status.error{display:block;border-color:#6a3438;background:#190d0f;color:#f0c8ca}.rank-submit-status .rank-status-title{font-weight:900;font-size:13px;margin-bottom:4px}.rank-submit-status .rank-status-grid{display:grid;grid-template-columns:1fr auto;gap:2px 10px;margin-top:7px}.rank-submit-status .rank-status-grid b{text-align:right}.rank-row.mine{background:#17140d;border-color:#5f5238;padding-left:8px;padding-right:8px;border-radius:9px}.my-rank-card{border:1px solid #5a5038;background:#15120c;border-radius:12px;padding:12px;margin:8px 0 12px;text-align:left}.my-rank-card b{color:#e5d3a6}.storage-info.cloud-error{color:#e29b9f}
-
-
-/* v0.9.8 persistent aftermath */
-.flash.ash{animation:ashFlash .55s ease}@keyframes ashFlash{0%{opacity:.7;background:#6b6d6f}45%{opacity:.28;background:#24272a}100%{opacity:0}}
-.flash.trail{animation:trailFlash .55s ease}@keyframes trailFlash{0%{opacity:.55;background:#31514b}100%{opacity:0}}
-.scene-card.aftermath-dead .scene-art{filter:grayscale(.72) saturate(.45) contrast(1.08)}
-.scene-card.aftermath-dead .scene-shade{background:linear-gradient(180deg,#11131733 0,#08090de0 46%,#08090d 100%)}
-.scene-card.aftermath-trail .scene-art{filter:saturate(.55) contrast(1.05)}
-.scene-card.aftermath-trail .scene-shade{background:linear-gradient(180deg,#17302a20 0,#080b0ae0 48%,#080a0a 100%)}

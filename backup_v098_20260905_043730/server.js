@@ -457,7 +457,7 @@ app.post('/api/score', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.8' });
+  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.7' });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
