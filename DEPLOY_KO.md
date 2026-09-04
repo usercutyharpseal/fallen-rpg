@@ -1,10 +1,13 @@
-# v0.9.7 배포
+# v0.9.14 적용
+
+Termux에서 자동 패치 실행 후 GitHub에 push하면 Render의 Auto-Deploy(On Commit)가 자동 배포합니다.
 
 ```bash
+bash ~/storage/downloads/fallen_patch_v0914.sh
 cd ~/textrpg
 git add .
-git commit -m "Text polish v0.9.7"
+git commit -m "Bandit encounters and class balance v0.9.14"
 git push
 ```
 
-Render에서 최신 커밋 배포 후 메인 하단의 `NORMAL MODE · v0.9.7`를 확인하세요.
+공개 사이트 하단에서 `NORMAL MODE · v0.9.14`를 확인하세요.

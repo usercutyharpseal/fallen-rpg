@@ -4,7 +4,7 @@ const SAVE_KEY = 'fallen_normal_v08';
 const PLAYER_ID_KEY = 'fallen_player_id';
 const PENDING_KEY = 'fallen_pending_scores';
 const META_KEY = 'fallen_meta_v1';
-const GAME_VERSION = 102;
+const GAME_VERSION = 103;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, necromancer:3, dictator:5 };
 function loadMeta(){
@@ -42,7 +42,7 @@ const CLASSES = {
     desc: '상대보다 느려도 33~50% 확률로 도망칠 수 있다.'
   },
   merchant: {
-    name: '상인', hp: 6, atk: 4, social: 4, speed: 4, unlocked: true,
+    name: '상인', hp: 5, atk: 5, social: 5, speed: 5, unlocked: true,
     passive: '장사꾼의 재능',
     desc: '새로운 조우마다 최대 체력만큼 골드를 얻고, 상점 가격이 25% 저렴해진다.'
   },
@@ -51,11 +51,11 @@ const CLASSES = {
     passive: '파괴만을 위한 생명', desc: '처세를 사용할 수 없다. 적을 쓰러뜨리면 최대 체력의 20%를 회복한다.'
   },
   necromancer: {
-    name: '망령사', hp: 4, atk: 4, social: 4, speed: 4, unlocked: false,
+    name: '망령사', hp: 8, atk: 4, social: 4, speed: 4, unlocked: false,
     passive: '죽은 자들이여 일어나라', desc: '적을 쓰러뜨리면 시체를 얻는다. 조우에서 시체 하나를 써 망령을 부를 수 있다.'
   },
   dictator: {
-    name: '독재자', hp: 2, atk: 14, social: 14, speed: 2, unlocked: false,
+    name: '독재자', hp: 4, atk: 14, social: 14, speed: 0, unlocked: false,
     passive: '끝없는 격차', desc: '처치와 처세 성공으로 독재가 쌓인다. 10이 될 때마다 직전 방식에 맞는 능력치가 크게 오른다.'
   }
 };
@@ -70,6 +70,9 @@ const ENEMIES = {
   eliteIsel: { name:'엘리트 기사 이셀', hp:16, atk:13, social:16, speed:9, gold:68, rank:'엘리트 기사', elite:true },
   oldGuard: { name:'늙은 노인', hp:34, atk:24, social:28, speed:9, gold:175, rank:'전설', elite:true },
   banditScout: { name:'도적단 정찰병', hp:7, atk:6, social:6, speed:8, gold:24, rank:'보통' },
+  banditSlingerMaren: { name:'도적단 투석수 마렌', hp:8, atk:7, social:6, speed:9, gold:28, rank:'투석수' },
+  banditPorterTor: { name:'도적단 짐꾼 토르', hp:7, atk:5, social:8, speed:6, gold:24, rank:'보급병' },
+  banditShieldEnoch: { name:'도적단 방패병 에녹', hp:13, atk:8, social:8, speed:5, gold:38, rank:'방패병' },
   assaultBram: { name:'도적단 돌격병 브람', hp:10, atk:9, social:7, speed:9, gold:36, rank:'돌격병' },
   assaultNera: { name:'도적단 돌격병 네라', hp:11, atk:10, social:10, speed:10, gold:44, rank:'돌격병' },
   banditOfficer1: { name:'도적단 간부 · 갈고리', hp:12, atk:9, social:10, speed:8, gold:48, rank:'강함', elite:true },
@@ -141,6 +144,18 @@ const BAD_ENDINGS = {
   eliteIsel: {
     title:'봉쇄선의 마지막 사람', kind:'BAD END · 엘리트 기사', art:'captain', bonus:760,
     epilogue:'이셀은 왕국과 숲 사이의 선을 지키는 사람이었다.\n그녀는 당신의 과거를 들었고, 그래도 한 번은 말할 기회를 줬다.\n끝내 검을 택한 뒤에는 두 번째 기회가 없었다.'
+  },
+  banditSlingerMaren: {
+    title:'돌이 먼저 닿았다', kind:'BAD END · 도적단', art:'bandits', bonus:300,
+    epilogue:'숲의 높은 곳은 조용했다. 그래서 첫 돌이 날아오는 소리도 늦게 들렸다.\n마렌은 칼을 맞대기보다 거리를 지키는 법을 배운 사람이었다.\n도적단의 영역은 목책보다 훨씬 바깥에서 시작되고 있었다.'
+  },
+  banditPorterTor: {
+    title:'보급선의 무게', kind:'BAD END · 도적단', art:'banditcamp', bonus:440,
+    epilogue:'토르는 전사가 아니라 짐을 나르는 사람이었다. 그러나 굶는 사람들의 물자를 지키기 위해 들었던 몽둥이는 가볍지 않았다.\n당신은 두목을 만나기도 전에 도적단이 무엇을 지키고 있는지 몸으로 알게 됐다.'
+  },
+  banditShieldEnoch: {
+    title:'목책 앞의 방패', kind:'BAD END · 도적단', art:'banditcamp', bonus:700,
+    epilogue:'에녹은 앞으로 나가지 않았다. 그저 한 걸음도 물러나지 않았다.\n세리아에게 닿는 마지막 길은 거대한 방패 하나에 막혔고, 당신의 여정도 그 앞에서 멈췄다.'
   },
   assaultBram: {
     title:'숲의 첫 돌진', kind:'BAD END · 도적단', art:'bandits', bonus:390,
@@ -223,7 +238,7 @@ function badEndingForCurrentScene() {
   const enemy = getEnemy(sc);
   const byEnemy = {
     gangster:'gangster', gateGuard:'kingdomGate', citizen:'citizen', alarmGuard:'guardResponse',
-    captain:'captainEnraged', eliteVark:'eliteVark', eliteIsel:'eliteIsel', oldGuard:'oldVeteran', banditScout:'banditScoutRoyal', assaultBram:'assaultBram', assaultNera:'assaultNera',
+    captain:'captainEnraged', eliteVark:'eliteVark', eliteIsel:'eliteIsel', oldGuard:'oldVeteran', banditScout:'banditScoutRoyal', banditSlingerMaren:'banditSlingerMaren', banditPorterTor:'banditPorterTor', banditShieldEnoch:'banditShieldEnoch', assaultBram:'assaultBram', assaultNera:'assaultNera',
     banditOfficer1:'merchantCaptured', banditOfficer2:'officer2', noviceKnight:'guildNovice',
     midKnight:'midKnight', banditBoss:'banditBossForest', king:'kingEnraged'
   };
@@ -248,6 +263,7 @@ const ENCOUNTER_META = {
   guardResponse:{actor:'alarmGuard',episode:'guard_response'}, guardFurious:{actor:'alarmGuard',episode:'guard_response'},
   captainEnraged:{actor:'captain',episode:'captain_purge'}, eliteVark:{actor:'eliteVark',episode:'elite_vark_watch'}, eliteIsel:{actor:'eliteIsel',episode:'elite_isel_blockade'}, oldVeteran:{actor:'oldGuard',episode:'old_guard'},
   banditScoutRoyal:{actor:'banditScout',episode:'scout_royal'}, banditScoutCornered:{actor:'banditScout',episode:'scout_royal'},
+  banditSlingerMaren:{actor:'banditSlingerMaren',episode:'maren_highpath'}, banditPorterTor:{actor:'banditPorterTor',episode:'tor_supply'}, banditShieldEnoch:{actor:'banditShieldEnoch',episode:'enoch_wall'},
   assaultBram:{actor:'assaultBram',episode:'bram_vanguard'}, assaultNera:{actor:'assaultNera',episode:'nera_gate'},
   banditBossRoyal:{actor:'banditBoss',episode:'seria_final'}, banditBossAngry:{actor:'banditBoss',episode:'seria_final'},
   captainRebel:{actor:'captain',episode:'captain_rebel'}, kingEnraged:{actor:'king',episode:'king_rebel'},
@@ -260,21 +276,21 @@ const ENCOUNTER_META = {
 };
 const ACTOR_NAMES = {
   gangster:'거리의 깡패', gateGuard:'왕국 경비병', citizen:'왕국 시민', alarmGuard:'출동한 경비병',
-  captain:'친위대장 레오른', eliteVark:'엘리트 기사 바르크', eliteIsel:'엘리트 기사 이셀', oldGuard:'아르벤', banditScout:'도적단 정찰병', assaultBram:'돌격병 브람', assaultNera:'돌격병 네라', banditBoss:'세리아', king:'왕 에드란',
+  captain:'친위대장 레오른', eliteVark:'엘리트 기사 바르크', eliteIsel:'엘리트 기사 이셀', oldGuard:'아르벤', banditScout:'도적단 정찰병', banditSlingerMaren:'투석수 마렌', banditPorterTor:'짐꾼 토르', banditShieldEnoch:'방패병 에녹', assaultBram:'돌격병 브람', assaultNera:'돌격병 네라', banditBoss:'세리아', king:'왕 에드란',
   merchant:'로벤', officer1:'갈고리', officer2:'붉은 모자', noviceKnight:'상인협회 초급 기사', midKnight:'상인협회 중급 기사'
 };
 const LEGACY_DEAD_FLAGS = {
   gangsterKilled:'gangster', guardKilled:'gateGuard', citizenKilled:'citizen', guardResponseKilled:'alarmGuard',
   captainKilled:'captain', eliteVarkKilled:'eliteVark', eliteIselKilled:'eliteIsel', oldGuardKilled:'oldGuard', merchantKilled:'merchant', officer1Killed:'officer1',
-  officer2Killed:'officer2', assaultBramKilled:'assaultBram', assaultNeraKilled:'assaultNera', noviceKilled:'noviceKnight', midKnightKilled:'midKnight', banditBossKilled:'banditBoss'
+  officer2Killed:'officer2', banditSlingerMarenKilled:'banditSlingerMaren', banditPorterTorKilled:'banditPorterTor', banditShieldEnochKilled:'banditShieldEnoch', assaultBramKilled:'assaultBram', assaultNeraKilled:'assaultNera', noviceKilled:'noviceKnight', midKnightKilled:'midKnight', banditBossKilled:'banditBoss'
 };
 const RECOVERY_FALLBACK = {
   gangster:'roadsideAftermath', gangsterAngry:'roadsideAftermath', kingdomGate:'cityEntry', gateSuspicious:'cityEntry',
   citizen:'citySquare', citizenSuspicious:'citySquare', guardResponse:'captainEnraged', guardFurious:'captainEnraged',
   captainEnraged:'kingdomEscape', eliteVark:'banditScoutRoyal', eliteIsel:'campNight', oldVeteran:'kingAudience', banditScoutRoyal:'royalSupply', banditScoutCornered:'royalSupply',
   banditBossRoyal:'friendBridge', banditBossAngry:'friendBridge', captainRebel:'rebelRetreat', kingEnraged:'rebelRetreat',
-  forestMerchant:'forestRoad', assaultBram:'merchantCaptured', merchantCaptured:'officer2', officer1Angry:'officer2', officer2:'banditCampLife', officer2Angry:'banditCampLife',
-  assaultNera:'banditBossForest', guildNovice:'forestBeforeBoss', guildNoviceAngry:'forestBeforeBoss', midKnight:'banditBossForest',
+  forestMerchant:'forestRoad', banditSlingerMaren:'assaultBram', assaultBram:'merchantCaptured', merchantCaptured:'officer2', officer1Angry:'officer2', officer2:'banditCampLife', officer2Angry:'banditCampLife',
+  banditPorterTor:'guildNovice', banditShieldEnoch:'assaultNera', assaultNera:'banditBossForest', guildNovice:'forestBeforeBoss', guildNoviceAngry:'forestBeforeBoss', midKnight:'banditBossForest',
   banditBossForest:'friendBridge', banditBossAngryForest:'friendBridge'
 };
 function worldShape(w={}){
@@ -770,13 +786,31 @@ const SCENES = {
     ].filter(Boolean)
   }),
 
+  banditSlingerMaren: scene('banditSlingerMaren', {
+    chapter:'FOREST ROUTE · HIGH PATH', location:'숲 · 비탈진 바위길', art:'bandits', enemy:'banditSlingerMaren',
+    text:()=>`경계목을 넘자 길이 갑자기 좁아진다. 머리 위 바위턱에서 작은 돌 하나가 발앞에 떨어진다. 실수가 아니다.
+
+가죽 주머니를 허리에 찬 젊은 도적이 위에서 내려다본다.
+
+“여기부터는 칼보다 돌이 먼저 닿아. 왕국 순찰대도 그걸 알고 돌아가고.”${state.flags.varkBriefing?"\n\n바르크에게 들었던 정찰 표식과 같은 흠집이 바위에 남아 있다. 이 길이 도적단의 감시선이라는 걸 바로 알아챈다.":""}`,
+    choices(){return (state.talkCount.banditSlingerMaren||0)>=2 ? [c('왕국 순찰대 이야기를 더 듣는다','',()=>{state.flags.marenRouteHint=true;state.relation.bandits+=1;state.stats.talkSolved++;resolve('talk','assaultBram',`마렌은 왕국 순찰대가 숲 안쪽까지 들어오지 못하게 일부러 빈 수레길을 열어둔다고 말한다.
+
+“브람이 있는 길로 가. 걔가 널 적으로 안 보면 안쪽 얘기도 들을 수 있을 거야.”`);})] : [];},
+    socialSuccess(){state.flags.marenSpared=true;state.relation.bandits+=1;resolve('social','assaultBram',`마렌은 투석끈을 풀어 허리에 감고 아래 길을 가리킨다.
+
+“브람한테 마렌이 보냈다고 해. 그럼 바로 찍어누르진 않을 거야.”`);},
+    socialFail(){encMod().attackPct-=4;encMod().enemyAtk+=1;toast('마렌은 말보다 거리부터 벌린다. 다음 돌은 경고가 아닐 것 같다.','bad');render();save();},
+    attackWin(){state.flags.banditSlingerMarenKilled=true;state.relation.bandits-=1;gainGold(28);resolve('attack','assaultBram','마렌이 바위턱 아래로 쓰러진다. 숲 안쪽에서 짧은 휘파람 신호가 한 번 울린다. 누군가 이 싸움을 들었다.');},
+    runSuccess(){handleEscapeSuccess();}
+  }),
+
   assaultBram: scene('assaultBram', {
     chapter:'FOREST ROUTE · VANGUARD', location:'숲 · 끊어진 수레길', art:'bandits', enemy:'assaultBram',
     text:()=>`부러진 수레축을 방패처럼 세운 남자가 길을 막고 있다. 큰 도끼를 들었지만 갑옷은 여기저기 기운 자국투성이다.
 
 “브람. 앞에서 맞는 놈이지.”
 
-그는 웃으며 도끼를 어깨에 걸친다.${state.flags.merchantAlive?'\n\n“상인 찾는 거면 서두르지 마. 갈고리는 사람보다 거래를 먼저 죽이는 놈이니까.”':'\n\n“혼자 여기까지 왔으면 뭘 찾는지는 대충 알겠네.”'}`,
+그는 웃으며 도끼를 어깨에 걸친다.${state.flags.banditSlingerMarenKilled?'\n\n“위에서 신호가 끊겼더라. 마렌 건드렸으면 나한텐 말 길게 하지 마.”':state.flags.marenSpared?'\n\n“마렌이 보냈다며? 그럼 한 번은 듣지.”':''}${state.flags.merchantAlive?'\n\n“상인 찾는 거면 서두르지 마. 갈고리는 사람보다 거래를 먼저 죽이는 놈이니까.”':'\n\n“혼자 여기까지 왔으면 뭘 찾는지는 대충 알겠네.”'}`,
     choices(){return (state.talkCount.assaultBram||0)>=2 ? [c('거래 이야기를 기억해둔다','',()=>{state.flags.bramTradeHint=true;state.relation.bandits+=1;state.stats.talkSolved++;resolve('talk',state.flags.merchantAlive?'merchantCaptured':'officer2','브람은 로벤을 잡은 이유가 몸값보다 끊긴 보급선 때문이라고 말한다.\n\n“갈고리 앞에서 돈 얘기보다 소금이랑 약 얘기를 먼저 해.”');})] : [];},
     socialSuccess(){state.flags.bramSpared=true;state.relation.bandits+=1;resolve('social',state.flags.merchantAlive?'merchantCaptured':'officer2','브람은 당신을 당장 베어야 할 적은 아니라고 판단하고 길을 비킨다.');},
     socialFail(){encMod().enemyAtk+=2;toast('브람은 말을 끊고 도끼를 양손으로 고쳐 잡는다.','bad');render();save();},
@@ -821,6 +855,24 @@ const SCENES = {
     runSuccess(){ handleEscapeSuccess(); }
   }),
 
+  banditPorterTor: scene('banditPorterTor', {
+    chapter:'FOREST ROUTE · SUPPLY', location:'도적단 외곽 · 보급 오솔길', art:'banditcamp', enemy:'banditPorterTor',
+    text:()=>`야영지를 벗어나자 마른 약초 냄새와 소금 냄새가 섞여 온다. 등에 상자 두 개를 묶은 덩치 큰 남자가 길 한가운데서 숨을 고른다. 칼보다 밧줄과 장부가 먼저 눈에 띈다.
+
+“토르. 짐꾼이야. 근데 짐 훔쳐가려면 몽둥이부터 맞아.”
+
+상자 옆에는 왕국 상표를 긁어낸 약병과 겨울용 소금 자루가 함께 묶여 있다.${state.flags.bramTradeHint?"\n\n브람이 말했던 끊긴 보급선이 바로 이것인 듯하다.":""}`,
+    choices(){return (state.talkCount.banditPorterTor||0)>=2 ? [c('상자 하나를 함께 옮긴다','',()=>{state.flags.torHelped=true;state.relation.bandits+=2;state.stats.talkSolved++;gainGold(5);resolve('talk',state.flags.officer2Allied?'guildNovice':'forestBeforeBoss',`토르와 함께 짐을 옮기자 안쪽 사람들이 경계를 조금 푼다.
+
+“이거 하나 늦으면 다친 애 셋이 밤을 못 넘겨. 우리가 길에 목숨 거는 이유도 별거 없어.”
+
+토르는 수고비라며 작은 동전 몇 개를 건넨다.`);})] : [];},
+    socialSuccess(){state.flags.torSpared=true;state.relation.bandits+=1;resolve('social',state.flags.officer2Allied?'guildNovice':'forestBeforeBoss','토르는 당신이 보급품을 노리는 사람이 아니라고 판단하고 길을 비킨다.');},
+    socialFail(){encMod().socialPct-=5;toast('토르는 말보다 상자 매듭을 먼저 확인한다. 당신을 물자를 노리는 사람으로 의심하기 시작했다.','bad');render();save();},
+    attackWin(){state.flags.banditPorterTorKilled=true;state.relation.bandits-=3;gainGold(24);resolve('attack',state.flags.officer2Allied?'guildNovice':'forestBeforeBoss','토르가 짐더미 옆으로 쓰러진다. 열린 상자에서 약병이 굴러나온다. 안쪽 야영지에서 누군가 “보급이 끊겼다”고 외친다.');},
+    runSuccess(){handleEscapeSuccess();}
+  }),
+
   guildNovice: scene('guildNovice', {
     chapter:'MERCHANT GUILD', location:'숲 · 교역로', art:'guild', enemy:'noviceKnight',
     text:`상인협회의 문장이 새겨진 작은 방패가 길을 막는다.\n초급 기사 한 명이 당신과 도적들을 번갈아 본다.\n\n“도적단과 함께 있는 이유를 설명해.”`,
@@ -839,13 +891,29 @@ const SCENES = {
     runSuccess(){ handleEscapeSuccess(); }
   }),
 
+  banditShieldEnoch: scene('banditShieldEnoch', {
+    chapter:'FOREST ROUTE · OUTER WALL', location:'도적단 본거지 · 첫 목책', art:'banditcamp', enemy:'banditShieldEnoch',
+    text:()=>`본거지의 첫 목책은 생각보다 낮다. 대신 길 한가운데 사람이 하나 서 있다. 몸 절반을 가리는 낡은 방패에는 화살촉이 여러 개 박혀 있다.
+
+“에녹. 안으로 들어가는 칼을 여기서 한 번 걸러.”
+
+그는 방패를 들되 먼저 달려들지는 않는다.${state.flags.banditPorterTorKilled?"\n\n“토르가 안 돌아왔어. 보급길 지나왔으면 이유를 알겠지.”":state.flags.torHelped?"\n\n“토르 짐 옮겨줬다며. 그 말이 사실이면 여기서 피 볼 필요는 없겠네.”":""}`,
+    choices(){return (state.talkCount.banditShieldEnoch||0)>=2 && !state.flags.banditPorterTorKilled ? [c('지금까지의 일을 그대로 말한다','',()=>{state.flags.enochVouched=true;state.relation.bandits+=1;state.stats.talkSolved++;resolve('talk','assaultNera',`에녹은 잠시 생각하다 방패를 옆으로 세운다.
+
+“네라한테는 내가 봤다고 말하지. 그 뒤는 네가 한 일로 판단할 거야.”`);})] : [];},
+    socialSuccess(){state.flags.enochSpared=true;state.relation.bandits+=1;resolve('social','assaultNera','에녹은 방패 끝으로 안쪽 길을 두 번 두드린다. 목책 너머에서 누군가 대답하듯 창자루를 두드린다.');},
+    socialFail(){encMod().enemyAtk+=2;toast('에녹은 방패를 완전히 세운다. 이제 말보다 밀어낼 준비를 한다.','bad');render();save();},
+    attackWin(){state.flags.banditShieldEnochKilled=true;state.relation.bandits-=2;gainGold(38);resolve('attack','assaultNera','에녹의 방패가 바닥에 떨어진다. 목책 안쪽에서 짧고 무거운 경보음이 울린다. 네라는 이미 누가 왔는지 알게 됐다.');},
+    runSuccess(){handleEscapeSuccess();}
+  }),
+
   assaultNera: scene('assaultNera', {
     chapter:'FOREST ROUTE · LAST GATE', location:'도적단 본거지 · 바깥 목책', art:'banditcamp', enemy:'assaultNera',
     text:()=>`본거지의 첫 횃불 아래, 짧은 창 두 자루를 등에 멘 여자가 기다리고 있다. 발치에는 왕국 화살과 도적단 화살이 함께 꽂혀 있다.
 
 “네라. 세리아한테 들어가는 사람 얼굴을 기억하는 게 내 일이야.”
 
-그녀는 당신의 얼굴보다 뒤에 남겨둔 사람들의 숫자를 먼저 세는 눈이다.${state.flags.assaultBramKilled?'\n\n“브람이 돌아오지 않은 이유도 이제 알겠네.”':''}${state.flags.officer1Killed||state.flags.officer2Killed?'\n\n“간부들 피까지 묻혔으면 말은 짧게 하자.”':''}`,
+그녀는 당신의 얼굴보다 뒤에 남겨둔 사람들의 숫자를 먼저 세는 눈이다.${state.flags.banditShieldEnochKilled?'\n\n“에녹 방패까지 넘어왔네. 오늘은 안쪽이 조용하긴 틀렸군.”':state.flags.enochVouched?'\n\n“에녹이 네 이야기는 들어볼 만하다고 했어.”':''}${state.flags.assaultBramKilled?'\n\n“브람이 돌아오지 않은 이유도 이제 알겠네.”':''}${state.flags.officer1Killed||state.flags.officer2Killed?'\n\n“간부들 피까지 묻혔으면 말은 짧게 하자.”':''}`,
     choices(){return (state.talkCount.assaultNera||0)>=2 && !(state.flags.assaultBramKilled&&state.flags.officer1Killed&&state.flags.officer2Killed) ? [c('있는 그대로 보고해달라고 한다','',()=>{state.flags.neraVouched=true;state.relation.bandits+=2;state.stats.talkSolved++;resolve('talk',state.flags.noviceKilled?'midKnight':'banditBossForest','네라는 당신이 죽인 사람과 살린 사람을 짧게 적는다.\n\n“꾸며서 말하지 않을게. 세리아는 그걸 더 싫어하니까.”');})] : [];},
     socialSuccess(){state.flags.neraVouched=true;state.relation.bandits+=1;resolve('social',state.flags.noviceKilled?'midKnight':'banditBossForest','네라는 한참 당신을 보다가 목책을 두드린다. 안쪽에서 문이 열린다.');},
     socialFail(){encMod().socialPct-=8;encMod().enemyAtk+=2;toast('네라는 당신의 말을 보고용 거짓말이라고 판단한다.','bad');render();save();},
@@ -858,7 +926,7 @@ const SCENES = {
     text:`도적단 본거지의 횃불이 나무 사이로 보인다.\n여기서부터는 세리아의 영역이다.`,
     choices:() => [
       c('잠시 장비를 점검한다','가방과 회복품을 확인한다.',openBag),
-      c('본거지로 들어간다','',()=>go('assaultNera'))
+      c('본거지로 들어간다','',()=>go('banditShieldEnoch'))
     ]
   }),
 
@@ -1122,9 +1190,9 @@ ${state.flags.gangsterKilled?'뒤에서 거지들의 환호가 아직 희미하�
 그 아래 앉은 외눈박이 나무꾼이 당신을 본다.
 “저 선을 넘으면 도적들 영역이야. 들어갈 거면 적어도 숨 쉬는 법부터 다시 배워.”`,
     choices:() => [
-      !state.flags.deepForestGrowth && c('무거운 장작을 메고 언덕을 오른다','최대 체력 +1',()=>takeGrowth('deepForestGrowth','hp','장작을 내려놓았을 때는 숨이 가쁘지만 몸은 한층 단단해져 있다.\n\n최대 체력 +1','assaultBram')),
-      !state.flags.deepForestGrowth && c('나무 사이를 빠르게 통과하는 법을 배운다','속도 +1',()=>takeGrowth('deepForestGrowth','speed','낮은 가지와 뿌리를 피하는 법을 익힌다. 숲에서의 발이 빨라졌다.\n\n속도 +1','assaultBram')),
-      c('경계목을 넘는다','도적단의 영역으로 들어간다.',()=>go('assaultBram'))
+      !state.flags.deepForestGrowth && c('무거운 장작을 메고 언덕을 오른다','최대 체력 +1',()=>takeGrowth('deepForestGrowth','hp','장작을 내려놓았을 때는 숨이 가쁘지만 몸은 한층 단단해져 있다.\n\n최대 체력 +1','banditSlingerMaren')),
+      !state.flags.deepForestGrowth && c('나무 사이를 빠르게 통과하는 법을 배운다','속도 +1',()=>takeGrowth('deepForestGrowth','speed','낮은 가지와 뿌리를 피하는 법을 익힌다. 숲에서의 발이 빨라졌다.\n\n속도 +1','banditSlingerMaren')),
+      c('경계목을 넘는다','도적단의 영역으로 들어간다.',()=>go('banditSlingerMaren'))
     ].filter(Boolean)
   }),
 
@@ -1135,10 +1203,10 @@ ${state.flags.gangsterKilled?'뒤에서 거지들의 환호가 아직 희미하�
 솥을 젓는 늙은 취사병, 다친 팔을 감싼 젊은 도적, 망을 보는 소녀가 각자의 일을 한다.
 ${state.flags.officer2Allied?'당신을 적으로 보지는 않지만 아직 완전히 믿는 눈치도 아니다.':'당신이 지나가자 대화가 잠시 끊긴다.'}`,
     choices:() => [
-      !state.flags.banditCampGrowth && c('취사병의 장작 패기를 돕는다','공격력 +1',()=>takeGrowth('banditCampGrowth','atk','무거운 도끼를 반복해서 내리친다. 취사병은 “칼도 결국 같은 거야.”라며 웃는다.\n\n공격력 +1',state.flags.officer2Allied?'guildNovice':'forestBeforeBoss')),
-      !state.flags.banditCampGrowth && c('망보는 소녀와 교대한다','속도 +1',()=>takeGrowth('banditCampGrowth','speed','나무를 오르고 내리며 주변 길을 외운다.\n\n속도 +1',state.flags.officer2Allied?'guildNovice':'forestBeforeBoss')),
-      !state.flags.banditCampGrowth && c('부상한 도적의 이야기를 듣는다','처세 +1 / 도적 관계 +1',()=>{state.relation.bandits++;takeGrowth('banditCampGrowth','social','그가 도적이 된 이유를 듣고, 당신의 이야기도 조금 들려준다. 말의 거리가 전보다 가까워졌다.\n\n처세 +1',state.flags.officer2Allied?'guildNovice':'forestBeforeBoss');}),
-      c('야영지를 지나간다','두목의 본거지 방향으로 이동한다.',()=>go(state.flags.officer2Allied?'guildNovice':'forestBeforeBoss'))
+      !state.flags.banditCampGrowth && c('취사병의 장작 패기를 돕는다','공격력 +1',()=>takeGrowth('banditCampGrowth','atk','무거운 도끼를 반복해서 내리친다. 취사병은 “칼도 결국 같은 거야.”라며 웃는다.\n\n공격력 +1','banditPorterTor')),
+      !state.flags.banditCampGrowth && c('망보는 소녀와 교대한다','속도 +1',()=>takeGrowth('banditCampGrowth','speed','나무를 오르고 내리며 주변 길을 외운다.\n\n속도 +1','banditPorterTor')),
+      !state.flags.banditCampGrowth && c('부상한 도적의 이야기를 듣는다','처세 +1 / 도적 관계 +1',()=>{state.relation.bandits++;takeGrowth('banditCampGrowth','social','그가 도적이 된 이유를 듣고, 당신의 이야기도 조금 들려준다. 말의 거리가 전보다 가까워졌다.\n\n처세 +1','banditPorterTor');}),
+      c('야영지를 지나간다','두목의 본거지 방향으로 이동한다.',()=>go('banditPorterTor'))
     ].filter(Boolean)
   })
 
@@ -1303,6 +1371,30 @@ const TALK_PROFILES = {
     {text:`“봉쇄선에서 제일 많이 보는 건 도적이 아니야. 장사 못 해서 돌아가는 상인들이지.” 이셀이 말한다.\n\n왕국의 방어가 누군가에게는 생존로를 막는 벽이라는 사실을 그녀도 알고 있다.`,on(){encMod().socialPct+=7;}},
     {text:`그녀는 전사자 명단과 징발 기록을 한 장씩 넘긴다. “둘 다 숫자로 적히면 편하지. 얼굴을 보면 불편해지고.”\n\n이셀은 왕국 편이지만 왕국의 잘못을 모르는 사람은 아니다.`,on(){state.flags.iselMediation=true;encMod().socialPct+=9;state.stats.secrets++;}}
   ]},
+  banditSlingerMaren:{end:'마렌은 투석끈을 손가락에 감는다. 더 많은 말은 필요 없다는 뜻이다.',steps:[
+    {text:`“왕국 순찰대는 길만 보고 와.” 마렌이 바위 아래를 가리킨다. “우린 길 위가 아니라 위에서 봐. 그래서 먼저 발견하는 거고.”
+
+도적단의 경계선이 목책보다 훨씬 넓다는 걸 알게 된다.`,on(){encMod().socialPct+=6;encMod().attackPct+=3;}},
+    {text:`“예전엔 이 길로 약이랑 소금이 들어왔어. 지금은 왕국도 협회도 막아놨지.”
+
+마렌은 돌 하나를 손바닥에서 굴린다. “그래서 수레 하나 지나가는 게 전투 하나보다 중요할 때도 있어.”`,on(){state.flags.marenSupplyView=true;state.stats.secrets++;encMod().socialPct+=8;}}
+  ]},
+  banditPorterTor:{end:'토르는 다시 상자 끈을 조인다. 짐은 말보다 오래 기다려주지 않는 모양이다.',steps:[
+    {text:`“전투 끝나면 누가 이긴 것만 세지.” 토르가 약병 상자를 두드린다. “난 그 다음날 누가 열나서 죽는지 세.”
+
+도적단에서 보급을 맡는 사람에게 전쟁은 승패보다 남은 물자의 숫자에 가깝다.`,on(){encMod().socialPct+=8;}},
+    {text:`토르는 소금 자루에 찍힌 왕국 상표를 긁어낸 흔적을 보여준다. “훔친 것도 있고, 돈 주고 산 것도 있고, 굶기 전에 빼앗은 것도 있어.”
+
+도적단의 보급이 약탈 하나로만 굴러가는 것은 아닌 듯하다.`,on(){state.flags.torSupplyTruth=true;state.stats.secrets++;encMod().socialPct+=9;}}
+  ]},
+  banditShieldEnoch:{end:'에녹은 방패를 바로 세운다. 이제 통과할 사람인지 막을 사람인지 판단할 차례다.',steps:[
+    {text:`“난 세리아 대신 죽으려고 여기 있는 게 아냐.” 에녹이 방패의 화살촉 하나를 뽑는다. “안에 있는 애들이 준비할 시간을 벌려고 서 있는 거지.”
+
+브람과 비슷한 말을 하지만, 에녹은 돌진 대신 버티는 쪽을 택한 사람이다.`,on(){encMod().socialPct+=6;encMod().attackPct+=2;}},
+    {text:`“네라는 살아 돌아온 사람 숫자를 세고, 난 여기서 들어가는 칼 숫자를 세.”
+
+에녹은 당신의 무기와 옷에 묻은 흔적을 천천히 훑는다. 지금까지의 선택을 숨기기는 쉽지 않아 보인다.`,on(){encMod().socialPct+=(state.stats.kills||0)<=3?9:-4;state.flags.enochReadYou=true;}}
+  ]},
   assaultBram:{end:'브람은 더 설명할 생각이 없다. 이제 길을 비킬지 부딪칠지 고르라고 한다.',steps:[
     {text:`“우린 앞에서 맞는 놈들이야.” 브람이 도끼 등으로 가슴을 두드린다. “뒤에 있는 애들이 도망갈 시간 벌라고.”\n\n돌격병이라는 이름은 공격만 잘해서 붙은 게 아닌 모양이다.`,on(){encMod().attackPct+=3;encMod().socialPct+=5;}},
     {text:`“갈고리가 잡은 상인? 죽이려고 잡은 거 아니야.” 브람이 코웃음 친다. “약이랑 소금 끊긴 게 문제지.”\n\n납치 사건의 목적을 미리 알게 됐다.`,on(){state.flags.bramTradeHint=true;encMod().socialPct+=10;state.stats.secrets++;}}
@@ -1356,6 +1448,9 @@ const TALK_RISKS = {
   forestMerchant:    {safe:3, max:2, social:-7, text:'로벤이 손바닥을 내민다. “정보도 상품이라고 했지?”'},
   eliteVark:         {safe:2, max:2, social:-7, enemyAtk:1, text:'바르크는 대화를 임무 회피로 받아들이기 시작한다.'},
   eliteIsel:         {safe:2, max:2, social:-6, enemyAtk:1, text:'이셀은 장부를 덮고 판단을 끝내려 한다.'},
+  banditSlingerMaren:{safe:2, max:1, social:-7, enemyAtk:1, text:'마렌은 대화를 핑계로 거리를 좁히려 한다고 의심한다.'},
+  banditPorterTor:   {safe:2, max:1, social:-6, enemyAtk:1, text:'토르는 짐을 노리는지 확인하려는 듯 손을 몽둥이 쪽으로 옮긴다.'},
+  banditShieldEnoch: {safe:2, max:1, social:-7, enemyAtk:1, text:'에녹은 더 묻는 말을 통과할 핑계로 받아들이지 않는다.'},
   assaultBram:       {safe:2, max:1, social:-7, enemyAtk:1, text:'브람은 말을 길게 끄는 걸 겁으로 받아들인다.'},
   assaultNera:       {safe:2, max:2, social:-9, enemyAtk:1, text:'네라는 이미 충분히 들었다는 듯 창끈을 조인다.'},
   banditScoutRoyal: {safe:2, max:1, social:-8, enemyAtk:1, text:'정찰병이 더는 임무 이야기를 흘릴 생각이 없어 보인다.'},
@@ -1626,6 +1721,9 @@ function socialChance(enemy,sc) {
   chance+=Number(m.socialPct||0);
   if(state.flags.gangsterTruth && state.sceneId==='gangster') chance+=16;
   if(state.sceneId==='banditScoutRoyal' && state.flags.varkBriefing) chance+=7;
+  if(state.sceneId==='assaultBram'){if(state.flags.marenSpared)chance+=6;if(state.flags.banditSlingerMarenKilled)chance-=6;}
+  if(state.sceneId==='assaultNera'){if(state.flags.enochVouched)chance+=7;if(state.flags.banditShieldEnochKilled)chance-=7;}
+  if(state.sceneId==='banditBossForest'){if(state.flags.torHelped)chance+=4;if(state.flags.banditPorterTorKilled)chance-=5;}
   if(['banditBossRoyal','banditBossForest'].includes(state.sceneId) && state.flags.iselMediation) chance+=6;
   if(['merchantCaptured','officer1Angry'].includes(state.sceneId) && state.flags.bramTradeHint) chance+=10;
   if(['banditBossRoyal','banditBossForest'].includes(state.sceneId)){if(state.flags.neraVouched)chance+=9;if(state.flags.assaultNeraKilled)chance-=9;}
@@ -1651,8 +1749,11 @@ function forestProgressScene(skipMerchant=false){
   // 도망 때문에 이미 끝낸 핵심 사건으로 되감기지 않도록 가장 앞선 안전 지점을 고른다.
   if(state.entered?.friendBridge || state.flags.banditTruce || state.entered?.banditBossForest || state.entered?.banditBossRoyal) return 'friendBridge';
   if(state.entered?.midKnight) return 'banditBossForest';
+  if(state.entered?.assaultNera || state.entered?.banditShieldEnoch) return 'assaultNera';
   if(state.entered?.forestBeforeBoss || state.entered?.guildNovice || state.entered?.guildNoviceAngry) return 'forestBeforeBoss';
+  if(state.entered?.banditPorterTor) return state.flags.officer2Allied?'guildNovice':'forestBeforeBoss';
   if(state.entered?.banditCampLife || state.entered?.officer2 || state.entered?.officer2Angry) return 'banditCampLife';
+  if(state.entered?.assaultBram || state.entered?.banditSlingerMaren) return 'assaultBram';
   if(state.entered?.forestRoad || state.entered?.forestMerchant || skipMerchant) return 'forestRoad';
   return 'forestMerchant';
 }
@@ -1679,11 +1780,14 @@ const ESCAPE_ROUTES = {
   captainRebel:      {to:'rebelRetreat', text:'반란군의 진격에서 이탈해 후퇴로로 빠졌다.', before(){state.flags.rebellionRetreated=true;}},
   kingEnraged:       {to:'rebelRetreat', text:'왕과의 마지막 결판을 포기하고 전장을 이탈했다.', before(){state.flags.rebellionRetreated=true;state.flags.escapedKing=true;}},
   forestMerchant:    {to:'forestRoad', text:'로벤을 지나쳐 숲 안쪽으로 들어갔다.', before(){state.flags.merchantAlive=true;}},
+  banditSlingerMaren:{to:'assaultBram', text:'바위길을 버리고 낮은 수레길로 뛰어내려 마렌의 투석 사거리에서 벗어났다.'},
   assaultBram:       {to:()=>state.flags.merchantAlive?'merchantCaptured':'officer2', text:'브람의 돌진을 피해 더 깊은 숲으로 달아났다.'},
   merchantCaptured:  {to:'officer2', text:'로벤을 남겨두고 도적단의 시야에서 빠져나왔다.', before(){state.flags.merchantAbandoned=true;}},
   officer1Angry:     {to:'officer2', text:'상인을 두고 도망쳐 다음 갈림길까지 달렸다.', before(){state.flags.merchantAbandoned=true;}},
   officer2:          {to:'banditCampLife', text:'돌다리를 돌아 우회해 도적단 야영지 외곽으로 이동했다.'},
   officer2Angry:     {to:'banditCampLife', text:'돌다리를 버리고 숲을 가로질러 야영지 외곽으로 빠졌다.'},
+  banditPorterTor:   {to:()=>state.flags.officer2Allied?'guildNovice':'forestBeforeBoss', text:'토르의 보급길을 피해 본거지 방향의 샛길로 빠졌다.'},
+  banditShieldEnoch: {to:'assaultNera', text:'목책 옆 비탈을 타고 넘어 에녹의 방패선을 우회했다.'},
   assaultNera:       {to:'friendBridge', text:'네라의 관문을 버리고 숲을 빠져나와 오래된 다리까지 달아났다.'},
   guildNovice:       {to:'forestBeforeBoss', text:'교역로를 벗어나 본거지 외곽 숲으로 사라졌다.'},
   guildNoviceAngry:  {to:'forestBeforeBoss', text:'초급 기사의 추격을 피해 본거지 외곽까지 달아났다.'},
@@ -1947,7 +2051,7 @@ function softKillCount(){
 }
 function bloodyMediatorEligible(){
   const soft=softKillCount();
-  const hardKill=state.flags.captainKilled||state.flags.eliteVarkKilled||state.flags.eliteIselKilled||state.flags.officer1Killed||state.flags.officer2Killed||state.flags.assaultBramKilled||state.flags.assaultNeraKilled||state.flags.noviceKilled||state.flags.midKnightKilled||state.flags.banditBossKilled;
+  const hardKill=state.flags.captainKilled||state.flags.eliteVarkKilled||state.flags.eliteIselKilled||state.flags.officer1Killed||state.flags.officer2Killed||state.flags.banditSlingerMarenKilled||state.flags.banditPorterTorKilled||state.flags.banditShieldEnochKilled||state.flags.assaultBramKilled||state.flags.assaultNeraKilled||state.flags.noviceKilled||state.flags.midKnightKilled||state.flags.banditBossKilled;
   return soft>=1 && soft<=3 && !hardKill && !!state.flags.merchantRescuedPeace && !!state.flags.merchantBalancedView && !!state.flags.friendTalkOpen && state.relation.kingdom>=3 && state.relation.bandits>=3 && state.relation.merchants>=3 && (state.stats.socialSuccess||0)>=4 && (state.stats.secrets||0)>=2 && !state.flags.rebel;
 }
 function specialEndingFor(baseName){
@@ -1959,7 +2063,7 @@ function specialEndingFor(baseName){
 }
 function friendEndingCheck(loose=false){
   const missing=[];
-  const coreKills=state.flags.gangsterKilled||state.flags.citizenKilled||state.flags.guardKilled||state.flags.guardResponseKilled||state.flags.captainKilled||state.flags.eliteVarkKilled||state.flags.eliteIselKilled||state.flags.officer1Killed||state.flags.officer2Killed||state.flags.assaultBramKilled||state.flags.assaultNeraKilled||state.flags.noviceKilled||state.flags.midKnightKilled||state.flags.banditBossKilled||state.flags.merchantKilled;
+  const coreKills=state.flags.gangsterKilled||state.flags.citizenKilled||state.flags.guardKilled||state.flags.guardResponseKilled||state.flags.captainKilled||state.flags.eliteVarkKilled||state.flags.eliteIselKilled||state.flags.officer1Killed||state.flags.officer2Killed||state.flags.banditSlingerMarenKilled||state.flags.banditPorterTorKilled||state.flags.banditShieldEnochKilled||state.flags.assaultBramKilled||state.flags.assaultNeraKilled||state.flags.noviceKilled||state.flags.midKnightKilled||state.flags.banditBossKilled||state.flags.merchantKilled;
   if(coreKills)missing.push('핵심 인물 살해 없이 진행');
   if(!state.flags.gangsterPeace)missing.push('빈민가 사건을 화해로 해결');
   if(!state.flags.citizenView)missing.push('왕국 시민의 속사정까지 듣기');
