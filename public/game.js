@@ -250,7 +250,7 @@ const SCENES = {
       const n = bumpTalk('gangster');
       if (n === 1) {
         state.flags.gangsterTruth = true; state.stats.secrets++;
-        toast('진실 발견 · 거지들이 먼저 돈을 훔쳤다.', 'good');
+        toast('거지들이 먼저 돈을 훔쳤다.', 'good');
       } else toast('깡패는 훔친 돈만 돌려받으면 된다고 말한다.');
       render(); save();
     },
@@ -269,7 +269,7 @@ const SCENES = {
     },
     socialFail() {
       state.flags.gangsterAngry = true;
-      damagePlayer(1, false); go('gangsterAngry', '처세 실패 · 깡패가 당신을 밀쳐냈다. HP -1');
+      damagePlayer(1, false); go('gangsterAngry', '깡패가 말을 끊고 거칠게 밀쳐냈다.');
     },
     attackWin() {
       state.flags.gangsterKilled = true; gainGold(20);
@@ -392,7 +392,7 @@ const SCENES = {
     },
     enemyMod(e){ e.atk += state.flags.captainTalkPenalty||0; return e; },
     socialSuccess(){ resolve('social','oldVeteran','그는 당신을 용서하지 않았다. 다만 더 큰 판단을 위해 검을 잠시 거뒀다.'); },
-    socialFail(){ state.flags.captainTalkPenalty=(state.flags.captainTalkPenalty||0)+2; toast('처세 실패 · 친위대장의 분노가 더 커졌다. 공격력 +2','bad'); render(); save(); },
+    socialFail(){ state.flags.captainTalkPenalty=(state.flags.captainTalkPenalty||0)+2; toast('레오른의 표정이 굳었다. 검을 쥔 손에 힘이 들어간다.','bad'); render(); save(); },
     attackWin(){ state.flags.captainKilled=true;state.relation.kingdom-=8;gainGold(80);resolve('attack','lootRoyalShop','친위대장마저 쓰러졌다. 왕궁으로 향하는 길이 열렸다.'); },
     runSuccess(){ handleEscapeSuccess(); }
   }),
@@ -416,7 +416,7 @@ const SCENES = {
       return state.flags.oldGuardIdentity ? [c('검을 내리고 왕을 만나게 해달라고 한다','전설과 싸우지 않는 길.',()=>{state.stats.talkSolved++;resolve('talk','kingAudience','아르벤은 한참 당신을 보다가 왕궁 문을 열어준다.');})] : [];
     },
     socialSuccess(){ resolve('social','kingAudience','아르벤은 당신에게 마지막 기회를 주기로 한다.'); },
-    socialFail(){ state.flags.oldGuardBuff=(state.flags.oldGuardBuff||0)+3; toast('처세 실패 · 아르벤이 당신의 수를 읽었다. 공격력 +3','bad'); render();save(); },
+    socialFail(){ state.flags.oldGuardBuff=(state.flags.oldGuardBuff||0)+3; toast('아르벤은 대답 대신 당신의 자세를 읽는다.','bad'); render();save(); },
     enemyMod(e){ e.atk += state.flags.oldGuardBuff||0; return e; },
     attackWin(){ state.flags.oldGuardKilled=true;gainGold(150);resolve('attack',null,'전설이 무릎을 꿇었다.\n\n왕궁을 지킬 마지막 칼이 사라졌다. 노인은 마지막 숨을 내쉬며 왕궁 쪽을 바라본다.', '지배자'); },
     runSuccess(){ handleEscapeSuccess(); }
@@ -524,7 +524,7 @@ const SCENES = {
     text:`레오른은 뒤에 선 시민들을 한 번 돌아본 뒤 검을 뽑는다.\n\n“여기서부터는 한 발도 못 간다.”`,
     talk(){toast('친위대장은 투항 외의 대답을 듣지 않는다.');},
     socialSuccess(){ state.flags.captainWeakened=true; toast('처세 성공 · 친위대 일부가 동요했다. 친위대장의 공격력 -3','good');render();save(); },
-    socialFail(){ state.flags.captainRebelBuff=(state.flags.captainRebelBuff||0)+2;toast('처세 실패 · 친위대의 사기가 올랐다. 공격력 +2','bad');render();save(); },
+    socialFail(){ state.flags.captainRebelBuff=(state.flags.captainRebelBuff||0)+2;toast('말이 끝나기도 전에 친위대가 대형을 좁힌다.','bad');render();save(); },
     enemyMod(e){ e.atk += (state.flags.captainRebelBuff||0); if(state.flags.captainWeakened)e.atk=Math.max(1,e.atk-3);return e;},
     attackWin(){state.flags.captainKilled=true;gainGold(80);resolve('attack','kingEnraged','친위대장이 쓰러진다. 왕이 직접 전장으로 내려온다.');},
     runSuccess(){ handleEscapeSuccess(); }
@@ -533,9 +533,9 @@ const SCENES = {
   kingEnraged: scene('kingEnraged', {
     chapter:'REBELLION · FINAL', location:'왕궁 앞', art:'kingrage', enemy:'king', socialPenalty:25,
     text:`왕 에드란이 피 묻은 망토를 끌며 계단을 내려온다.\n\n“내 병사와 백성을 죽이고도 말이 필요하다고 생각하느냐?”\n\n분노한 왕에게 남은 것은 결판뿐이다.`,
-    talk(){state.flags.kingBuff=(state.flags.kingBuff||0)+2;toast('왕의 분노만 키웠다. 공격력 +2','bad');render();save();},
+    talk(){state.flags.kingBuff=(state.flags.kingBuff||0)+2;toast('왕의 눈빛이 더 차가워졌다.','bad');render();save();},
     socialSuccess(){state.flags.kingShaken=true;toast('처세 성공 · 왕의 판단이 흔들렸다. 공격력 -2','good');render();save();},
-    socialFail(){state.flags.kingBuff=(state.flags.kingBuff||0)+3;toast('처세 실패 · 왕의 공격력 +3','bad');render();save();},
+    socialFail(){state.flags.kingBuff=(state.flags.kingBuff||0)+3;toast('말은 닿지 않았다. 왕이 검을 바로 세운다.','bad');render();save();},
     enemyMod(e){e.atk+=(state.flags.kingBuff||0);if(state.flags.kingShaken)e.atk=Math.max(1,e.atk-2);return e;},
     attackWin(){gainGold(180);resolve('attack',null,'왕이 쓰러졌다.\n\n성문 위의 깃발이 천천히 내려가고, 반란군의 함성이 왕궁을 덮는다.', '반란');},
     runSuccess(){ handleEscapeSuccess(); }
@@ -659,7 +659,7 @@ const SCENES = {
   midKnight: scene('midKnight', {
     chapter:'MERCHANT GUILD · PURSUER', location:'도적단 본거지 앞', art:'midknight', enemy:'midKnight', socialDisabled:true,
     text:`검은 망토의 기사가 길 한가운데 서 있다.\n방패에는 상인협회의 은빛 문장이 박혀 있다.\n\n“초급 기사를 죽인 자가 너구나.”`,
-    talk(){state.flags.midKnightBuff=(state.flags.midKnightBuff||0)+3;toast('대화를 시도한 틈을 읽혔다. 중급 기사 공격력 +3','bad');render();save();},
+    talk(){state.flags.midKnightBuff=(state.flags.midKnightBuff||0)+3;toast('말을 건 사이, 중급 기사는 당신의 호흡과 발을 읽었다.','bad');render();save();},
     enemyMod(e){e.atk+=(state.flags.midKnightBuff||0);return e;},
     attackWin(){state.flags.midKnightKilled=true;state.relation.merchants-=4;gainGold(95);resolve('attack','banditBossForest','중급 기사까지 쓰러졌다. 상인협회와의 관계는 돌이킬 수 없다.');},
     runSuccess(){ handleEscapeSuccess(); }
@@ -699,7 +699,7 @@ const SCENES = {
       c('왕국과 도적단의 협상을 주선한다',friendEndingHint(true),()=>{
         const check=friendEndingCheck(true);
         if(canFriendEnding(true)) finish('모두와 친구');
-        else queueOutcome(`협상 조건이 아직 부족하다.\n\n${friendEndingHint(true)}\n\n서로를 한 번 살려둔 것만으로는 신뢰가 생기지 않는다. 왕국·도적단·상인 모두에게 실제로 쌓아둔 근거가 필요하다.`,null);
+        else queueOutcome(`${friendEndingHint(true)}\n\n다리 양쪽의 사람들은 아직 무기를 내려놓지 않는다.`,null);
       }),
       !state.flags.rebellionRetreated && c('도적단에 돌아가 왕국을 공격한다','반란으로 끝을 본다.',()=>{state.flags.rebel=true;go('rebelMarch');})
     ].filter(Boolean)
@@ -1057,44 +1057,36 @@ function effectiveAttack(){return Math.max(0,Number(state.p?.atk||0)+Number(encM
 function effectiveSocial(){return Math.max(0,Number(state.p?.social||0)+Number(encMod().socialStat||0));}
 function talkProfile(){return TALK_PROFILES[state.sceneId]||(state.sceneId==='banditBossRoyal'?TALK_PROFILES.banditBossForest:null);}
 function talkLabel(){
-  const p=talkProfile(); if(!p)return '상대와 이야기한다';
+  const p=talkProfile(); if(!p)return '말을 건다';
   const n=state.talkCount[state.sceneId]||0, risk=riskProfile();
   if(n>=p.steps.length){
     const rr=state.talkRisk[state.sceneId]||0;
-    if(risk && rr<(risk.max||2)) return `⚠ 더 캐묻기 · 대화 리스크`;
-    return `대화 종료 · ${p.steps.length}/${p.steps.length}`;
+    if(risk && rr<(risk.max||2)) return '더 묻는다';
+    return '더 할 말이 없다';
   }
   const risky=risk && (n+1)>Number(risk.safe||0);
-  return `${risky?'⚠ ':''}대화 ${n+1}/${p.steps.length}${risky?' · 리스크 있음':' · 말에 따라 판정 변화'}`;
+  return risky ? '조심스럽게 더 묻는다' : '대화';
 }
 function handleTalk(sc){
   const p=talkProfile();
-  if(!p){ if(sc.talk)sc.talk(); else toast('상대는 대화를 이어갈 생각이 없어 보인다.'); return; }
+  if(!p){ if(sc.talk)sc.talk(); else toast('상대는 더 말할 생각이 없어 보인다.'); return; }
   const done=state.talkCount[state.sceneId]||0;
-  const before={a:attackChance(getEnemy(sc)),s:socialChance(getEnemy(sc),sc),r:runChance(getEnemy(sc))};
   if(done>=p.steps.length){
     const risk=applyTalkRisk(true);
-    if(!risk){queueOutcome(p.end||'더 이어갈 대화가 없다.',null);return;}
+    if(!risk){ queueOutcome(p.end||'더 이어갈 말이 없다.',null); return; }
     state.stats.talkInteractions=(state.stats.talkInteractions||0)+1;
-    const enemy=getEnemy(sc), after={a:attackChance(enemy),s:socialChance(enemy,sc),r:runChance(enemy)};
-    const changes=[];
-    if(after.a!==before.a)changes.push(`공격 ${before.a}% → ${after.a}%`);
-    if(!sc.socialDisabled&&after.s!==before.s)changes.push(`처세 ${before.s}% → ${after.s}%`);
-    if(after.r!==before.r)changes.push(`도망 ${before.r}% → ${after.r}%`);
-    queueOutcome(`[과대화 · 경계 ${risk.level}]\n${risk.text}\n\n${p.end||'이제 상대는 결정을 요구한다.'}${changes.length?`\n\n[리스크] ${changes.join(' · ')}`:''}`,null);
+    queueOutcome(`${risk.text}
+
+${p.end||'이제 상대는 결정을 요구한다.'}`,null);
     save(); return;
   }
   const step=p.steps[done];
   bumpTalk(state.sceneId); state.stats.talkInteractions=(state.stats.talkInteractions||0)+1;
   if(step.on)step.on();
   const risk=applyTalkRisk(false);
-  const enemy=getEnemy(sc);
-  const after={a:attackChance(enemy),s:socialChance(enemy,sc),r:runChance(enemy)};
-  const changes=[];
-  if(after.a!==before.a)changes.push(`공격 ${before.a}% → ${after.a}%`);
-  if(!sc.socialDisabled&&after.s!==before.s)changes.push(`처세 ${before.s}% → ${after.s}%`);
-  if(after.r!==before.r)changes.push(`도망 ${before.r}% → ${after.r}%`);
-  queueOutcome(`[대화 ${done+1}/${p.steps.length}]\n${step.text}${risk?`\n\n[대화 리스크] ${risk.text}`:''}${changes.length?`\n\n[판정 변화] ${changes.join(' · ')}`:''}`,null);
+  queueOutcome(`${step.text}${risk?`
+
+${risk.text}`:''}`,null);
 }
 
 const DIALOGUE_EXIT_CHOICES = {
@@ -1104,32 +1096,17 @@ const DIALOGUE_EXIT_CHOICES = {
   merchantCaptured(){
     if((state.talkCount.merchantCaptured||0)<2||!state.flags.merchantBalancedView)return [];
     const cost=state.classId==='noble'?6:12;
-    return [c(`갈고리와 로벤의 거래를 중재한다`, `골드 ${cost} · 양쪽 체면을 살려 로벤을 풀어준다. 모두와 친구 루트의 핵심 조건.`,()=>{
+    return [c(`갈고리와 로벤의 거래를 중재한다 · ◆ ${cost}`, '',()=>{
       if(!spendGold(cost)){queueOutcome(`중재안을 내놓았지만 거래를 메울 골드가 부족하다. 필요한 골드: ${cost}`,null);return;}
       state.flags.merchantAlive=true;state.flags.merchantRescuedPeace=true;state.flags.officer1Allied=true;
       state.relation.bandits+=2;state.relation.merchants+=2;state.stats.talkSolved++;
-      resolve('talk','officer2',`당신이 손실 일부를 메우고, 로벤이 겨울 물자를 다시 공급하는 조건으로 거래를 묶었다.\n\n갈고리는 칼을 내리고 로벤의 밧줄을 끊는다. 로벤은 투덜거리지만 약속을 부정하지 않는다.\n\n골드 -${cost} · 도적단 신뢰 +2 · 상인 신뢰 +2`);
+      resolve('talk','officer2',`당신이 손실 일부를 메우고, 로벤이 겨울 물자를 다시 공급하는 조건으로 거래를 묶었다.\n\n갈고리는 칼을 내리고 로벤의 밧줄을 끊는다. 로벤은 투덜거리지만 약속을 부정하지 않는다.\n\n당신이 낸 돈만큼, 두 사람 사이의 칼날도 조금 멀어졌다.`);
     })];
   },
   guildNovice(){if((state.talkCount.guildNovice||0)<2||!state.flags.merchantAlive||state.flags.merchantKilled)return [];return [c('로벤에게 확인하라고 한다','살려둔 상인이 당신의 말에 신빙성을 더한다.',()=>{state.stats.talkSolved++;state.relation.merchants+=2;resolve('talk','forestBeforeBoss','초급 기사는 한참 망설이다 검을 내린다.\n\n“로벤이 살아 있다면 확인하겠다. 하지만 도적단 편에 완전히 서지는 마.”\n\n싸움 없이 교역로를 통과했다.');})];}
 };
 function dialogueExitChoices(){const f=DIALOGUE_EXIT_CHOICES[state.sceneId];return f?f():[];}
-function encounterStatusHtml(enemy,sc){
-  const m=encMod(), chips=[];
-  const t=state.talkCount[state.sceneId]||0, p=talkProfile();
-  if(p)chips.push(`<span class="encounter-chip info">대화 ${Math.min(t,p.steps.length)}/${p.steps.length}</span>`);
-  const atkTier=attackTierBonus(); if(atkTier)chips.push(`<span class="encounter-chip good">고공격 보너스 +${atkTier}%</span>`);
-  const socialLow=lowSocialPenalty(); if(socialLow)chips.push(`<span class="encounter-chip bad">저처세 패널티 -${socialLow}%</span>`);
-  const tr=state.talkRisk[state.sceneId]||0; if(tr)chips.push(`<span class="encounter-chip bad">대화 경계 ${tr}</span>`);
-  if(m.attackStat||m.attackPct)chips.push(`<span class="encounter-chip good">공격 보정 ${m.attackStat?`+${m.attackStat} 능력`:''}${m.attackPct?` ${m.attackPct>0?'+':''}${m.attackPct}%`:''}</span>`);
-  if(m.socialStat||m.socialPct)chips.push(`<span class="encounter-chip ${m.socialPct<0?'bad':'good'}">처세 보정 ${m.socialStat?`+${m.socialStat} 능력`:''}${m.socialPct?` ${m.socialPct>0?'+':''}${m.socialPct}%`:''}</span>`);
-  if(m.speed)chips.push(`<span class="encounter-chip good">속도 ${m.speed>0?'+':''}${m.speed}</span>`);
-  if(m.enemyAtk<0)chips.push(`<span class="encounter-chip good">적 공격 ${m.enemyAtk}</span>`);
-  if(m.enemyAtk>0)chips.push(`<span class="encounter-chip bad">적 공격 +${m.enemyAtk}</span>`);
-  if(m.comebackMin<6)chips.push(`<span class="encounter-chip good">역전 ${m.comebackMin}~6</span>`);
-  if(m.revealed)chips.push(`<span class="encounter-chip info">약점 관찰됨</span>`);
-  return chips.length?`<div class="encounter-status">${chips.join('')}</div>`:'';
-}
+function encounterStatusHtml(){ return ''; }
 
 // ---------- Rendering / UI ----------
 const $ = (id) => document.getElementById(id);
@@ -1179,9 +1156,9 @@ function render() {
     $('enemyName').textContent = enemy.name;
     $('enemyRank').textContent = enemy.rank || '';
     $('enemyStats').innerHTML = `체력 ${enemy.hp} · 공격 ${enemy.atk} · 처세 ${enemy.social} · 속도 ${enemy.speed}${encounterStatusHtml(enemy,sc)}`;
-    $('attackInfo').textContent = `예상 승률 ${attackChance(enemy)}% · 공격하면 전투 돌입`;
+    $('attackInfo').textContent = `승률 ${attackChance(enemy)}%`;
     $('talkInfo').textContent=talkLabel();
-    $('socialInfo').textContent = sc.socialDisabled ? '사용 불가' : state.socialUsed[state.sceneId] ? '이미 시도함' : `성공률 ${socialChance(enemy,sc)}%`;
+    $('socialInfo').textContent = sc.socialDisabled ? '통하지 않는다' : state.socialUsed[state.sceneId] ? '이미 시도했다' : `성공 ${socialChance(enemy,sc)}%`;
     const rc = runChance(enemy);
     const runAlreadyUsed=!!state.escapeAttempted;
     $('runInfo').textContent = runLabel(enemy, rc);
@@ -1200,9 +1177,9 @@ function render() {
   $('choiceArea').classList.toggle('hidden', waiting);
   if (enemy) $('actionGrid').classList.toggle('hidden', waiting);
   $('encounterTools').classList.toggle('hidden', !enemy || waiting);
-  if(enemy){const usable=state.inventory.filter(n=>ITEMS[n]?.encounter||ITEMS[n]?.heal||ITEMS[n]?.persistent).length;$('encounterItemInfo').textContent=usable?`사용 가능 ${usable}개 · 사용 후 판정 즉시 갱신`:'사용 가능한 물품 없음';}
+  if(enemy){const usable=state.inventory.filter(n=>ITEMS[n]?.encounter||ITEMS[n]?.heal||ITEMS[n]?.persistent).length;$('encounterItemInfo').textContent=usable?`${usable}개 보유`:'사용할 물품이 없다';}
   $('sceneCard').classList.toggle('deep-dialogue', !!talkProfile() && (state.talkCount[state.sceneId]||0)>0);
-  $('choiceArea').innerHTML = choices.filter(Boolean).map((x,i)=>`<button class="choice-btn" data-choice="${i}"><b>${escapeHtml(x.label)}</b>${x.note?`<small>${escapeHtml(x.note)}</small>`:''}</button>`).join('');
+  $('choiceArea').innerHTML = choices.filter(Boolean).map((x,i)=>`<button class="choice-btn" data-choice="${i}"><b>${escapeHtml(x.label)}</b></button>`).join('');
   [...document.querySelectorAll('[data-choice]')].forEach(btn => {
     btn.onclick = () => { if(!state.pending) choices[Number(btn.dataset.choice)].fn(); };
   });
@@ -1279,11 +1256,10 @@ function runChance(enemy) {
 }
 
 function runLabel(enemy, chance) {
-  const mine=effectiveSpeed(), foe=Number(enemy?.speed||0);
-  if(state.escapeAttempted) return `이번 조우에서 이미 시도함 · 속도 ${mine} : ${foe}`;
-  if(chance===100) return `속도 ${mine} > ${foe} · 반드시 성공`;
-  if(chance===0) return `속도 ${mine} ≤ ${foe} · 도망 불가`;
-  return `도둑 특성 · ${chance}% · 1회 (${mine} : ${foe})`;
+  if(state.escapeAttempted) return '이미 시도했다';
+  if(chance===100) return '반드시 성공';
+  if(chance===0) return '도망 불가';
+  return `성공 ${chance}%`;
 }
 
 function forestProgressScene(skipMerchant=false){
@@ -1330,14 +1306,14 @@ function handleEscapeSuccess(){
   const route=ESCAPE_ROUTES[state.sceneId];
   if(!route){
     console.error('[ESCAPE] missing route for',state.sceneId);
-    queueOutcome('도망에는 성공했지만 이동 경로를 찾지 못했다. 이 장면은 안전하게 유지된다.',null);
+    queueOutcome('길이 끊겼다. 잠시 숨을 고른다.',null);
     return;
   }
   if(route.before) route.before();
   const target=typeof route.to==='function'?route.to():route.to;
   if(!target || !SCENES[target] || target===state.sceneId){
     console.error('[ESCAPE] invalid target',state.sceneId,target);
-    queueOutcome('도망 경로가 꼬이는 것을 막기 위해 현재 장면에서 멈췄다.',null);
+    queueOutcome('앞길이 막혔다. 더 나아갈 수 없다.',null);
     return;
   }
   state.flags.lastEscapeFrom=state.sceneId;
@@ -1484,18 +1460,18 @@ function finishBattleWin(sc,enemy,chance,comeback){
   if(dmg>0){state.p.hp-=dmg;floatText(`HP -${dmg}`);}
   state.stats.kills++; if(enemy.elite)state.stats.eliteKills++;
   hideBattleOverlay(); battleBusy=false;
-  const prefix=comeback?`[역전승] 주사위가 승부를 뒤집었다. 패배 직전 전세를 뒤집었다.${dmg?`\n체력 ${dmg}을 잃었다.`:''}\n\n`:'';
+  const prefix=comeback?`주사위가 6에 멈췄다. 끝났던 승부가 뒤집혔다.${dmg?`\n체력 ${dmg}을 잃었다.`:''}\n\n`:'';
   if(sc.attackWin){
     if(comeback){state.lastToast=prefix.trim();}
     sc.attackWin();
-    if(comeback && state.lastToast && !state.lastToast.startsWith('[역전승]')) state.lastToast=prefix+state.lastToast;
+    if(comeback && state.lastToast && !state.lastToast.startsWith('주사위가 6에 멈췄다.')) state.lastToast=prefix+state.lastToast;
   } else resolve('attack',null,prefix+'전투에서 승리했다.');
   save(); render();
 }
 
 function resolve(method,next,msg,ending=null) {
   state.stats.progress++;
-  if(state.classId==='knight' && method!=='social' && method!=='run') { state.p.atk++; msg += '\n\n[기사] 신조 유지 · 공격력 +1'; floatText('공격력 +1'); }
+  if(state.classId==='knight' && method!=='social' && method!=='run') { state.p.atk++; msg += '\n\n물러서지 않았다. 칼끝이 조금 더 단단해졌다. 공격력 +1'; floatText('공격력 +1'); }
   queueOutcome(msg||'행동의 결과가 정해졌다.', next, ending);
 }
 function queueOutcome(msg,next=null,ending=null) {
@@ -1567,9 +1543,16 @@ function friendEndingCheck(loose=false){
 function canFriendEnding(loose=false){const c=friendEndingCheck(loose);return c.ok||bloodyMediatorEligible();}
 function friendEndingHint(loose=false){
   const c=friendEndingCheck(loose);
-  if(c.ok)return '모든 조건을 갖췄다. 양쪽이 당신의 중재를 들을 준비가 됐다.';
-  if(bloodyMediatorEligible())return '완전한 우정은 이미 불가능하다. 하지만 피 묻은 손으로도 불완전한 평화를 중재할 수 있다.';
-  return '아직 부족한 조건\n· '+c.missing.slice(0,5).join('\n· ')+(c.missing.length>5?`\n· 외 ${c.missing.length-5}개`:'');
+  if(c.ok)return '양쪽 모두 당신의 말을 들을 준비가 되어 있다.';
+  if(bloodyMediatorEligible())return '완전한 우정은 멀어졌지만, 아직 전쟁을 멈출 길은 남아 있다.';
+  const hints=[];
+  if(!state.flags.gangsterPeace||!state.flags.citizenView) hints.push('왕국에서 풀지 못한 매듭이 남아 있다.');
+  if(!state.flags.merchantAlive||state.flags.merchantAbandoned||!state.flags.merchantRescuedPeace) hints.push('숲의 상인과 도적 사이에 빚이 남아 있다.');
+  if(!state.flags.friendTalkOpen) hints.push('세리아는 아직 당신을 믿지 않는다.');
+  if(state.relation.kingdom<4||state.relation.bandits<4||state.relation.merchants<3) hints.push('어느 쪽도 당신에게 등을 맡길 만큼 믿지는 않는다.');
+  if((state.stats.overTalks||0)>2) hints.push('말이 너무 많았다. 몇 사람은 이미 마음을 닫았다.');
+  if(state.flags.rebel) hints.push('이미 한쪽 깃발 아래 너무 멀리 와 버렸다.');
+  return hints.slice(0,2).join('\n') || '아직 때가 아니다.';
 }
 
 function finish(name) {
@@ -1585,7 +1568,7 @@ function finish(name) {
   $('endKind').textContent=e.kind;$('endTitle').textContent=name;$('endEpilogue').textContent=e.epilogue;
   $('playStyle').textContent=`플레이 스타일 · ${playStyle()}`;
   $('endScore').textContent=clientScore().toLocaleString();
-  const deathBlock=e.bad&&state.flags.deathReason?`<b>최후의 순간</b> · ${escapeHtml(state.flags.deathReason)}<br><b>사망 장소</b> · ${escapeHtml(SCENES[state.flags.deathScene]?.location||'알 수 없는 장소')}<br><b>배드엔딩 보정</b> · +${Number(e.bonus||0).toLocaleString()}<br><br>`:'';
+  const deathBlock=e.bad&&state.flags.deathReason?`<b>최후의 순간</b> · ${escapeHtml(state.flags.deathReason)}<br><b>사망 장소</b> · ${escapeHtml(SCENES[state.flags.deathScene]?.location||'알 수 없는 장소')}<br><br><br>`:'';
   $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 과대화 <b>${state.stats.overTalks||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>`;
   resetRankSubmitUI();
   fx(e.bad?'bad':'good');showScreen('endScreen');
@@ -1609,17 +1592,17 @@ function clientScore(){const s=state.stats,b=Number(endingProfile(s.ending)?.bon
 
 // ---------- Inventory / shop ----------
 const ITEMS = {
-  '붕대':{heal:3,kind:'회복',desc:'체력 3 회복. 조우 중에도 사용 가능.'},
-  '고급 붕대':{heal:5,kind:'회복',desc:'체력 5 회복. 조우 중에도 사용 가능.'},
+  '붕대':{heal:3,kind:'회복',desc:'체력 3 회복.'},
+  '고급 붕대':{heal:5,kind:'회복',desc:'체력 5 회복.'},
   '상인의 물약':{heal:999,kind:'회복',desc:'체력을 완전히 회복한다.'},
   '철제 부적':{persistent:true,kind:'영구',desc:'사용 즉시 최대 체력 +2.',apply(){state.p.maxHp+=2;state.p.hp+=2;floatText('최대 HP +2');}},
-  '강심제':{encounter:true,kind:'조우',desc:'현재 조우에서 공격력 +2.',apply(m){m.attackStat=clamp((m.attackStat||0)+2,0,6);}},
-  '은빛 브로치':{encounter:true,kind:'조우',desc:'현재 조우에서 처세 +2.',apply(m){m.socialStat=clamp((m.socialStat||0)+2,0,6);}},
-  '경량 장화끈':{encounter:true,kind:'조우',desc:'현재 조우에서 속도 +2. 도망 판정도 즉시 변한다.',apply(m){m.speed=clamp((m.speed||0)+2,0,8);}},
-  '연막탄':{encounter:true,kind:'조우',desc:'현재 조우에서 속도 +5. 자동 도주는 아니며 기존 속도 규칙을 따른다.',apply(m){m.speed=clamp((m.speed||0)+5,0,10);}},
+  '강심제':{encounter:true,kind:'조우',desc:'공격력 +2.',apply(m){m.attackStat=clamp((m.attackStat||0)+2,0,6);}},
+  '은빛 브로치':{encounter:true,kind:'조우',desc:'처세 +2.',apply(m){m.socialStat=clamp((m.socialStat||0)+2,0,6);}},
+  '경량 장화끈':{encounter:true,kind:'조우',desc:'속도 +2.',apply(m){m.speed=clamp((m.speed||0)+2,0,8);}},
+  '연막탄':{encounter:true,kind:'조우',desc:'속도 +5.',apply(m){m.speed=clamp((m.speed||0)+5,0,10);}},
   '독병':{encounter:true,kind:'조우',desc:'상대의 음료나 상처에 독을 묻힌다. 현재 조우에서 적 공격력 -3.',apply(m){m.enemyAtk=clamp((m.enemyAtk||0)-3,-8,8);}},
   '관찰자의 렌즈':{encounter:true,kind:'조우',desc:'상대의 약점을 읽어 현재 조우 공격 승률 +10%.',apply(m){m.attackPct=clamp((m.attackPct||0)+10,-30,35);m.revealed=true;}},
-  '행운의 동전':{encounter:true,kind:'조우',desc:'이번 조우의 역전 주사위가 5~6에서 성공한다.',apply(m){m.comebackMin=Math.min(m.comebackMin||6,5);}},
+  '행운의 동전':{encounter:true,kind:'조우',desc:'역전 주사위 5~6 성공.',apply(m){m.comebackMin=Math.min(m.comebackMin||6,5);}},
   '뇌물 봉투':{encounter:true,kind:'조우',desc:'상대가 돈에 흔들릴 여지를 만든다. 현재 조우 처세 성공률 +20%.',apply(m){m.socialPct=clamp((m.socialPct||0)+20,-30,40);}}
 };
 const SHOP = [
@@ -1629,13 +1612,13 @@ const SHOP = [
   {name:'숫돌',cost:26,desc:'공격력 영구 +1',buy(){state.p.atk++;floatText('공격력 +1');}}
 ];
 function openShop(){
-  $('modal').innerHTML=`<h2>상점</h2><div class="modal-sub">보유 골드 ◆ ${state.p.gold} · 조우용 물품은 상대와 마주친 뒤 사용할 수 있다.</div>${SHOP.map((x,i)=>`<div class="shop-row"><div class="item-copy"><b>${x.name}${ITEMS[x.name]?`<span class="item-kind">${ITEMS[x.name].kind}</span>`:''}</b><small>${x.desc||ITEMS[x.name]?.desc||''}</small></div><button class="shop-btn" data-buy="${i}">◆ ${x.cost}</button></div>`).join('')}<button class="btn modal-close" onclick="closeModal()">나간다</button>`;
+  $('modal').innerHTML=`<h2>상점</h2><div class="modal-sub">◆ ${state.p.gold}</div>${SHOP.map((x,i)=>`<div class="shop-row"><div class="item-copy"><b>${x.name}${ITEMS[x.name]?`<span class="item-kind">${ITEMS[x.name].kind}</span>`:''}</b><small>${x.desc||ITEMS[x.name]?.desc||''}</small></div><button class="shop-btn" data-buy="${i}">◆ ${x.cost}</button></div>`).join('')}<button class="btn modal-close" onclick="closeModal()">나간다</button>`;
   showModal();document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const x=SHOP[Number(b.dataset.buy)];if(!spendGold(x.cost)){toast('골드가 부족하다.','bad');return;}if(x.buy)x.buy();else addItem(x.name);save();openShop();render();});
 }
 function inventoryCounts(){const counts={};for(const x of state.inventory)counts[x]=(counts[x]||0)+1;return counts;}
 function openBag(){
   const rows=Object.entries(inventoryCounts());
-  $('modal').innerHTML=`<h2>가방</h2><div class="modal-sub">회복/영구 물품은 여기서 사용. 조우 물품은 적과 마주친 화면의 ‘조우 아이템’에서 사용한다.</div>${rows.length?rows.map(([nm,count])=>{const it=ITEMS[nm];const can=!!(it?.heal||it?.persistent);return `<div class="bag-row ${can?'':'item-disabled'}"><div class="item-copy"><b>${nm} × ${count}${it?`<span class="item-kind">${it.kind}</span>`:''}</b><small>${itemDesc(nm)}</small></div><button class="shop-btn" data-use="${escapeAttr(nm)}" ${can?'':'disabled'}>${can?'사용':'조우용'}</button></div>`}).join(''):'<p class="modal-sub">아무것도 없다.</p>'}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;
+  $('modal').innerHTML=`<h2>가방</h2>${rows.length?rows.map(([nm,count])=>{const it=ITEMS[nm];const can=!!(it?.heal||it?.persistent);return `<div class="bag-row ${can?'':'item-disabled'}"><div class="item-copy"><b>${nm} × ${count}${it?`<span class="item-kind">${it.kind}</span>`:''}</b><small>${itemDesc(nm)}</small></div><button class="shop-btn" data-use="${escapeAttr(nm)}" ${can?'':'disabled'}>${can?'사용':'조우용'}</button></div>`}).join(''):'<p class="modal-sub">아무것도 없다.</p>'}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;
   showModal();document.querySelectorAll('[data-use]').forEach(b=>b.onclick=()=>useItem(b.dataset.use,false));
 }
 function openEncounterItems(){
@@ -1643,7 +1626,7 @@ function openEncounterItems(){
   const sc=SCENES[state.sceneId],enemy=getEnemy(sc);if(!enemy)return;
   const rows=Object.entries(inventoryCounts()).filter(([nm])=>{const it=ITEMS[nm];return it&&(it.encounter||it.heal||it.persistent);});
   const m=encMod();
-  $('modal').innerHTML=`<h2>조우 아이템</h2><div class="modal-sub">${escapeHtml(enemy.name)}과 마주친 상태 · 아이템 사용 후 승률과 판정이 즉시 바뀐다. 공격을 시작하면 더 이상 사용할 수 없다.</div>${rows.length?rows.map(([nm,count])=>{const it=ITEMS[nm];return `<div class="bag-row encounter-usable"><div class="item-copy"><b>${nm} × ${count}<span class="item-kind">${it.kind}</span></b><small>${it.desc}</small></div><button class="shop-btn" data-enc-use="${escapeAttr(nm)}">사용</button></div>`}).join(''):'<p class="modal-sub">이 조우에서 사용할 물품이 없다.</p>'}<div class="modal-sub">현재 보정 · 공격 ${m.attackPct>=0?'+':''}${m.attackPct}% / 임시 공격 ${m.attackStat||0} · 처세 ${m.socialPct>=0?'+':''}${m.socialPct}% / 임시 처세 ${m.socialStat||0} · 속도 +${m.speed||0} · 적 공격 ${m.enemyAtk>=0?'+':''}${m.enemyAtk||0} · 역전 ${m.comebackMin||6}~6</div><button class="btn modal-close" onclick="closeModal()">닫기</button>`;
+  $('modal').innerHTML=`<h2>조우 아이템</h2><div class="modal-sub">${escapeHtml(enemy.name)}</div>${rows.length?rows.map(([nm,count])=>{const it=ITEMS[nm];return `<div class="bag-row encounter-usable"><div class="item-copy"><b>${nm} × ${count}<span class="item-kind">${it.kind}</span></b><small>${it.desc}</small></div><button class="shop-btn" data-enc-use="${escapeAttr(nm)}">사용</button></div>`}).join(''):'<p class="modal-sub">이 조우에서 사용할 물품이 없다.</p>'}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;
   showModal();document.querySelectorAll('[data-enc-use]').forEach(b=>b.onclick=()=>useItem(b.dataset.encUse,true));
 }
 function itemDesc(nm){return ITEMS[nm]?.desc||'특수 물품';}

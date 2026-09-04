@@ -15,10 +15,14 @@ const SUPABASE_KEY_IS_NEW = SUPABASE_KEY.startsWith('sb_secret_');
 const CLOUD_CONFIGURED = !!(SUPABASE_URL && SUPABASE_KEY);
 const supabase = CLOUD_CONFIGURED ? createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { autoRefreshToken:false, persistSession:false, detectSessionInUrl:false },
-  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.5' } }
+  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.6' } }
 }) : null;
 
 app.use(express.json({ limit: '256kb' }));
+app.use((req,res,next)=>{
+  if(req.path==='/'||/\.(?:js|css|html)$/.test(req.path)) res.set('Cache-Control','no-store, max-age=0');
+  next();
+});
 app.use(express.static(path.join(__dirname, 'public')));
 
 const ENDING_BONUS = {
@@ -445,11 +449,11 @@ app.post('/api/score', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.5' });
+  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.6' });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n몰락자 Normal Mode v0.9.5`);
+  console.log(`\n몰락자 Normal Mode v0.9.6`);
   console.log(`http://localhost:${PORT}`);
   console.log(`랭킹 설정: ${CLOUD_CONFIGURED ? 'Supabase 환경변수 있음 (실연결은 /api/storage에서 검증)' : '로컬 파일'}\n`);
 });
