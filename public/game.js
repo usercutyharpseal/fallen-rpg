@@ -4,7 +4,7 @@ const SAVE_KEY = 'fallen_normal_v08';
 const PLAYER_ID_KEY = 'fallen_player_id';
 const PENDING_KEY = 'fallen_pending_scores';
 const META_KEY = 'fallen_meta_v1';
-const GAME_VERSION = 99;
+const GAME_VERSION = 101;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, necromancer:3, dictator:5 };
 function loadMeta(){
@@ -41,6 +41,11 @@ const CLASSES = {
     passive: '잡을 수 있다면 잡아봐',
     desc: '상대보다 느려도 33~50% 확률로 도망칠 수 있다.'
   },
+  merchant: {
+    name: '상인', hp: 6, atk: 4, social: 4, speed: 4, unlocked: true,
+    passive: '장사꾼의 재능',
+    desc: '새로운 조우마다 최대 체력만큼 골드를 얻고, 상점 가격이 25% 저렴해진다.'
+  },
   spellsword: {
     name: '마검사', hp: 6, atk: 13, social: 0, speed: 8, unlocked: false,
     passive: '파괴만을 위한 생명', desc: '처세를 사용할 수 없다. 적을 쓰러뜨리면 최대 체력의 20%를 회복한다.'
@@ -63,7 +68,7 @@ const ENEMIES = {
   captain: { name:'친위대장 레오른', hp:18, atk:14, social:18, speed:9, gold:80, rank:'매우 강함', elite:true },
   eliteVark: { name:'엘리트 기사 바르크', hp:15, atk:12, social:12, speed:8, gold:62, rank:'엘리트 기사', elite:true },
   eliteIsel: { name:'엘리트 기사 이셀', hp:16, atk:13, social:16, speed:9, gold:68, rank:'엘리트 기사', elite:true },
-  oldGuard: { name:'늙은 노인', hp:28, atk:20, social:24, speed:8, gold:150, rank:'전설', elite:true },
+  oldGuard: { name:'늙은 노인', hp:34, atk:24, social:28, speed:9, gold:175, rank:'전설', elite:true },
   banditScout: { name:'도적단 정찰병', hp:7, atk:6, social:6, speed:8, gold:24, rank:'보통' },
   assaultBram: { name:'도적단 돌격병 브람', hp:10, atk:9, social:7, speed:9, gold:36, rank:'돌격병' },
   assaultNera: { name:'도적단 돌격병 네라', hp:11, atk:10, social:10, speed:10, gold:44, rank:'돌격병' },
@@ -71,7 +76,7 @@ const ENEMIES = {
   banditOfficer2: { name:'도적단 간부 · 붉은 모자', hp:13, atk:10, social:11, speed:9, gold:52, rank:'강함', elite:true },
   noviceKnight: { name:'상인협회 초급 기사', hp:10, atk:8, social:9, speed:7, gold:42, rank:'보통' },
   midKnight: { name:'상인협회 중급 기사', hp:21, atk:16, social:23, speed:9, gold:95, rank:'매우 강함', elite:true },
-  banditBoss: { name:'도적단 두목 세리아', hp:17, atk:12, social:17, speed:10, gold:110, rank:'두목', elite:true },
+  banditBoss: { name:'도적단 두목 세리아', hp:19, atk:14, social:19, speed:10, gold:125, rank:'두목', elite:true },
   king: { name:'격분한 왕 에드란', hp:22, atk:17, social:25, speed:9, gold:180, rank:'왕', elite:true }
 };
 
@@ -79,11 +84,11 @@ const ENDINGS = {
   'BAD END': { icon:'†', kind:'BAD END', bonus:0, epilogue:'당신의 여정은 여기서 끝났다.\n하지만 실패조차 하나의 기록으로 남는다.' },
   '명예 회복': { icon:'⚜', kind:'NORMAL END', bonus:5000, epilogue:'도적단의 깃발이 쓰러졌다.\n한때 쫓겨났던 당신의 이름은 다시 사람들의 입에 오르기 시작했다.' },
   '반란': { icon:'⚔', kind:'HARD END', bonus:10000, epilogue:'왕의 분노도 왕국의 성벽도 끝내 당신들을 막지 못했다.\n새로운 질서가 피와 함성 속에서 시작된다.' },
-  '모두와 친구': { icon:'◇', kind:'SECRET END', bonus:18000, epilogue:'칼을 뽑지 않고도 바뀌는 것이 있었다.\n왕국과 도적단, 상인들은 불편한 평화를 받아들였다. 그리고 그 중심에 당신이 있었다.' },
-  '위선적인 영웅': { icon:'⚜', kind:'SPECIAL END · 위선', bonus:8500, epilogue:'사람들은 당신을 영웅이라 불렀다.\n당신이 쓰러뜨린 약자들의 이름은 승전 연설 어디에도 없었다. 칼로 만든 문제를 말로 덮었고, 왕국은 듣고 싶은 이야기만 들었다.\n명예는 돌아왔다. 진실만 돌아오지 못했다.' },
-  '피 묻은 중재자': { icon:'◇', kind:'SPECIAL END · 불완전한 평화', bonus:13500, epilogue:'왕국과 숲은 결국 같은 탁자에 앉았다.\n그러나 그 탁자를 닦아도 지워지지 않는 피가 있었다. 사람들은 당신의 중재를 받아들였지만, 살아남은 자들은 당신이 평화를 말하기 전에 무엇을 했는지 기억했다.\n평화는 이루어졌다. 결백은 아니었다.' },
-  '두 개의 깃발': { icon:'⚔', kind:'SPECIAL END · 배신', bonus:12000, epilogue:'당신은 한때 왕국의 깃발 아래 섰고, 마지막에는 그것을 향해 검을 들었다.\n왕국은 당신을 배신자라 불렀고 반란군은 영웅이라 불렀다. 둘 다 틀리지 않았다.\n되찾은 것은 명예가 아니라, 어느 편에서도 완전히 지워지지 않을 이름이었다.' },
-  '지배자': { icon:'♛', kind:'LEGEND END', bonus:15000, epilogue:'전설마저 쓰러졌다.\n왕좌를 지킬 자도, 당신에게 명령할 자도 더는 남지 않았다.' },
+  '모두와 친구': { icon:'◇', kind:'SECRET END', bonus:25000, epilogue:'칼을 뽑지 않고도 바뀌는 것이 있었다.\n왕국과 도적단, 상인들은 불편한 평화를 받아들였다. 그리고 그 중심에 당신이 있었다.' },
+  '위선적인 영웅': { icon:'⚜', kind:'SPECIAL END · 위선', bonus:12000, epilogue:'사람들은 당신을 영웅이라 불렀다.\n당신이 쓰러뜨린 약자들의 이름은 승전 연설 어디에도 없었다. 칼로 만든 문제를 말로 덮었고, 왕국은 듣고 싶은 이야기만 들었다.\n명예는 돌아왔다. 진실만 돌아오지 못했다.' },
+  '피 묻은 중재자': { icon:'◇', kind:'SPECIAL END · 불완전한 평화', bonus:20000, epilogue:'왕국과 숲은 결국 같은 탁자에 앉았다.\n그러나 그 탁자를 닦아도 지워지지 않는 피가 있었다. 사람들은 당신의 중재를 받아들였지만, 살아남은 자들은 당신이 평화를 말하기 전에 무엇을 했는지 기억했다.\n평화는 이루어졌다. 결백은 아니었다.' },
+  '두 개의 깃발': { icon:'⚔', kind:'SPECIAL END · 배신', bonus:18000, epilogue:'당신은 한때 왕국의 깃발 아래 섰고, 마지막에는 그것을 향해 검을 들었다.\n왕국은 당신을 배신자라 불렀고 반란군은 영웅이라 불렀다. 둘 다 틀리지 않았다.\n되찾은 것은 명예가 아니라, 어느 편에서도 완전히 지워지지 않을 이름이었다.' },
+  '지배자': { icon:'♛', kind:'LEGEND END', bonus:30000, epilogue:'전설마저 쓰러졌다.\n왕좌를 지킬 자도, 당신에게 명령할 자도 더는 남지 않았다.' },
   '길을 잃은 자': { icon:'∅', kind:'BAD END · 방황', bonus:420, epilogue:'다리의 한쪽에는 왕국이, 다른 한쪽에는 숲이 있었다.\n당신은 두 곳에서 모두 물러났고 어느 쪽에도 돌아갈 이유를 남기지 못했다.\n해가 질 때까지 다리 위에 서 있었지만 누구도 당신을 부르러 오지 않았다.\n결국 길을 잃은 것은 발이 아니라, 선택이었다.' }
 };
 
@@ -274,7 +279,7 @@ const RECOVERY_FALLBACK = {
 };
 function worldShape(w={}){
   return {
-    deadActors:{...(w.deadActors||{})}, encounters:{...(w.encounters||{})}, escapeUsed:{...(w.escapeUsed||{})},
+    deadActors:{...(w.deadActors||{})}, encounters:{...(w.encounters||{})}, escapeUsed:{...(w.escapeUsed||{})}, merchantPaid:{...(w.merchantPaid||{})},
     anomalies:{undertakerSeen:!!w.anomalies?.undertakerSeen,trackerSeen:!!w.anomalies?.trackerSeen},
     invalidReturns:Number(w.invalidReturns||0), recovery:w.recovery||null
   };
@@ -359,7 +364,7 @@ function freshState() {
     stats: {
       progress:0, goldEarned:0, goldSpent:0, kills:0, eliteKills:0, riskyWins:0,
       talkSolved:0, socialSuccess:0, socialFail:0, runSuccess:0, secrets:0,
-      survivors:0, growths:0, comebackWins:0, talkInteractions:0, overTalks:0, itemsUsed:0, corpses:0, tyranny:0, ending:'', maxAttackChanceBeaten:100
+      survivors:0, growths:0, comebackWins:0, talkInteractions:0, overTalks:0, itemsUsed:0, corpses:0, tyranny:0, merchantDeals:0, merchantIncome:0, ending:'', maxAttackChanceBeaten:100
     }
   };
 }
@@ -868,7 +873,7 @@ const SCENES = {
 
   banditBossForest: scene('banditBossForest', {
     chapter:'FOREST ROUTE · FINAL', location:'도적단 본거지', art:'boss', enemy:'banditBoss',
-    text:`세리아가 지도 위에 꽂힌 단검을 뽑는다.\n\n“내 간부들을 죽였든, 친구가 됐든 결국 여기까지 왔네.”\n“그래서 넌 어느 편이지?”`,
+    text:`세리아가 지도 위에 꽂힌 단검을 뽑는다.\n\n“내 간부들을 죽였든, 친구가 됐든 결국 여기까지 왔네.”\n“그래서 넌 어느 편이지?”${classReaction('banditBossForest')}`,
     talk(){state.flags.bossTalked=true;state.relation.bandits++;toast('세리아는 왕국을 공격할 계획과 그 이유를 모두 털어놓는다.','good');render();save();},
     choices(){
       const arr=[];
@@ -1157,6 +1162,11 @@ const EARLY_CLASS_FLAVOR = {
     beggars:'도움을 청하는 동안 한 명의 시선이 자꾸 당신의 허리춤으로 내려간다. 가난한 사람을 의심해서가 아니라, 손버릇은 손버릇을 알아보기 때문이다.',
     gangster:'정면보다 골목 양옆의 틈이 먼저 보인다. 이길 수 있는 싸움인지보다, 필요하면 얼마나 빨리 사라질 수 있는지를 먼저 잰다.'
   },
+  merchant:{
+    intro:'비에 젖은 옷보다 먼저 주머니 속 동전의 무게를 센다. 몰락해도 값의 감각은 남는다. 이 도시에서 다시 시작하려면 명예보다 밑천이 먼저다.',
+    beggars:'세 사람의 사정을 듣는 동안 필요한 비용부터 머릿속에 잡힌다. 배고픔도 원한도 결국 누군가는 값을 치른다. 문제는 그 값이 누구 몫이냐는 것이다.',
+    gangster:'남자의 낡은 외투와 굳은손을 보고 하루 벌이가 어느 정도인지부터 짐작한다. 싸움보다 거래가 싸게 먹힐 가능성이 있다.'
+  },
   spellsword:{
     intro:'손이 먼저 검을 찾는다. 몰락도 추방도 설명할 말은 많지만, 머릿속에 남은 답은 이상하리만큼 단순하다. 부술 수 있으면 지나갈 수 있다.',
     beggars:'세 사람의 하소연은 길다. 누가 옳은지보다 이 이야기가 결국 싸움으로 끝날지부터 생각하게 된다.',
@@ -1175,25 +1185,83 @@ const EARLY_CLASS_FLAVOR = {
 };
 function earlyClassFlavor(part){return EARLY_CLASS_FLAVOR[state.classId]?.[part]||'';}
 
+const CLASS_REACTIONS = {
+  kingdomGate:{
+    knight:'경비병이 당신의 서 있는 자세를 한 번 더 본다. “군에 있었나? 발을 그렇게 두는 사람은 흔치 않은데.”',
+    noble:'경비병이 말투를 듣고 눈을 가늘게 뜬다. “그 말씨… 평민 골목에서 배운 건 아니군.”',
+    thief:'경비병이 당신의 손부터 본다. “손은 보이게 둬. 요즘 문 앞에서 지갑 사라지는 일이 많아서.”',
+    merchant:'경비병이 짐보다 허리의 돈주머니를 먼저 본다. “장사꾼이면 통행세부터 준비해. 안에서 값 깎는 건 네 자유고.”',
+    spellsword:'경비병의 시선이 검에 오래 머문다. “그 물건, 칼집에서 꺼낼 생각은 하지 마.”',
+    necromancer:'경비병이 이유도 모른 채 반걸음 물러난다. “이상하군. 네 주변만 유난히 찬 것 같은데.”',
+    dictator:'당신의 첫마디가 명령처럼 떨어지자 경비병의 턱이 굳는다. “여긴 네 부하가 지키는 문이 아니다.”'
+  },
+  forestMerchant:{
+    knight:'로벤은 당신의 손에 밴 굳은살을 보고 웃는다. “호위 출신이면 물건값보다 길값이 더 비싸다는 건 알겠네.”',
+    noble:'로벤은 옷보다 말투를 보고 값을 다시 생각한다. “좋은 집 출신은 흥정을 못하거나, 너무 잘하지. 어느 쪽인지 보자고.”',
+    thief:'로벤이 수레 덮개를 슬쩍 당겨 닫는다. “눈으로 재는 건 공짜지만, 손대는 순간부터 가격이 붙어.”',
+    merchant:'로벤의 눈빛이 처음으로 조금 즐거워진다. “동업자였나? 그럼 거짓말은 절반만 하자. 서로 시간 아깝잖아.”',
+    spellsword:'로벤은 검과 수레 사이 거리를 잰다. “물건은 부숴도 돈이 안 나와. 그 정도는 알지?”',
+    necromancer:'로벤은 당신 뒤 빈 공간을 한 번 본다. “혼자 온 거 맞지? …됐다. 묻지 않는 것도 장사 수완이야.”',
+    dictator:'로벤은 명령조를 듣고도 웃는다. “왕도 외상은 안 돼. 돈 내는 사람만 손님이야.”'
+  },
+  captainEnraged:{
+    knight:'레오른은 당신의 검을 보며 낮게 말한다. “배운 사람이니 더 잘 알겠지. 칼은 명령보다 오래 남는다.”',
+    noble:'“신분이 죄를 가려주던 시절은 네게 끝났다.” 레오른은 예전 호칭을 일부러 입에 올리지 않는다.',
+    thief:'“빠른 발로 여기까지 왔군.” 레오른의 시선이 골목 출구를 훑는다. “이번엔 도망갈 길부터 막았다.”',
+    merchant:'“사람 목숨에도 값을 매길 셈인가?” 레오른은 당신의 돈주머니 쪽을 보지도 않는다.',
+    spellsword:'레오른은 당신의 검에서 눈을 떼지 않는다. “말보다 파괴가 편한 인간은 결국 파괴될 곳을 찾더군.”',
+    necromancer:'“죽은 자를 데리고 다닌다는 소문이 있더군.” 레오른의 목소리가 더 낮아진다. “오늘은 더 늘리지 마라.”',
+    dictator:'“명령할 사람을 찾는 눈이군.” 레오른이 검을 뽑는다. “여기엔 네 명령을 받을 사람이 없다.”'
+  },
+  oldVeteran:{
+    knight:'아르벤은 당신의 자세를 보고 아주 작게 고개를 끄덕인다. “기본은 배웠군. 그래서 더 위험하지. 배운 사람은 자기 실수를 실력으로 착각하거든.”',
+    noble:'“가문은 검을 대신 들어주지 않아.” 아르벤은 당신의 옛 신분을 이미 아는 듯 말한다.',
+    thief:'아르벤은 당신이 빠져나갈 길을 보는 순간을 놓치지 않는다. “도망칠 곳을 먼저 찾는 건 좋은 습관이지. 상대가 나만 아니면.”',
+    merchant:'“세상 모든 것에 값이 있다고 믿나?” 아르벤이 묻는다. “그럼 네가 여기까지 온 값도 생각해둬.”',
+    spellsword:'아르벤의 시선이 마검에 닿는다. “힘이 검에서 오는지, 네가 검에 빌려주는 건지부터 알아야 오래 산다.”',
+    necromancer:'“죽은 사람에게 기대는 건 쉽다.” 노인이 말한다. “살아 있는 사람의 책임을 지는 게 더 어렵지.”',
+    dictator:'아르벤은 웃음기 없이 당신을 본다. “사람 위에 서고 싶다면 먼저 혼자 서는 법부터 보여라.”'
+  },
+  banditBossForest:{
+    knight:'세리아가 당신의 자세를 훑는다. “왕국 기사랑 비슷한 냄새가 나네. 갑옷을 벗었다고 버릇까지 벗겨지진 않지.”',
+    noble:'“말투가 비싸네.” 세리아가 웃는다. “숲에선 혈통보다 오늘 누가 배고픈지가 더 중요해.”',
+    thief:'세리아는 당신의 발끝을 보고 웃는다. “도망칠 길부터 찾았지? 좋아. 적어도 솔직한 몸이네.”',
+    merchant:'세리아가 지도 위 교역로를 손가락으로 두드린다. “장사꾼이면 알겠네. 우리가 원하는 건 왕관보다 길이야.”',
+    spellsword:'“칼로 다 해결하는 사람은 협상하기 편해.” 세리아가 단검을 든다. “원하는 게 뻔하거든.”',
+    necromancer:'세리아가 당신 뒤를 바라본다. “죽은 놈들이 네 편이면, 산 놈들한테는 뭘 줄 건데?”',
+    dictator:'“왕 하나도 벅찬데 또 왕 노릇 할 사람이 왔네.” 세리아의 미소가 얇아진다.'
+  },
+  kingEnraged:{
+    knight:'에드란이 검끝을 세운다. “기사였으면 알겠지. 충성은 마지막에 어느 쪽을 향해 서느냐로 남는다.”',
+    noble:'왕은 당신의 옛 신분을 비웃듯 부른다. “가문이 무너져도 귀족의 버릇은 남는군.”',
+    thief:'“도망칠 길을 찾는 눈이군.” 왕이 옆문을 잠그라는 손짓을 한다. “이번 알현은 짧게 끝내지.”',
+    merchant:'“왕국까지 흥정거리로 보이나?” 에드란이 차갑게 웃는다. “그럼 네 목숨의 가격부터 매겨봐라.”',
+    spellsword:'왕은 마검을 보며 자리에서 일어난다. “말보다 저게 편하겠지. 나도 오늘은 그렇다.”',
+    necromancer:'“내 병사들의 죽음까지 네 병력으로 셀 셈인가?” 왕의 분노가 한층 깊어진다.',
+    dictator:'에드란의 표정에서 모욕감이 번진다. “왕좌가 비어 보였나? 앉기 전에 무릎부터 꿇게 해주지.”'
+  }
+};
+function classReaction(part){const t=CLASS_REACTIONS[part]?.[state.classId];return t?`\n\n${t}`:'';}
+
 // ---------- v0.9: richer scenes / multi-step dialogue ----------
 const RICH_TEXT = {
   intro: () => `당신에게는 한때 이름이 있었다.\n\n그 이름을 부르면 문이 열렸고, 누군가는 고개를 숙였고, 누군가는 당신이 돌아오기를 기다렸다. 몰락은 그 모든 것을 한꺼번에 지워버렸다. 변명할 시간도, 짐을 챙길 시간도 없었다.\n\n비가 그친 새벽. 차가운 돌바닥의 습기가 옷 안쪽까지 스며든다. 멀리서 시장을 여는 종소리가 희미하게 들리지만 이 골목에는 빵 냄새보다 젖은 재와 썩은 나무 냄새가 짙다.\n\n당신은 빈민가 끝자락에서 눈을 뜬다. 가진 것은 몸 하나와, 아직 완전히 꺾이지 않은 습관뿐이다.\n\n${earlyClassFlavor('intro')}`,
   beggars: () => `누더기를 걸친 세 사람이 당신을 빙 둘러싼다. 가장 늙은 자는 손에 찌그러진 양철잔을 들고 있고, 아이처럼 마른 청년은 끊임없이 골목 입구를 살핀다.\n\n“살아 있었군.”\n“보아하니 당신도 갈 데 없는 사람 같네.”\n\n그들은 며칠째 자신들을 괴롭히는 깡패가 있다고 말한다. 돈을 빼앗고, 잠자리를 걷어차고, 말을 듣지 않으면 때린다고 한다. 말은 빠르고 억울함은 충분해 보이지만 세 사람 모두 같은 부분에서 묘하게 시선을 피한다.\n\n당신이 어떤 사람인지 묻기도 전에 그들은 당신이 자기들 편일 거라 믿고 있다.\n\n${earlyClassFlavor('beggars')}`,
   gangster: () => `뒷골목 끝. 덩치 큰 남자가 벽에서 등을 떼고 천천히 일어난다. 낡은 외투 아래로 두꺼운 팔이 드러나고, 오른손에는 싸움에 익숙한 굳은살이 잡혀 있다.\n\n“또 너희냐?”\n\n거지들은 약속이라도 한 듯 당신 뒤로 물러선다.\n“저놈이에요. 매일 우릴 괴롭혀요!”\n\n남자의 시선이 거지들에게서 당신에게 옮겨온다. 그는 먼저 덤비지 않는다. 대신 당신이 왜 끼어들었는지 재려는 듯 턱을 조금 든다.${state.flags.gangsterTruth?'\n\n이제 당신은 안다. 이 싸움의 시작은 거지들이 그의 돈주머니에 손을 댄 일이었다.':''}\n\n${earlyClassFlavor('gangster')}`,
-  kingdomGate: () => `왕국의 동문은 생각보다 높다. 사람 두세 명이 나란히 걸어도 남을 만큼 넓은 성벽 위로 활을 든 병사들이 오간다. 문 앞에는 장사꾼, 농부, 짐수레가 길게 줄을 서 있다.\n\n당신 차례가 되자 경비병 하나가 창을 가로로 세운다. 갑옷에는 먼지가 묻었고 눈 밑에는 옅은 피로가 내려앉아 있다.\n\n“멈춰. 신분과 목적을 밝혀라.”\n\n그의 말투는 거칠지만 개인적인 악의는 없다. 최근 무언가 때문에 검문이 강해진 모양이다. 성문 너머로는 시장의 고함, 대장간의 쇳소리, 멀리 왕궁의 종이 한꺼번에 섞여 들린다.`,
+  kingdomGate: () => `왕국의 동문은 생각보다 높다. 사람 두세 명이 나란히 걸어도 남을 만큼 넓은 성벽 위로 활을 든 병사들이 오간다. 문 앞에는 장사꾼, 농부, 짐수레가 길게 줄을 서 있다.\n\n당신 차례가 되자 경비병 하나가 창을 가로로 세운다. 갑옷에는 먼지가 묻었고 눈 밑에는 옅은 피로가 내려앉아 있다.\n\n“멈춰. 신분과 목적을 밝혀라.”\n\n그의 말투는 거칠지만 개인적인 악의는 없다. 최근 무언가 때문에 검문이 강해진 모양이다. 성문 너머로는 시장의 고함, 대장간의 쇳소리, 멀리 왕궁의 종이 한꺼번에 섞여 들린다.${classReaction('kingdomGate')}`,
   citySquare: () => `왕국의 중앙가는 전쟁을 앞둔 도시답지 않게 바쁘고 평범하다. 빵집 앞에는 줄이 있고, 세탁물이 창문 사이에서 흔들리고, 장사꾼들은 오늘이 마지막 날이 아닌 것처럼 목청껏 값을 외친다.\n\n하지만 자세히 들으면 평범한 대화의 끝마다 같은 이름이 붙는다. 도적단. 세금. 징발. 친위대. 누군가는 왕국이 자신들을 지켜준다고 말하고, 누군가는 왕국이 먼저 사람들을 숲으로 내몰았다고 낮게 중얼거린다.\n\n${state.flags.gangsterPeace?'시장 한편에서 빈민가에서 보았던 깡패와 닮은 뒷모습이 스쳐 지나간다. 피를 보지 않고 끝낸 작은 사건이 이 넓은 도시 어딘가에도 이어져 있는 듯하다.':''}${state.flags.kingdomHostile?'\n\n그리고 지금은 사람들의 시선이 유난히 당신에게 오래 머문다. 왕국은 이미 당신을 위험한 사람으로 기억하기 시작했다.':''}`,
-  captainEnraged: () => `왕궁 앞 대로가 비었다. 상인들은 문을 잠갔고 시민들은 창문을 닫았다. 멀리서 갑옷이 부딪히는 소리가 한 번 들린 뒤, 은빛 갑옷의 남자가 혼자 걸어 나온다.\n\n친위대장 레오른.\n\n그는 당신을 보기 전에 먼저 길 위의 흔적을 본다. 쓰러진 경비, 버려진 무기, 도망친 사람들의 자국. 그러고서야 당신에게 시선을 올린다.\n\n“네가 죽인 사람들의 얼굴을 하나라도 기억하나?”\n\n목소리는 크지 않다. 그래서 더 위험하다. 그의 검은 아직 칼집에 있지만, 손은 이미 손잡이에 놓여 있다.`,
-  oldVeteran: () => `왕궁으로 오르는 오래된 돌계단 한가운데, 허름한 외투를 입은 노인이 서 있다. 왕궁을 지키는 병사도, 화려한 문장도 없다. 처음 보면 길을 잘못 든 노인처럼 보일 뿐이다.\n\n그러나 이상하다. 바람이 외투 자락을 흔들어도 그의 중심은 조금도 움직이지 않는다. 당신이 한 걸음 옮길 때마다 그의 시선은 발끝이 아니라 어깨와 허리를 따라간다.\n\n“여기까지 왔으면, 네가 뭘 원하는지는 들어봐야겠지.”\n\n노인은 웃지 않는다. 위협하지도 않는다. 그럴 필요가 없는 사람처럼 보인다.${state.flags.oldGuardIdentity?'\n\n당신은 이제 그의 이름을 안다. 아르벤. 오래전 왕국에서 전설처럼 불리던 전 친위대장.':''}`,
+  captainEnraged: () => `왕궁 앞 대로가 비었다. 상인들은 문을 잠갔고 시민들은 창문을 닫았다. 멀리서 갑옷이 부딪히는 소리가 한 번 들린 뒤, 은빛 갑옷의 남자가 혼자 걸어 나온다.\n\n친위대장 레오른.\n\n그는 당신을 보기 전에 먼저 길 위의 흔적을 본다. 쓰러진 경비, 버려진 무기, 도망친 사람들의 자국. 그러고서야 당신에게 시선을 올린다.\n\n“네가 죽인 사람들의 얼굴을 하나라도 기억하나?”\n\n목소리는 크지 않다. 그래서 더 위험하다. 그의 검은 아직 칼집에 있지만, 손은 이미 손잡이에 놓여 있다.${classReaction('captainEnraged')}`,
+  oldVeteran: () => `왕궁으로 오르는 오래된 돌계단 한가운데, 허름한 외투를 입은 노인이 서 있다. 왕궁을 지키는 병사도, 화려한 문장도 없다. 처음 보면 길을 잘못 든 노인처럼 보일 뿐이다.\n\n그러나 이상하다. 바람이 외투 자락을 흔들어도 그의 중심은 조금도 움직이지 않는다. 당신이 한 걸음 옮길 때마다 그의 시선은 발끝이 아니라 어깨와 허리를 따라간다.\n\n“여기까지 왔으면, 네가 뭘 원하는지는 들어봐야겠지.”\n\n노인은 웃지 않는다. 위협하지도 않는다. 그럴 필요가 없는 사람처럼 보인다.${state.flags.oldGuardIdentity?'\n\n당신은 이제 그의 이름을 안다. 아르벤. 오래전 왕국에서 전설처럼 불리던 전 친위대장.':''}${classReaction('oldVeteran')}`,
   kingAudience: () => `왕궁의 알현실은 생각보다 조용하다. 귀족도 시종도 보이지 않는다. 높은 창으로 들어온 빛이 긴 바닥을 반으로 가르고, 그 끝에 왕 에드란이 홀로 앉아 있다.\n\n“네가 무슨 짓을 했는지는 알고 있다.”\n\n왕은 당신을 꾸짖기보다 계산한다. 살려둘 가치와 죽일 위험을 같은 저울에 올리는 눈이다.\n\n“그래도 도적단을 무너뜨릴 힘이 있다면, 한 번은 쓸 수 있겠지.”\n\n명예를 되찾을 기회인지, 목숨을 대신 내놓으라는 명령인지 아직은 알 수 없다.`,
   enlist: () => `친위대 모집소의 책상 위에는 지원서보다 전사자 명단이 더 두껍다. 장교는 당신의 이름과 출신을 확인하다가 한 번 멈춘다. 몰락한 사람을 알아본 눈이다.\n\n하지만 그는 종이를 찢지도, 경비를 부르지도 않는다.\n“과거가 어떻든 상관없다. 지금 필요한 건 도적단을 막을 칼이야.”\n\n막사 안에서는 신병들이 목검을 부딪치고 있다. 어떤 얼굴은 겁에 질렸고, 어떤 얼굴은 전쟁을 아직 모험으로 착각한다. 이들과 함께 싸우면 당신의 이름은 다시 왕국 쪽 기록에 올라갈 것이다.`,
-  forestMerchant: () => `숲 초입. 바퀴 하나가 진흙에 빠진 짐수레 옆에서 상인이 욕설을 중얼거린다. 당신을 발견하자 그는 재빨리 웃는 얼굴을 만들지만 손은 허리춤의 작은 칼에서 멀어지지 않는다.\n\n“이 시간에 혼자 숲으로?”\n“물건이 필요하면 돈부터 보여줘. 세상에서 말보다 믿을 만한 게 동전 소리거든.”\n\n수레에는 약품, 밧줄, 건조식량이 가지런히 묶여 있다. 도적이 자주 나온다는 길을 혼자 다니는 상인치고는 지나치게 침착하다. 이름은 로벤. 그는 숲길과 사람값을 모두 잘 아는 사람처럼 보인다.`,
+  forestMerchant: () => `숲 초입. 바퀴 하나가 진흙에 빠진 짐수레 옆에서 상인이 욕설을 중얼거린다. 당신을 발견하자 그는 재빨리 웃는 얼굴을 만들지만 손은 허리춤의 작은 칼에서 멀어지지 않는다.\n\n“이 시간에 혼자 숲으로?”\n“물건이 필요하면 돈부터 보여줘. 세상에서 말보다 믿을 만한 게 동전 소리거든.”\n\n수레에는 약품, 밧줄, 건조식량이 가지런히 묶여 있다. 도적이 자주 나온다는 길을 혼자 다니는 상인치고는 지나치게 침착하다. 이름은 로벤. 그는 숲길과 사람값을 모두 잘 아는 사람처럼 보인다.${classReaction('forestMerchant')}`,
   merchantCaptured: () => `해가 기울 무렵, 뒤집힌 짐수레와 부러진 바퀴가 먼저 보인다. 그 뒤 나무에는 로벤이 손이 묶인 채 기대어 있다. 입가에 피가 묻었지만 의식은 또렷하다.\n\n그 앞을 갈고리 모양의 칼을 든 도적단 간부가 지킨다. 주변에는 다른 도적이 없다. 혼자서도 충분하다고 생각하는 모양이다.\n\n“상인 하나 때문에 목숨 걸 생각은 아니겠지?”\n\n로벤은 당신을 보자 도움을 청하는 대신 아주 작게 고개를 젓는다. 덤비기 전에 생각하라는 뜻인지, 자신을 버리고 가라는 뜻인지는 알 수 없다.`,
   officer2: () => `숲을 가르는 돌다리 위. 붉은 모자를 쓴 여자가 난간에 걸터앉아 칼끝으로 돌을 두드리고 있다. 당신이 가까워지자 그녀는 피할 생각 없이 다리 한가운데로 내려선다.\n\n“갈고리를 만났지?”\n그녀의 눈이 당신의 옷과 무기, 상처를 빠르게 훑는다.\n“살아서 여기 왔다는 건 어느 쪽이든 재미있네.”\n\n말투는 가볍지만 위치 선정은 치밀하다. 뒤로 물러나면 좁은 다리, 앞으로 가면 그녀. 대화를 해볼 시간은 있지만 허튼소리를 여러 번 받아줄 사람은 아니다.`,
   guildNovice: () => `숲을 가로지르는 오래된 교역로에서 작은 방패 하나가 길을 막는다. 상인협회의 은빛 문장이 새겨져 있다. 방패 뒤에는 아직 얼굴에 소년 티가 남은 초급 기사가 서 있다.\n\n그는 당신과 도적단 쪽을 번갈아 보며 침을 삼킨다. 겁이 없는 것이 아니라, 겁을 감추는 훈련을 받은 사람이다.\n\n“도적단과 함께 있는 이유를 설명해.”\n\n목소리가 아주 조금 떨린다. 잘 말하면 지나갈 수 있을지도 모르지만, 궁지에 몰면 오히려 규칙대로 검을 뽑을 가능성이 커 보인다.`,
   midKnight: () => `도적단 본거지가 보이기 직전, 숲의 소리가 갑자기 끊긴다. 길 한가운데 검은 망토의 기사가 서 있다. 발밑에는 부러진 화살 몇 개가 떨어져 있고, 방패에는 상인협회의 은빛 문장이 깊게 새겨져 있다.\n\n“초급 기사를 죽인 자가 너구나.”\n\n그는 확인을 요구하지 않는다. 이미 결론을 내리고 여기까지 추적해 온 사람이다. 말할 때조차 시선은 당신의 입이 아니라 손과 발을 본다.\n\n이 사람에게 대화는 화해의 수단이 아니라 당신의 호흡과 습관을 읽을 시간일지도 모른다.`,
-  banditBossForest: () => `도적단 본거지 가장 안쪽. 커다란 지도에는 왕국 성벽과 교역로, 세금 수송로가 붉은 실로 이어져 있다. 지도 한가운데 꽂혀 있던 단검을 여자가 뽑는다.\n\n세리아. 숲의 사람들이 두목이라고 부르던 이름이다.\n\n“내 간부들을 죽였든, 친구가 됐든 결국 여기까지 왔네.”\n\n그녀는 당신 뒤에 누가 살아남았는지 이미 알고 있는 눈치다. 단검을 바로 들지는 않는다. 먼저 당신이 어떤 이유로 여기까지 왔는지 알고 싶어 한다.\n\n“그래서 넌 어느 편이지?”`,
+  banditBossForest: () => `도적단 본거지 가장 안쪽. 커다란 지도에는 왕국 성벽과 교역로, 세금 수송로가 붉은 실로 이어져 있다. 지도 한가운데 꽂혀 있던 단검을 여자가 뽑는다.\n\n세리아. 숲의 사람들이 두목이라고 부르던 이름이다.\n\n“내 간부들을 죽였든, 친구가 됐든 결국 여기까지 왔네.”\n\n그녀는 당신 뒤에 누가 살아남았는지 이미 알고 있는 눈치다. 단검을 바로 들지는 않는다. 먼저 당신이 어떤 이유로 여기까지 왔는지 알고 싶어 한다.\n\n“그래서 넌 어느 편이지?”${classReaction('banditBossForest')}`,
   friendBridge: () => `왕국과 숲 사이의 오래된 돌다리. 두 세력이 서로를 볼 수 있을 만큼 가깝지만, 아직 활이 닿기에는 먼 거리에서 멈춰 있다.\n\n당신 뒤에는 지금까지 살려둔 사람들의 말이 겹쳐 있다. 세금을 원망한 도적, 습격을 두려워한 시민, 길 하나가 막히면 가족이 굶는다고 했던 상인. 어느 한쪽의 말만 완전히 틀렸다고 하기엔 너무 많은 얼굴을 보았다.\n\n이곳에서 칼을 뽑는 것은 쉽다. 어려운 것은 서로 칼을 들 이유가 남아 있는데도 내려놓게 만드는 일이다.`,
-  kingEnraged: () => `왕의 얼굴에서 마지막 계산이 사라진다. 남은 것은 분노다. 왕좌 옆에 세워둔 검을 직접 뽑는 순간, 알현실의 공기가 달라진다.\n\n“내 병사도, 내 백성도, 내 나라까지 네 선택의 장난감이었나?”\n\n에드란은 왕관을 벗어 왕좌 위에 던진다. 이제 앞에 선 사람은 왕의 권위로 싸우지 않는다. 자신이 잃었다고 믿는 모든 것을 대신해 싸운다.\n\n대화를 더 이어갈 수는 있다. 다만 잘못된 말 한마디는 그 분노에 칼날 하나를 더 얹을 것이다.`
+  kingEnraged: () => `왕의 얼굴에서 마지막 계산이 사라진다. 남은 것은 분노다. 왕좌 옆에 세워둔 검을 직접 뽑는 순간, 알현실의 공기가 달라진다.\n\n“내 병사도, 내 백성도, 내 나라까지 네 선택의 장난감이었나?”\n\n에드란은 왕관을 벗어 왕좌 위에 던진다. 이제 앞에 선 사람은 왕의 권위로 싸우지 않는다. 자신이 잃었다고 믿는 모든 것을 대신해 싸운다.\n\n대화를 더 이어갈 수는 있다. 다만 잘못된 말 한마디는 그 분노에 칼날 하나를 더 얹을 것이다.${classReaction('kingEnraged')}`
 };
 
 const TALK_PROFILES = {
@@ -1437,7 +1505,7 @@ function render() {
   $('hudGold').textContent = `◆ ${state.p.gold}`;
   $('hpText').textContent = `${state.p.hp} / ${state.p.maxHp}`;
   $('hpBar').style.width = `${Math.max(0, Math.min(100, state.p.hp/state.p.maxHp*100))}%`;
-  const classExtra=state.classId==='necromancer'?` · 시체 ${state.stats.corpses||0}`:state.classId==='dictator'?` · 독재 ${state.stats.tyranny||0}`:'';
+  const classExtra=state.classId==='necromancer'?` · 시체 ${state.stats.corpses||0}`:state.classId==='dictator'?` · 독재 ${state.stats.tyranny||0}`:state.classId==='merchant'?` · 장사 ${state.stats.merchantIncome||0}`:'';
   $('hudStats').textContent = `처세 ${state.p.social} · 속도 ${state.p.speed} · 진행 ${state.stats.progress}${classExtra}`;
 
   $('chapter').textContent = sc.chapter || '';
@@ -1863,8 +1931,9 @@ function enter(id) {
   showScreen('gameScreen');
   if(maybeReplaceResolvedEncounter(id))return;
   const sc=SCENES[id];
+  merchantEncounterProfit(id);
   if(!state.entered[id]){state.entered[id]=true;if(sc.onFirstEnter)sc.onFirstEnter();}
-  render();
+  save();render();
 }
 function gainGold(v){v=Math.max(0,Math.floor(v));state.p.gold+=v;state.stats.goldEarned+=v;if(v)floatText(`◆ +${v}`);}
 function spendGold(v){if(state.p.gold<v)return false;state.p.gold-=v;state.stats.goldSpent+=v;return true;}
@@ -1956,7 +2025,7 @@ function finish(name) {
   $('playStyle').textContent=`플레이 스타일 · ${playStyle()}`;
   $('endScore').textContent=clientScore().toLocaleString();
   const deathBlock=e.bad&&state.flags.deathReason?`<b>최후의 순간</b> · ${escapeHtml(state.flags.deathReason)}<br><b>사망 장소</b> · ${escapeHtml(SCENES[state.flags.deathScene]?.location||'알 수 없는 장소')}<br><br><br>`:'';
-  $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 과대화 <b>${state.stats.overTalks||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>`;
+  $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 과대화 <b>${state.stats.overTalks||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>${state.classId==='merchant'?`<br>장사 수익 <b>${state.stats.merchantIncome||0}</b> · 새 조우 <b>${state.stats.merchantDeals||0}</b>`:''}`;
   const meta=loadMeta();
   if(!e.bad){
     const unlockLine=state.flags.newClassUnlocks?.length?`<br><br><b>새 직업 해금 · ${state.flags.newClassUnlocks.map(escapeHtml).join(' / ')}</b>`:`<br><br>노말 엔딩 <b>${meta.normalClears}회</b>`;
@@ -1977,10 +2046,30 @@ function die(reason){
 }
 function playStyle(){
   const s=state.stats;
-  const pairs=[['전투광',s.kills*3+s.riskyWins*2],['협상가',s.socialSuccess*3+s.talkSolved],['생존가',s.runSuccess*4],['탐색가',s.secrets*5+s.talkSolved],['파괴자',s.eliteKills*5+s.kills]];
+  const pairs=[['전투광',s.kills*3+s.riskyWins*2],['협상가',s.socialSuccess*3+s.talkSolved],['생존가',s.runSuccess*4],['탐색가',s.secrets*5+s.talkSolved],['장사꾼',(s.merchantDeals||0)*4+Math.floor((s.merchantIncome||0)/5)],['파괴자',s.eliteKills*5+s.kills]];
   pairs.sort((a,b)=>b[1]-a[1]);return pairs[0][1]===0?'방랑자':pairs[0][0];
 }
 function clientScore(){const s=state.stats,b=Number(endingProfile(s.ending)?.bonus||s.endingBonus||0);return Math.max(0,Math.floor(s.progress*115+s.goldEarned*3+state.p.gold*1.2+s.kills*170+s.eliteKills*950+s.riskyWins*650+(s.comebackWins||0)*900+s.talkSolved*170+s.socialSuccess*185+s.runSuccess*85+s.secrets*500+(s.growths||0)*140+s.survivors*220-s.socialFail*25-(s.overTalks||0)*90+b));}
+
+// ---------- Merchant class economy ----------
+function merchantEncounterProfit(id=state.sceneId){
+  if(state.classId!=='merchant'||!state.p)return 0;
+  const sc=SCENES[id]; if(!getEnemy(sc))return 0;
+  state.world ||= worldShape(); state.world.merchantPaid ||= {};
+  const key=encounterKey(id);
+  if(state.world.merchantPaid[key])return 0;
+  state.world.merchantPaid[key]=true;
+  const amount=Math.max(1,Math.floor(state.p.maxHp));
+  state.stats.merchantDeals=Number(state.stats.merchantDeals||0)+1;
+  state.stats.merchantIncome=Number(state.stats.merchantIncome||0)+amount;
+  gainGold(amount);
+  state.lastToast=`사람을 만나면 먼저 값이 보인다. 거래의 틈에서 ◆ ${amount}을 챙겼다.`;
+  return amount;
+}
+function shopPrice(base){
+  base=Math.max(1,Math.floor(Number(base)||1));
+  return state.classId==='merchant'?Math.max(1,Math.ceil(base*0.75)):base;
+}
 
 // ---------- Inventory / shop ----------
 const ITEMS = {
@@ -2004,8 +2093,9 @@ const SHOP = [
   {name:'숫돌',cost:26,desc:'공격력 영구 +1',buy(){state.p.atk++;floatText('공격력 +1');}}
 ];
 function openShop(){
-  $('modal').innerHTML=`<h2>상점</h2><div class="modal-sub">◆ ${state.p.gold}</div>${SHOP.map((x,i)=>`<div class="shop-row"><div class="item-copy"><b>${x.name}${ITEMS[x.name]?`<span class="item-kind">${ITEMS[x.name].kind}</span>`:''}</b><small>${x.desc||ITEMS[x.name]?.desc||''}</small></div><button class="shop-btn" data-buy="${i}">◆ ${x.cost}</button></div>`).join('')}<button class="btn modal-close" onclick="closeModal()">나간다</button>`;
-  showModal();document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const x=SHOP[Number(b.dataset.buy)];if(!spendGold(x.cost)){toast('골드가 부족하다.','bad');return;}if(x.buy)x.buy();else addItem(x.name);save();openShop();render();});
+  const discount=state.classId==='merchant'?'<div class="modal-sub">장사꾼의 재능 · 모든 가격 25% 할인</div>':'';
+  $('modal').innerHTML=`<h2>상점</h2><div class="modal-sub">◆ ${state.p.gold}</div>${discount}${SHOP.map((x,i)=>{const price=shopPrice(x.cost);return `<div class="shop-row"><div class="item-copy"><b>${x.name}${ITEMS[x.name]?`<span class="item-kind">${ITEMS[x.name].kind}</span>`:''}</b><small>${x.desc||ITEMS[x.name]?.desc||''}</small></div><button class="shop-btn" data-buy="${i}">◆ ${price}${price<x.cost?` <s>${x.cost}</s>`:''}</button></div>`;}).join('')}<button class="btn modal-close" onclick="closeModal()">나간다</button>`;
+  showModal();document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const x=SHOP[Number(b.dataset.buy)];const price=shopPrice(x.cost);if(!spendGold(price)){toast('골드가 부족하다.','bad');return;}if(x.buy)x.buy();else addItem(x.name);save();openShop();render();});
 }
 function inventoryCounts(){const counts={};for(const x of state.inventory)counts[x]=(counts[x]||0)+1;return counts;}
 function openBag(){
@@ -2056,6 +2146,8 @@ function normalizeLoadedState(data){
   merged.stats.overTalks=Number(data.stats?.overTalks||0);
   merged.stats.corpses=Number(data.stats?.corpses||0);
   merged.stats.tyranny=Number(data.stats?.tyranny||0);
+  merged.stats.merchantDeals=Number(data.stats?.merchantDeals||0);
+  merged.stats.merchantIncome=Number(data.stats?.merchantIncome||0);
   merged.runId=String(data.runId||base.runId);
   merged.version=GAME_VERSION;
   return migrateLegacyWorld(merged,data);

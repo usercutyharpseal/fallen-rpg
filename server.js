@@ -60,11 +60,11 @@ const ENDING_BONUS = {
   '이름 없는 최후': 0,
   '명예 회복': 5000,
   '반란': 10000,
-  '모두와 친구': 18000,
-  '위선적인 영웅': 8500,
-  '피 묻은 중재자': 13500,
-  '두 개의 깃발': 12000,
-  '지배자': 15000,
+  '모두와 친구': 25000,
+  '위선적인 영웅': 12000,
+  '피 묻은 중재자': 20000,
+  '두 개의 깃발': 18000,
+  '지배자': 30000,
 };
 
 function n(v, max = 100000) {
@@ -457,7 +457,7 @@ app.post('/api/score', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.9' });
+  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.11' });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
