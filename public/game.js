@@ -1455,6 +1455,7 @@ function finish(name) {
   $('endScore').textContent=clientScore().toLocaleString();
   const deathBlock=e.bad&&state.flags.deathReason?`<b>최후의 순간</b> · ${escapeHtml(state.flags.deathReason)}<br><b>사망 장소</b> · ${escapeHtml(SCENES[state.flags.deathScene]?.location||'알 수 없는 장소')}<br><b>배드엔딩 보정</b> · +${Number(e.bonus||0).toLocaleString()}<br><br>`:'';
   $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>`;
+  resetRankSubmitUI();
   fx(e.bad?'bad':'good');showScreen('endScreen');
 }
 function die(reason){
@@ -1543,7 +1544,7 @@ function normalizeLoadedState(data){
   merged.entered={...(data.entered||{})};
   merged.inventory=Array.isArray(data.inventory)?data.inventory:[];
   merged.stats={...base.stats,...(data.stats||{})};
-  merged.version=92;
+  merged.version=93;
   return merged;
 }
 function save(){localStorage.setItem(SAVE_KEY,JSON.stringify(state));updateMenuSaveInfo();}
@@ -1569,19 +1570,112 @@ function updateMenuSaveInfo(){
 }
 function finishLoaded(){state.ended=false;finish(state.stats.ending||'BAD END');}
 function getPlayerId(){let id=localStorage.getItem(PLAYER_ID_KEY);if(!id){id=`p_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,10)}`;localStorage.setItem(PLAYER_ID_KEY,id);}return id;}
-async function submitScore(){const nickname=$('nickname').value.trim()||'익명';const payload={playerId:getPlayerId(),nickname,className:state.p.className,stats:{...state.stats,goldHeld:state.p.gold}};try{const r=await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!r.ok)throw new Error();const d=await r.json();alert(d.isBest?`최고 기록 갱신! ${d.score.toLocaleString()}점 · ${d.rank}위`:`기존 최고 기록이 더 높습니다. 이번 점수 ${d.score.toLocaleString()}점`);}catch{const q=JSON.parse(localStorage.getItem(PENDING_KEY)||'[]');q.push(payload);localStorage.setItem(PENDING_KEY,JSON.stringify(q));alert('서버에 연결되지 않아 기록을 기기에 보관했습니다. 다음 접속 때 다시 전송합니다.');}}
+function resetRankSubmitUI(){
+  const box=$('rankSubmitStatus');const btn=$('submitScoreBtn');
+  if(box){box.className='rank-submit-status hidden';box.innerHTML='';}
+  if(btn){btn.disabled=false;btn.textContent='영구 랭킹에 기록 등록';}
+}
+function setRankSubmitStatus(kind,title,bodyHtml=''){
+  const box=$('rankSubmitStatus');if(!box)return;
+  box.className=`rank-submit-status ${kind}`;
+  box.innerHTML=`<div class="rank-status-title">${escapeHtml(title)}</div>${bodyHtml}`;
+}
+function queuePendingScore(payload){
+  let q=[];try{q=JSON.parse(localStorage.getItem(PENDING_KEY)||'[]');if(!Array.isArray(q))q=[];}catch{q=[];}
+  const sig=JSON.stringify([payload.playerId,payload.stats?.ending,payload.stats?.progress,payload.stats?.kills,payload.stats?.goldHeld,payload.stats?.goldEarned]);
+  const exists=q.some(x=>JSON.stringify([x.playerId,x.stats?.ending,x.stats?.progress,x.stats?.kills,x.stats?.goldHeld,x.stats?.goldEarned])===sig);
+  if(!exists)q.push({...payload,queuedAt:Date.now()});
+  localStorage.setItem(PENDING_KEY,JSON.stringify(q.slice(-20)));
+}
+async function verifyPermanentRecord(playerId,expectedBest){
+  const r=await fetch(`/api/player/${encodeURIComponent(playerId)}?t=${Date.now()}`,{cache:'no-store'});
+  if(!r.ok)throw new Error('VERIFY_HTTP');
+  const d=await r.json();
+  if(!d.ok||!d.found||d.storage!=='cloud'||!d.verified)throw new Error('VERIFY_NOT_CLOUD');
+  if(Number(d.record?.score)!==Number(expectedBest))throw new Error('VERIFY_SCORE');
+  return d;
+}
+async function submitScore(){
+  const btn=$('submitScoreBtn');
+  if(btn?.disabled)return;
+  const nickname=$('nickname').value.trim()||'익명';
+  const playerId=getPlayerId();
+  const payload={playerId,nickname,className:state.p.className,stats:{...state.stats,goldHeld:state.p.gold}};
+  if(btn){btn.disabled=true;btn.textContent='영구 DB에 저장 확인 중...';}
+  setRankSubmitStatus('keep','서버에 기록을 확인하고 있습니다.','<div>저장 후 실제 DB에서 다시 읽어 검증합니다.</div>');
+  try{
+    const r=await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store'});
+    let d={};try{d=await r.json();}catch{}
+    if(!r.ok||!d.ok||!d.permanent||!d.verified||d.storage!=='cloud')throw new Error(d.error||`HTTP_${r.status}`);
+
+    // A second client-side read proves that the public server can really read the permanent row back.
+    const verify=await verifyPermanentRecord(playerId,d.bestScore);
+    const rank=verify.rank??d.rank;
+    const rankText=rank?`${rank}위`:'순위 확인됨';
+    const submitted=Number(d.submittedScore||0).toLocaleString();
+    const best=Number(d.bestScore||0).toLocaleString();
+
+    if(d.recordStatus==='created'){
+      setRankSubmitStatus('success','✓ 영구 랭킹 등록 완료',`<div>Supabase 저장 후 재조회까지 확인했습니다.</div><div class="rank-status-grid"><span>이번 점수</span><b>${submitted}</b><span>서버 최고기록</span><b>${best}</b><span>현재 순위</span><b>${rankText}</b></div>`);
+    }else if(d.recordStatus==='updated'){
+      setRankSubmitStatus('success','✓ 최고 기록 갱신 완료',`<div>새 기록이 영구 DB에 저장됐고 다시 읽어 확인했습니다.</div><div class="rank-status-grid"><span>이번 점수</span><b>${submitted}</b><span>새 최고기록</span><b>${best}</b><span>현재 순위</span><b>${rankText}</b></div>`);
+    }else{
+      setRankSubmitStatus('keep','✓ 서버 기록 확인 완료 · 최고기록 유지',`<div>랭킹은 플레이어별 최고 점수 1개만 보관합니다. 이번 점수는 낮아서 기존 기록을 유지했습니다.</div><div class="rank-status-grid"><span>이번 점수</span><b>${submitted}</b><span>기존 최고기록</span><b>${best}</b><span>현재 순위</span><b>${rankText}</b></div>`);
+    }
+    // Remove queued copies for this player after a verified permanent connection succeeds.
+    try{const q=JSON.parse(localStorage.getItem(PENDING_KEY)||'[]');localStorage.setItem(PENDING_KEY,JSON.stringify((Array.isArray(q)?q:[]).filter(x=>x.playerId!==playerId)));}catch{}
+    updateStorageStatus();
+  }catch(err){
+    queuePendingScore(payload);
+    setRankSubmitStatus('error','✕ 영구 랭킹 저장 실패',`<div>이번 기록은 기기에 재전송 대기 상태로 보관했습니다. <b>영구 DB에 실제 저장된 것으로 처리하지 않았습니다.</b></div><div class="rank-status-grid"><span>이번 점수</span><b>${clientScore().toLocaleString()}</b><span>상태</span><b>재전송 대기</b></div>`);
+    console.warn('[ranking submit]',err?.message||err);
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='기록 다시 확인 / 등록';}
+  }
+}
 async function showLeaderboard(){
-  $('modal').innerHTML='<h2>노말 모드 기록</h2><div class="modal-sub">서버 최고 기록을 불러오는 중...</div>';showModal();
-  try{const r=await fetch('/api/leaderboard');const rows=await r.json();$('modal').innerHTML=`<h2>노말 모드 기록</h2><div class="modal-sub">플레이어별 최고 점수만 저장됩니다.</div>${rows.length?rows.map((x,i)=>`<div class="rank-row"><div class="rank-num">${i+1}</div><div><b>${escapeHtml(x.nickname)}</b><div class="rank-meta">${escapeHtml(x.className)} · ${escapeHtml(x.ending)}</div></div><div class="rank-score">${Number(x.score).toLocaleString()}</div></div>`).join(''):'<p class="modal-sub">아직 기록이 없다.</p>'}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;}catch{$('modal').innerHTML='<h2>노말 모드 기록</h2><p class="modal-sub">서버에 연결하지 못했다.</p><button class="btn modal-close" onclick="closeModal()">닫기</button>';}
+  $('modal').innerHTML='<h2>노말 모드 기록</h2><div class="modal-sub">영구 DB에서 실제 기록을 불러오는 중...</div>';showModal();
+  const playerId=getPlayerId();
+  try{
+    const [lr,mr]=await Promise.all([
+      fetch(`/api/leaderboard?t=${Date.now()}`,{cache:'no-store'}),
+      fetch(`/api/player/${encodeURIComponent(playerId)}?t=${Date.now()}`,{cache:'no-store'}).catch(()=>null)
+    ]);
+    if(!lr.ok)throw new Error('LEADERBOARD_HTTP');
+    const rows=await lr.json();if(!Array.isArray(rows))throw new Error('LEADERBOARD_FORMAT');
+    let me=null;if(mr&&mr.ok){try{const md=await mr.json();if(md.ok&&md.found&&md.storage==='cloud')me=md;}catch{}}
+    const myCard=me?`<div class="my-rank-card"><b>내 영구 최고기록</b><div class="rank-status-grid"><span>점수</span><b>${Number(me.record.score).toLocaleString()}</b><span>현재 순위</span><b>${me.rank?me.rank+'위':'확인됨'}</b><span>엔딩</span><b>${escapeHtml(me.record.ending)}</b></div></div>`:'<div class="modal-sub">아직 이 기기의 영구 최고기록이 없습니다.</div>';
+    $('modal').innerHTML=`<h2>노말 모드 기록</h2><div class="modal-sub">Supabase 영구 DB · 플레이어별 최고 점수 1개</div>${myCard}${rows.length?rows.map((x,i)=>`<div class="rank-row ${x.playerId===playerId?'mine':''}"><div class="rank-num">${i+1}</div><div><b>${escapeHtml(x.nickname)}${x.playerId===playerId?' · 나':''}</b><div class="rank-meta">${escapeHtml(x.className)} · ${escapeHtml(x.ending)}</div></div><div class="rank-score">${Number(x.score).toLocaleString()}</div></div>`).join(''):'<p class="modal-sub">아직 기록이 없다.</p>'}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;
+  }catch(err){
+    $('modal').innerHTML='<h2>노말 모드 기록</h2><p class="modal-sub">영구 랭킹 DB에서 기록을 읽지 못했습니다. 잠시 후 다시 시도해 주세요.</p><button class="btn modal-close" onclick="closeModal()">닫기</button>';
+    console.warn('[leaderboard]',err?.message||err);
+  }
 }
 
 async function updateStorageStatus(){
   const el=$('storageInfo'); if(!el)return;
-  try{const r=await fetch('/api/storage');const d=await r.json();if(d.permanent){el.textContent='● 영구 랭킹 DB 연결됨';el.className='storage-info cloud';}else{el.textContent='○ 로컬 랭킹 · 공개 전 DB 연결 필요';el.className='storage-info local';}}
-  catch{el.textContent='○ 랭킹 서버 상태 확인 불가';el.className='storage-info local';}
+  try{
+    const r=await fetch(`/api/storage?t=${Date.now()}`,{cache:'no-store'});const d=await r.json();
+    if(d.permanent&&d.connected){el.textContent='● 영구 랭킹 DB 실제 연결 확인';el.className='storage-info cloud';}
+    else if(d.configured&&!d.connected){el.textContent='● 영구 DB 설정됨 · 연결 오류';el.className='storage-info cloud-error';}
+    else{el.textContent='○ 영구 랭킹 DB 미연결';el.className='storage-info local';}
+  }catch{el.textContent='○ 랭킹 서버 상태 확인 불가';el.className='storage-info local';}
 }
 
-async function flushPending(){let q=JSON.parse(localStorage.getItem(PENDING_KEY)||'[]');if(!q.length)return;const remain=[];for(const payload of q){try{const r=await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!r.ok)remain.push(payload);}catch{remain.push(payload);}}localStorage.setItem(PENDING_KEY,JSON.stringify(remain));}
+async function flushPending(){
+  let q=[];try{q=JSON.parse(localStorage.getItem(PENDING_KEY)||'[]');if(!Array.isArray(q))q=[];}catch{q=[];}
+  if(!q.length)return;
+  const remain=[];
+  for(const payload of q){
+    try{
+      const r=await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store'});
+      let d={};try{d=await r.json();}catch{}
+      if(!r.ok||!d.ok||!d.permanent||!d.verified||d.storage!=='cloud'){remain.push(payload);continue;}
+      await verifyPermanentRecord(payload.playerId,d.bestScore);
+    }catch{remain.push(payload);}
+  }
+  localStorage.setItem(PENDING_KEY,JSON.stringify(remain));
+}
 
 // ---------- FX / helpers ----------
 function toast(msg,type=''){state.lastToast=msg;render();if(type)fx(type);}
