@@ -3,27 +3,6 @@
 const SAVE_KEY = 'fallen_normal_v08';
 const PLAYER_ID_KEY = 'fallen_player_id';
 const PENDING_KEY = 'fallen_pending_scores';
-const META_KEY = 'fallen_meta_v1';
-const GAME_VERSION = 97;
-
-const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, necromancer:3, dictator:5 };
-function loadMeta(){
-  try{
-    const raw=JSON.parse(localStorage.getItem(META_KEY)||'{}');
-    return {normalClears:Number(raw.normalClears||0), endings:Array.isArray(raw.endings)?raw.endings:[], awardedRuns:Array.isArray(raw.awardedRuns)?raw.awardedRuns:[]};
-  }catch{return {normalClears:0,endings:[],awardedRuns:[]};}
-}
-function saveMeta(meta){localStorage.setItem(META_KEY,JSON.stringify(meta));}
-function isClassUnlocked(id){
-  if(!CLASS_UNLOCK_CLEAR_REQUIREMENTS[id])return true;
-  return loadMeta().normalClears>=CLASS_UNLOCK_CLEAR_REQUIREMENTS[id];
-}
-function classUnlockText(id){
-  const need=CLASS_UNLOCK_CLEAR_REQUIREMENTS[id];
-  if(!need)return '';
-  const n=loadMeta().normalClears;
-  return n>=need?'해금됨':`노말 엔딩 ${need}회 · ${Math.min(n,need)}/${need}`;
-}
 
 const CLASSES = {
   knight: {
@@ -43,15 +22,15 @@ const CLASSES = {
   },
   spellsword: {
     name: '마검사', hp: 6, atk: 10, social: 0, speed: 8, unlocked: false,
-    passive: '파괴만을 위한 생명', desc: '처세를 사용할 수 없다. 적을 쓰러뜨리면 최대 체력의 20%를 회복한다.'
+    passive: '파괴만을 위한 생명', desc: '???'
   },
   necromancer: {
     name: '망령사', hp: 4, atk: 4, social: 4, speed: 4, unlocked: false,
-    passive: '죽은 자들이여 일어나라', desc: '적을 쓰러뜨리면 시체를 얻는다. 조우에서 시체 하나를 써 망령을 부를 수 있다.'
+    passive: '죽은 자들이여 일어나라', desc: '???'
   },
   dictator: {
     name: '독재자', hp: 2, atk: 8, social: 8, speed: 2, unlocked: false,
-    passive: '끝없는 격차', desc: '처치와 처세 성공으로 독재가 쌓인다. 10이 될 때마다 직전 방식에 맞는 능력치가 크게 오른다.'
+    passive: '끝없는 격차', desc: '???'
   }
 };
 
@@ -214,8 +193,7 @@ function endingProfile(name) {
 
 function freshState() {
   return {
-    version: GAME_VERSION,
-    runId:`local_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,9)}`,
+    version: 95,
     classId: null,
     p: null,
     sceneId: 'intro',
@@ -236,7 +214,7 @@ function freshState() {
     stats: {
       progress:0, goldEarned:0, goldSpent:0, kills:0, eliteKills:0, riskyWins:0,
       talkSolved:0, socialSuccess:0, socialFail:0, runSuccess:0, secrets:0,
-      survivors:0, growths:0, comebackWins:0, talkInteractions:0, overTalks:0, itemsUsed:0, corpses:0, tyranny:0, ending:'', maxAttackChanceBeaten:100
+      survivors:0, growths:0, comebackWins:0, talkInteractions:0, overTalks:0, itemsUsed:0, ending:'', maxAttackChanceBeaten:100
     }
   };
 }
@@ -583,7 +561,7 @@ const SCENES = {
   }),
 
   forestMerchant: scene('forestMerchant', {
-    chapter:'CHAPTER 3B', location:'숲 · 초입', art:'merchant',
+    chapter:'CHAPTER 3B', location:'숲 · 초입', art:'merchant', enemy:'merchantDummy',
     text:`짐수레를 끌던 상인이 당신을 발견한다.\n\n“이 시간에 혼자 숲으로?”\n“물건이 필요하면 돈부터 보여줘.”\n\n그는 경계하지만 아직 적대적이지 않다.`,
     enemyOverride:{name:'떠돌이 상인 로벤',hp:5,atk:3,social:10,speed:5,gold:45,rank:'비전투원'},
     talk(){ state.flags.merchantAlive=true;state.relation.merchants+=2;state.stats.talkSolved++;queueOutcome('로벤 · “이 앞엔 도적단 간부들이 돌아다녀. 특히 둘은 건드리지 마.”\n\n그는 숲길의 지름길과 위험한 구역까지 알려준다.', 'forestRoad'); },
@@ -928,46 +906,11 @@ ${state.flags.officer2Allied?'당신을 적으로 보지는 않지만 아직 완
 
 };
 
-// ---------- Class-flavored opening ----------
-const EARLY_CLASS_FLAVOR = {
-  knight:{
-    intro:'몸은 아직 쫓겨난 사실보다 오래된 훈련을 먼저 기억한다. 등을 벽에 두고, 출구를 확인하고, 손이 닿는 곳에 무기가 있는지 살핀다.',
-    beggars:'도움을 청하는 목소리를 들으면 먼저 앞을 막아서는 습관이 남아 있다. 다만 이번에는 지켜야 할 깃발도 명령도 없다.',
-    gangster:'남자의 어깨와 발 간격이 먼저 눈에 들어온다. 싸움이 벌어진다면 정면에서 받아낼 수 있을지 본능적으로 가늠한다.'
-  },
-  noble:{
-    intro:'옷은 초라해졌어도 사람을 재는 습관은 남아 있다. 누가 먼저 말하고, 누가 눈을 피하고, 누가 당신의 몰락을 알아볼지를 살핀다.',
-    beggars:'세 사람은 도움보다 동의를 먼저 구한다. 말의 순서와 눈짓이 맞지 않는다. 귀족 사회에서 수없이 본 종류의 작은 연극이다.',
-    gangster:'남자는 무례하지만 무작정 덤비는 부류는 아니다. 무엇을 원하는지 알아내면 검보다 말이 빠를 수도 있다.'
-  },
-  thief:{
-    intro:'눈을 뜨자마자 주머니부터 확인한다. 가진 건 적지만 아직 빼앗긴 것은 없다. 골목의 출구 셋과 감시하기 좋은 지붕 하나도 함께 눈에 들어온다.',
-    beggars:'도움을 청하는 동안 한 명의 시선이 자꾸 당신의 허리춤으로 내려간다. 가난한 사람을 의심해서가 아니라, 손버릇은 손버릇을 알아보기 때문이다.',
-    gangster:'정면보다 골목 양옆의 틈이 먼저 보인다. 이길 수 있는 싸움인지보다, 필요하면 얼마나 빨리 사라질 수 있는지를 먼저 잰다.'
-  },
-  spellsword:{
-    intro:'손이 먼저 검을 찾는다. 몰락도 추방도 설명할 말은 많지만, 머릿속에 남은 답은 이상하리만큼 단순하다. 부술 수 있으면 지나갈 수 있다.',
-    beggars:'세 사람의 하소연은 길다. 누가 옳은지보다 이 이야기가 결국 싸움으로 끝날지부터 생각하게 된다.',
-    gangster:'상대가 싸울 사람인지 아닌지는 금세 알 수 있다. 문제는 싸우지 않을 이유를 당신이 얼마나 오래 참을 수 있느냐다.'
-  },
-  necromancer:{
-    intro:'젖은 골목에는 살아 있는 냄새와 죽어가는 냄새가 뒤섞여 있다. 다른 사람은 지나칠 흔적들이 당신에게는 유난히 선명하다.',
-    beggars:'셋 모두 굶주렸지만 아직 죽음과는 거리가 있다. 이상하게도 그 사실이 먼저 안심된다.',
-    gangster:'남자의 숨은 고르고 맥은 강해 보인다. 아직 죽은 자의 편에 설 사람은 아니다. 적어도 지금은.'
-  },
-  dictator:{
-    intro:'자리도 이름도 잃었지만 사람을 위아래로 나누던 습관은 사라지지 않았다. 이 골목에서도 누가 명령하고 누가 따르는지는 금세 보인다.',
-    beggars:'세 사람 중 실제로 결정을 내리는 자는 하나뿐이다. 나머지는 그의 말을 반복한다. 작은 무리에도 권력은 있다.',
-    gangster:'남자는 이 골목에서 자기 규칙이 통한다고 믿는다. 당신에게는 그 확신 자체가 도전처럼 느껴진다.'
-  }
-};
-function earlyClassFlavor(part){return EARLY_CLASS_FLAVOR[state.classId]?.[part]||'';}
-
 // ---------- v0.9: richer scenes / multi-step dialogue ----------
 const RICH_TEXT = {
-  intro: () => `당신에게는 한때 이름이 있었다.\n\n그 이름을 부르면 문이 열렸고, 누군가는 고개를 숙였고, 누군가는 당신이 돌아오기를 기다렸다. 몰락은 그 모든 것을 한꺼번에 지워버렸다. 변명할 시간도, 짐을 챙길 시간도 없었다.\n\n비가 그친 새벽. 차가운 돌바닥의 습기가 옷 안쪽까지 스며든다. 멀리서 시장을 여는 종소리가 희미하게 들리지만 이 골목에는 빵 냄새보다 젖은 재와 썩은 나무 냄새가 짙다.\n\n당신은 빈민가 끝자락에서 눈을 뜬다. 가진 것은 몸 하나와, 아직 완전히 꺾이지 않은 습관뿐이다.\n\n${earlyClassFlavor('intro')}`,
-  beggars: () => `누더기를 걸친 세 사람이 당신을 빙 둘러싼다. 가장 늙은 자는 손에 찌그러진 양철잔을 들고 있고, 아이처럼 마른 청년은 끊임없이 골목 입구를 살핀다.\n\n“살아 있었군.”\n“보아하니 당신도 갈 데 없는 사람 같네.”\n\n그들은 며칠째 자신들을 괴롭히는 깡패가 있다고 말한다. 돈을 빼앗고, 잠자리를 걷어차고, 말을 듣지 않으면 때린다고 한다. 말은 빠르고 억울함은 충분해 보이지만 세 사람 모두 같은 부분에서 묘하게 시선을 피한다.\n\n당신이 어떤 사람인지 묻기도 전에 그들은 당신이 자기들 편일 거라 믿고 있다.\n\n${earlyClassFlavor('beggars')}`,
-  gangster: () => `뒷골목 끝. 덩치 큰 남자가 벽에서 등을 떼고 천천히 일어난다. 낡은 외투 아래로 두꺼운 팔이 드러나고, 오른손에는 싸움에 익숙한 굳은살이 잡혀 있다.\n\n“또 너희냐?”\n\n거지들은 약속이라도 한 듯 당신 뒤로 물러선다.\n“저놈이에요. 매일 우릴 괴롭혀요!”\n\n남자의 시선이 거지들에게서 당신에게 옮겨온다. 그는 먼저 덤비지 않는다. 대신 당신이 왜 끼어들었는지 재려는 듯 턱을 조금 든다.${state.flags.gangsterTruth?'\n\n이제 당신은 안다. 이 싸움의 시작은 거지들이 그의 돈주머니에 손을 댄 일이었다.':''}\n\n${earlyClassFlavor('gangster')}`,
+  intro: () => `당신에게는 한때 이름이 있었다.\n\n그 이름을 부르면 문이 열렸고, 누군가는 고개를 숙였고, 누군가는 당신이 돌아오기를 기다렸다. 몰락은 그 모든 것을 한꺼번에 지워버렸다. 변명할 시간도, 짐을 챙길 시간도 없었다.\n\n비가 그친 새벽. 차가운 돌바닥의 습기가 옷 안쪽까지 스며든다. 멀리서 시장을 여는 종소리가 희미하게 들리지만 이 골목에는 빵 냄새보다 젖은 재와 썩은 나무 냄새가 짙다.\n\n당신은 빈민가 끝자락에서 눈을 뜬다. 가진 것은 몸 하나와, 아직 완전히 꺾이지 않은 습관뿐이다.`,
+  beggars: () => `누더기를 걸친 세 사람이 당신을 빙 둘러싼다. 가장 늙은 자는 손에 찌그러진 양철잔을 들고 있고, 아이처럼 마른 청년은 끊임없이 골목 입구를 살핀다.\n\n“살아 있었군.”\n“보아하니 당신도 갈 데 없는 사람 같네.”\n\n그들은 며칠째 자신들을 괴롭히는 깡패가 있다고 말한다. 돈을 빼앗고, 잠자리를 걷어차고, 말을 듣지 않으면 때린다고 한다. 말은 빠르고 억울함은 충분해 보이지만 세 사람 모두 같은 부분에서 묘하게 시선을 피한다.\n\n당신이 어떤 사람인지 묻기도 전에 그들은 당신이 자기들 편일 거라 믿고 있다.`,
+  gangster: () => `뒷골목 끝. 덩치 큰 남자가 벽에서 등을 떼고 천천히 일어난다. 낡은 외투 아래로 두꺼운 팔이 드러나고, 오른손에는 싸움에 익숙한 굳은살이 잡혀 있다.\n\n“또 너희냐?”\n\n거지들은 약속이라도 한 듯 당신 뒤로 물러선다.\n“저놈이에요. 매일 우릴 괴롭혀요!”\n\n남자의 시선이 거지들에게서 당신에게 옮겨온다. 그는 먼저 덤비지 않는다. 대신 당신이 왜 끼어들었는지 재려는 듯 턱을 조금 든다.${state.flags.gangsterTruth?'\n\n이제 당신은 안다. 이 싸움의 시작은 거지들이 그의 돈주머니에 손을 댄 일이었다.':''}`,
   kingdomGate: () => `왕국의 동문은 생각보다 높다. 사람 두세 명이 나란히 걸어도 남을 만큼 넓은 성벽 위로 활을 든 병사들이 오간다. 문 앞에는 장사꾼, 농부, 짐수레가 길게 줄을 서 있다.\n\n당신 차례가 되자 경비병 하나가 창을 가로로 세운다. 갑옷에는 먼지가 묻었고 눈 밑에는 옅은 피로가 내려앉아 있다.\n\n“멈춰. 신분과 목적을 밝혀라.”\n\n그의 말투는 거칠지만 개인적인 악의는 없다. 최근 무언가 때문에 검문이 강해진 모양이다. 성문 너머로는 시장의 고함, 대장간의 쇳소리, 멀리 왕궁의 종이 한꺼번에 섞여 들린다.`,
   citySquare: () => `왕국의 중앙가는 전쟁을 앞둔 도시답지 않게 바쁘고 평범하다. 빵집 앞에는 줄이 있고, 세탁물이 창문 사이에서 흔들리고, 장사꾼들은 오늘이 마지막 날이 아닌 것처럼 목청껏 값을 외친다.\n\n하지만 자세히 들으면 평범한 대화의 끝마다 같은 이름이 붙는다. 도적단. 세금. 징발. 친위대. 누군가는 왕국이 자신들을 지켜준다고 말하고, 누군가는 왕국이 먼저 사람들을 숲으로 내몰았다고 낮게 중얼거린다.\n\n${state.flags.gangsterPeace?'시장 한편에서 빈민가에서 보았던 깡패와 닮은 뒷모습이 스쳐 지나간다. 피를 보지 않고 끝낸 작은 사건이 이 넓은 도시 어딘가에도 이어져 있는 듯하다.':''}${state.flags.kingdomHostile?'\n\n그리고 지금은 사람들의 시선이 유난히 당신에게 오래 머문다. 왕국은 이미 당신을 위험한 사람으로 기억하기 시작했다.':''}`,
   captainEnraged: () => `왕궁 앞 대로가 비었다. 상인들은 문을 잠갔고 시민들은 창문을 닫았다. 멀리서 갑옷이 부딪히는 소리가 한 번 들린 뒤, 은빛 갑옷의 남자가 혼자 걸어 나온다.\n\n친위대장 레오른.\n\n그는 당신을 보기 전에 먼저 길 위의 흔적을 본다. 쓰러진 경비, 버려진 무기, 도망친 사람들의 자국. 그러고서야 당신에게 시선을 올린다.\n\n“네가 죽인 사람들의 얼굴을 하나라도 기억하나?”\n\n목소리는 크지 않다. 그래서 더 위험하다. 그의 검은 아직 칼집에 있지만, 손은 이미 손잡이에 놓여 있다.`,
@@ -1015,10 +958,6 @@ const TALK_PROFILES = {
     {text:`로벤은 왕국과 도적단 사이를 오랫동안 오갔다고 한다. “왕국은 세금을 걷고, 도적은 통행료를 걷지. 상인 입장에선 이름만 달라.”\n\n그는 어느 편도 완전히 믿지 않는다. 그래서 살아남은 듯하다.`,on(){state.flags.merchantBalancedView=true;state.stats.secrets++;encMod().socialPct+=7;}},
     {text:`“정말 숲 깊이 갈 거면 이건 기억해. 붉은 모자는 말이 통하지만 자존심을 건드리면 끝이야. 그리고 상인협회 기사 앞에서는 도적 물건을 보이지 마.”\n\n후반 조우에 쓸 만한 구체적인 정보를 얻었다.`,on(){state.flags.merchantAdvice=true;encMod().attackPct+=3;}}
   ]},
-  banditScoutRoyal:{end:'정찰병은 더 말하면 임무를 망친다며 입을 다문다.',steps:[
-    {text:`정찰병은 목책 너머 왕국 쪽을 힐끗 본다. “우리가 재미로 수레를 터는 줄 알아? 세금 걷고, 겨울 곡식까지 가져간 게 먼저였어.”\n\n말투에는 과장이 섞였지만 왕국 쪽에서 듣지 못한 사정이 있다.`,on(){if(!state.flags.heardBanditSide){state.flags.heardBanditSide=true;state.relation.bandits+=1;}encMod().socialPct+=7;}},
-    {text:`“세리아는 왕국 사람 전부를 죽이자는 쪽은 아니야.” 정찰병이 낮게 말한다. “근데 성벽 안쪽은 우리 말 들을 생각이 없지.”\n\n그는 당신이 왕국 편인지 확인하려 하지만, 동시에 싸움을 피할 여지도 남겨둔다.`,on(){state.flags.scoutKnowsTruce=true;encMod().socialPct+=8;encMod().attackPct+=3;}}
-  ]},
   merchantCaptured:{end:'갈고리는 더 말하면 거래 대신 싸움이 될 거라고 경고한다.',steps:[
     {text:`갈고리는 로벤을 흘겨본다. “상인협회가 우리 거래선을 끊었어. 약도, 소금도, 겨울 식량도. 저 상인은 그쪽 사람이면서 우리한테도 팔았고.”\n\n단순한 납치라기보다 끊어진 거래의 보복에 가깝다.`,on(){state.relation.bandits+=1;encMod().socialPct+=8;}},
     {text:`로벤이 끼어든다. “난 누구 편도 아니야. 돈 내는 사람 편이지.”\n갈고리가 피식 웃는다. “그래서 아무도 널 믿지 않는 거고.”\n\n둘의 관계가 완전히 적대적이기만 한 것은 아니다. 협상의 틈이 있다.`,on(){encMod().socialPct+=12;state.flags.officer1DealGap=true;}}
@@ -1058,7 +997,6 @@ const TALK_RISKS = {
   captainEnraged:    {safe:2, max:2, social:-8, enemyAtk:2, attack:-2, text:'레오른은 대화를 시간 끌기로 받아들인다. 검을 쥔 손에 힘이 들어간다.'},
   oldVeteran:        {safe:3, max:2, social:-6, enemyAtk:1, text:'아르벤은 더 캐묻는 태도를 시험이 아니라 무례로 받아들인다.'},
   forestMerchant:    {safe:3, max:2, social:-7, text:'로벤이 손바닥을 내민다. “정보도 상품이라고 했지?”'},
-  banditScoutRoyal: {safe:2, max:1, social:-8, enemyAtk:1, text:'정찰병이 더는 임무 이야기를 흘릴 생각이 없어 보인다.'},
   merchantCaptured:  {safe:2, max:2, social:-8, enemyAtk:1, text:'갈고리는 협상이 아니라 시간 끌기라고 판단하기 시작한다.'},
   officer2:          {safe:2, max:2, social:-8, enemyAtk:1, text:'붉은 모자의 웃음이 사라진다. 자존심을 건드린 모양이다.'},
   guildNovice:       {safe:2, max:2, social:-10, enemyAtk:1, text:'초급 기사는 말을 더 들을수록 규정대로 처리하려 한다.'},
@@ -1111,7 +1049,7 @@ function richSceneText(sc){
 }
 function encMod(id=state.sceneId){
   state.encounterMods ||= {};
-  if(!state.encounterMods[id]) state.encounterMods[id]={attackPct:0,socialPct:0,attackStat:0,socialStat:0,speed:0,enemyAtk:0,comebackMin:6,revealed:false,usedItems:[],wraithSummoned:false};
+  if(!state.encounterMods[id]) state.encounterMods[id]={attackPct:0,socialPct:0,attackStat:0,socialStat:0,speed:0,enemyAtk:0,comebackMin:6,revealed:false,usedItems:[]};
   return state.encounterMods[id];
 }
 function effectiveSpeed(){return Number(state.p?.speed||0)+Number(encMod().speed||0);}
@@ -1180,19 +1118,15 @@ function showScreen(id) {
 }
 
 function renderClasses() {
-  $('classGrid').innerHTML = Object.entries(CLASSES).map(([id,cl]) => {
-    const unlocked=isClassUnlocked(id);
-    const unlockText=classUnlockText(id);
-    return `
-    <article class="class-card ${unlocked?'':'locked'}">
-      <div class="class-head"><div class="class-name">${unlocked?'':'🔒 '}${cl.name}</div><span class="tag">${unlocked?'선택 가능':unlockText}</span></div>
+  $('classGrid').innerHTML = Object.entries(CLASSES).map(([id,cl]) => `
+    <article class="class-card ${cl.unlocked?'':'locked'}">
+      <div class="class-head"><div class="class-name">${cl.unlocked?'':'🔒 '}${cl.name}</div><span class="tag">${cl.unlocked?'선택 가능':'잠김'}</span></div>
       <div class="stats-row">
         ${statBox('체력',cl.hp)}${statBox('공격',cl.atk)}${statBox('처세',cl.social)}${statBox('속도',cl.speed)}
       </div>
-      <div class="passive"><strong>${unlocked?cl.passive:'???'}</strong><br>${unlocked?cl.desc:`노말 엔딩을 더 보면 기억이 열린다.`}</div>
-      <button class="btn ${unlocked?'primary':''}" ${unlocked?'':'disabled'} onclick="selectClass('${id}')">${unlocked?'이 직업으로 시작':'잠김'}</button>
-    </article>`;
-  }).join('');
+      <div class="passive"><strong>${cl.passive}</strong><br>${cl.desc}</div>
+      <button class="btn ${cl.unlocked?'primary':''}" ${cl.unlocked?'':'disabled'} onclick="selectClass('${id}')">${cl.unlocked?'이 직업으로 시작':'해금되지 않음'}</button>
+    </article>`).join('');
 }
 function statBox(nm,v){return `<div class="stat-box">${nm}<b>${v}</b></div>`;}
 
@@ -1205,8 +1139,7 @@ function render() {
   $('hudGold').textContent = `◆ ${state.p.gold}`;
   $('hpText').textContent = `${state.p.hp} / ${state.p.maxHp}`;
   $('hpBar').style.width = `${Math.max(0, Math.min(100, state.p.hp/state.p.maxHp*100))}%`;
-  const classExtra=state.classId==='necromancer'?` · 시체 ${state.stats.corpses||0}`:state.classId==='dictator'?` · 독재 ${state.stats.tyranny||0}`:'';
-  $('hudStats').textContent = `처세 ${state.p.social} · 속도 ${state.p.speed} · 진행 ${state.stats.progress}${classExtra}`;
+  $('hudStats').textContent = `처세 ${state.p.social} · 속도 ${state.p.speed} · 진행 ${state.stats.progress}`;
 
   $('chapter').textContent = sc.chapter || '';
   $('location').textContent = sc.location || '';
@@ -1225,13 +1158,12 @@ function render() {
     $('enemyStats').innerHTML = `체력 ${enemy.hp} · 공격 ${enemy.atk} · 처세 ${enemy.social} · 속도 ${enemy.speed}${encounterStatusHtml(enemy,sc)}`;
     $('attackInfo').textContent = `승률 ${attackChance(enemy)}%`;
     $('talkInfo').textContent=talkLabel();
-    const classSocialBlocked=state.classId==='spellsword';
-    $('socialInfo').textContent = classSocialBlocked ? '사용할 수 없다' : sc.socialDisabled ? '통하지 않는다' : state.socialUsed[state.sceneId] ? '이미 시도했다' : `성공 ${socialChance(enemy,sc)}%`;
+    $('socialInfo').textContent = sc.socialDisabled ? '통하지 않는다' : state.socialUsed[state.sceneId] ? '이미 시도했다' : `성공 ${socialChance(enemy,sc)}%`;
     const rc = runChance(enemy);
     const runAlreadyUsed=!!state.escapeAttempted;
     $('runInfo').textContent = runLabel(enemy, rc);
     const socialBtn = document.querySelector('[data-game-action="social"]');
-    socialBtn.classList.toggle('locked-action', !!sc.socialDisabled || state.classId==='spellsword');
+    socialBtn.classList.toggle('locked-action', !!sc.socialDisabled);
     socialBtn.classList.toggle('used', !!state.socialUsed[state.sceneId]);
     const runBtn=document.querySelector('[data-game-action="run"]');
     runBtn.classList.toggle('locked-action', rc===0 || runAlreadyUsed);
@@ -1245,18 +1177,7 @@ function render() {
   $('choiceArea').classList.toggle('hidden', waiting);
   if (enemy) $('actionGrid').classList.toggle('hidden', waiting);
   $('encounterTools').classList.toggle('hidden', !enemy || waiting);
-  if(enemy){
-    const usable=state.inventory.filter(n=>ITEMS[n]?.encounter||ITEMS[n]?.heal||ITEMS[n]?.persistent).length;
-    $('encounterItemInfo').textContent=usable?`${usable}개 보유`:'사용할 물품이 없다';
-    const wraithBtn=$('necromancerSkillBtn');
-    if(wraithBtn){
-      const m=encMod(); const corpses=Number(state.stats.corpses||0);
-      const show=state.classId==='necromancer';
-      wraithBtn.classList.toggle('hidden',!show);
-      wraithBtn.disabled=!show||corpses<=0||!!m.wraithSummoned;
-      const info=$('necromancerSkillInfo');if(info)info.textContent=m.wraithSummoned?'이미 소환했다':`시체 ${corpses}`;
-    }
-  }
+  if(enemy){const usable=state.inventory.filter(n=>ITEMS[n]?.encounter||ITEMS[n]?.heal||ITEMS[n]?.persistent).length;$('encounterItemInfo').textContent=usable?`${usable}개 보유`:'사용할 물품이 없다';}
   $('sceneCard').classList.toggle('deep-dialogue', !!talkProfile() && (state.talkCount[state.sceneId]||0)>0);
   $('choiceArea').innerHTML = choices.filter(Boolean).map((x,i)=>`<button class="choice-btn" data-choice="${i}"><b>${escapeHtml(x.label)}</b></button>`).join('');
   [...document.querySelectorAll('[data-choice]')].forEach(btn => {
@@ -1293,7 +1214,7 @@ function art(kind) {
 
 // ---------- Gameplay ----------
 function selectClass(id) {
-  const cl=CLASSES[id]; if(!cl || !isClassUnlocked(id)) return;
+  const cl=CLASSES[id]; if(!cl || !cl.unlocked) return;
   state=freshState(); state.classId=id;
   state.p={className:cl.name,maxHp:cl.hp,hp:cl.hp,atk:cl.atk,social:cl.social,speed:cl.speed,gold:10};
   state.sceneId='intro'; save(); showScreen('gameScreen'); enter('intro');
@@ -1404,11 +1325,10 @@ function gameAction(type) {
   const sc=SCENES[state.sceneId], enemy=getEnemy(sc); if(!sc||!enemy||state.ended)return;
   if(type==='talk') { handleTalk(sc); return; }
   if(type==='social') {
-    if(state.classId==='spellsword'){toast('마검사는 처세하지 않는다.');return;}
     if(sc.socialDisabled || state.socialUsed[state.sceneId]) return;
     state.socialUsed[state.sceneId]=true;
     const chance=socialChance(enemy,sc);
-    if(Math.random()*100<chance){state.stats.socialSuccess++;if(state.classId==='dictator')gainTyranny('social');fx('good');floatText('처세 성공');if(sc.socialSuccess)sc.socialSuccess();else resolve('social',null,'처세에 성공했다.');}
+    if(Math.random()*100<chance){state.stats.socialSuccess++;fx('good');floatText('처세 성공');if(sc.socialSuccess)sc.socialSuccess();else resolve('social',null,'처세에 성공했다.');}
     else {state.stats.socialFail++;fx('bad');floatText('처세 실패');if(sc.socialFail)sc.socialFail();else {toast('처세에 실패했다. 같은 방법은 다시 통하지 않는다.','bad');render();save();}}
     return;
   }
@@ -1479,49 +1399,6 @@ async function rollComebackDie(){
   await sleep(650);
   return finalRoll;
 }
-function gainTyranny(source){
-  state.stats.tyranny=Number(state.stats.tyranny||0)+1;
-  const current=Math.floor(state.stats.tyranny/10);
-  const claimed=Number(state.flags.tyrannyMilestones||0);
-  if(current>claimed){
-    state.flags.tyrannyMilestones=current;
-    if(source==='social'){
-      state.p.social+=8;
-      floatText('처세 +8');
-      state.lastToast='사람을 굴복시키는 방식이 더 노골적으로 다듬어졌다. 처세 +8';
-    }else{
-      state.p.atk+=8;
-      floatText('공격력 +8');
-      state.lastToast='저항을 꺾을수록 힘의 격차가 벌어진다. 공격력 +8';
-    }
-  }
-}
-function applyClassKillReward(){
-  if(state.classId==='spellsword'){
-    const amount=Math.max(1,Math.ceil(state.p.maxHp*0.2));
-    const before=state.p.hp; heal(amount,false);
-    if(state.p.hp>before)floatText(`흡혈 +${state.p.hp-before}`);
-  }else if(state.classId==='necromancer'){
-    state.stats.corpses=Number(state.stats.corpses||0)+1;
-    floatText('시체 +1');
-  }else if(state.classId==='dictator'){
-    gainTyranny('kill');
-  }
-}
-function summonWraith(){
-  if(state.classId!=='necromancer'||battleBusy||state.pending)return;
-  const sc=SCENES[state.sceneId];if(!getEnemy(sc))return;
-  const m=encMod();
-  if(m.wraithSummoned){toast('이 조우에는 이미 망령이 붙어 있다.');return;}
-  if(Number(state.stats.corpses||0)<=0){toast('불러낼 시체가 없다.');return;}
-  state.stats.corpses--;
-  m.wraithSummoned=true;
-  m.attackPct=clamp(Number(m.attackPct||0)+12,-30,35);
-  m.enemyAtk=clamp(Number(m.enemyAtk||0)-2,-8,8);
-  state.lastToast='차가운 그림자가 당신 옆에 일어선다. 상대의 시선이 갈라진다.';
-  floatText('망령 소환');save();render();
-}
-
 async function startBattleSequence(sc, enemy){
   if(battleBusy||state.ended)return;
   battleBusy=true;
@@ -1559,7 +1436,7 @@ async function startBattleSequence(sc, enemy){
       setBattleText(`${roll} · 역전!`,'comeback');
       fx('good'); shake();
       await sleep(900);
-      finishBattleWin(sc,enemy,chance,true,roll);
+      finishBattleWin(sc,enemy,chance,true);
       return;
     }
 
@@ -1574,7 +1451,7 @@ async function startBattleSequence(sc, enemy){
     hideBattleOverlay(); battleBusy=false;
   }
 }
-function finishBattleWin(sc,enemy,chance,comeback,comebackRoll=null){
+function finishBattleWin(sc,enemy,chance,comeback){
   if(chance<=35)state.stats.riskyWins++;
   if(comeback){state.stats.comebackWins=(state.stats.comebackWins||0)+1; state.stats.riskyWins++;}
   const base=comeback?0.22:0.08;
@@ -1582,13 +1459,12 @@ function finishBattleWin(sc,enemy,chance,comeback,comebackRoll=null){
   const dmg=Math.min(Math.max(0,Math.floor(enemy.atk*(base+Math.random()*spread))),Math.max(0,state.p.hp-1));
   if(dmg>0){state.p.hp-=dmg;floatText(`HP -${dmg}`);}
   state.stats.kills++; if(enemy.elite)state.stats.eliteKills++;
-  applyClassKillReward();
   hideBattleOverlay(); battleBusy=false;
-  const prefix=comeback?`주사위가 ${comebackRoll??6}에 멈췄다. 끝났던 승부가 뒤집혔다.${dmg?`\n체력 ${dmg}을 잃었다.`:''}\n\n`:'';
+  const prefix=comeback?`주사위가 6에 멈췄다. 끝났던 승부가 뒤집혔다.${dmg?`\n체력 ${dmg}을 잃었다.`:''}\n\n`:'';
   if(sc.attackWin){
     if(comeback){state.lastToast=prefix.trim();}
     sc.attackWin();
-    if(comeback && state.lastToast && !state.lastToast.startsWith('주사위가 ')) state.lastToast=prefix+state.lastToast;
+    if(comeback && state.lastToast && !state.lastToast.startsWith('주사위가 6에 멈췄다.')) state.lastToast=prefix+state.lastToast;
   } else resolve('attack',null,prefix+'전투에서 승리했다.');
   save(); render();
 }
@@ -1679,21 +1555,6 @@ function friendEndingHint(loose=false){
   return hints.slice(0,2).join('\n') || '아직 때가 아니다.';
 }
 
-function recordClearForUnlock(name,e){
-  if(e?.bad || String(e?.kind||'').startsWith('BAD END'))return [];
-  const meta=loadMeta();
-  const runId=String(state.runId||'');
-  if(runId && meta.awardedRuns.includes(runId))return [];
-  const before=Object.keys(CLASS_UNLOCK_CLEAR_REQUIREMENTS).filter(isClassUnlocked);
-  meta.normalClears=Math.max(0,Number(meta.normalClears||0))+1;
-  if(!meta.endings.includes(name))meta.endings.push(name);
-  if(runId)meta.awardedRuns.push(runId);
-  meta.awardedRuns=meta.awardedRuns.slice(-100);
-  saveMeta(meta);
-  const after=Object.keys(CLASS_UNLOCK_CLEAR_REQUIREMENTS).filter(isClassUnlocked);
-  return after.filter(x=>!before.includes(x)).map(x=>CLASSES[x].name);
-}
-
 function finish(name) {
   if(state.ended)return;
   name=specialEndingFor(name);
@@ -1701,8 +1562,6 @@ function finish(name) {
   state.stats.survivors = ['merchantAlive','gangsterPeace'].filter(f=>state.flags[f]).length + (!state.flags.citizenKilled?1:0) + (!state.flags.captainKilled?1:0);
   const e=endingProfile(name);
   state.stats.endingBonus=Number(e.bonus||0);
-  const newlyUnlocked=recordClearForUnlock(name,e);
-  state.flags.newClassUnlocks=newlyUnlocked;
   save();
   $('endingArt').classList.toggle('bad-ending-art', !!e.bad);
   $('endingArt').innerHTML=e.art ? art(e.art) : `<span class="ending-glyph">${escapeHtml(e.icon||'†')}</span>`;
@@ -1711,11 +1570,6 @@ function finish(name) {
   $('endScore').textContent=clientScore().toLocaleString();
   const deathBlock=e.bad&&state.flags.deathReason?`<b>최후의 순간</b> · ${escapeHtml(state.flags.deathReason)}<br><b>사망 장소</b> · ${escapeHtml(SCENES[state.flags.deathScene]?.location||'알 수 없는 장소')}<br><br><br>`:'';
   $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 과대화 <b>${state.stats.overTalks||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>`;
-  const meta=loadMeta();
-  if(!e.bad){
-    const unlockLine=state.flags.newClassUnlocks?.length?`<br><br><b>새 직업 해금 · ${state.flags.newClassUnlocks.map(escapeHtml).join(' / ')}</b>`:`<br><br>노말 엔딩 <b>${meta.normalClears}회</b>`;
-    $('endStats').innerHTML+=unlockLine;
-  }
   resetRankSubmitUI();
   fx(e.bad?'bad':'good');showScreen('endScreen');
 }
@@ -1807,10 +1661,7 @@ function normalizeLoadedState(data){
   merged.inventory=Array.isArray(data.inventory)?data.inventory:[];
   merged.stats={...base.stats,...(data.stats||{})};
   merged.stats.overTalks=Number(data.stats?.overTalks||0);
-  merged.stats.corpses=Number(data.stats?.corpses||0);
-  merged.stats.tyranny=Number(data.stats?.tyranny||0);
-  merged.runId=String(data.runId||base.runId);
-  merged.version=GAME_VERSION;
+  merged.version=95;
   return merged;
 }
 function save(){localStorage.setItem(SAVE_KEY,JSON.stringify(state));updateMenuSaveInfo();}
@@ -1831,7 +1682,6 @@ function updateMenuSaveInfo(){
     if(!d.p){el.textContent='저장된 여정 없음';return;}
     const sc=SCENES[d.sceneId];
     const where=sc?.location||'알 수 없는 장소';
-    if(d.ended){el.textContent=`${d.p.className} · ${d.stats?.ending||'끝난 여정'} · 기록 확인 가능`;return;}
     el.textContent=`${d.p.className} · ${where} · HP ${d.p.hp}/${d.p.maxHp} · ◆ ${d.p.gold}`;
   }catch{el.textContent='저장 데이터 확인 필요';}
 }
@@ -1939,7 +1789,6 @@ async function updateStorageStatus(){
   try{
     const r=await fetch(`/api/storage?t=${Date.now()}`,{cache:'no-store'});const d=await r.json();
     if(d.permanent&&d.connected){el.textContent='● 영구 랭킹 DB 실제 연결 확인';el.className='storage-info cloud';}
-    else if(d.error==='SERVER_SECRET_KEY_REQUIRED'){el.textContent='● Supabase Secret Key 확인 필요';el.className='storage-info cloud-error';}
     else if(d.configured&&!d.connected){el.textContent='● 영구 DB 설정됨 · 연결 오류';el.className='storage-info cloud-error';}
     else{el.textContent='○ 영구 랭킹 DB 미연결';el.className='storage-info local';}
   }catch{el.textContent='○ 랭킹 서버 상태 확인 불가';el.className='storage-info local';}
@@ -1978,14 +1827,13 @@ document.addEventListener('click',e=>{
   if(act==='back-menu'){closeModal();showScreen('menuScreen');updateMenuSaveInfo();}
   if(act==='bag')openBag();
   if(act==='encounter-items')openEncounterItems();
-  if(act==='summon-wraith')summonWraith();
   if(act==='save-exit')saveAndExit();
   if(act==='submit-score')submitScore();
   if(act==='continue-result')continueOutcome();
   const ga=e.target.closest('[data-game-action]')?.dataset.gameAction;
   if(ga)gameAction(ga);
 });
-window.selectClass=selectClass;window.summonWraith=summonWraith;window.openShop=openShop;window.openBag=openBag;window.openEncounterItems=openEncounterItems;window.closeModal=closeModal;window.continueOutcome=continueOutcome;window.saveAndExit=saveAndExit;
+window.selectClass=selectClass;window.openShop=openShop;window.openBag=openBag;window.openEncounterItems=openEncounterItems;window.closeModal=closeModal;window.continueOutcome=continueOutcome;window.saveAndExit=saveAndExit;
 
 updateMenuSaveInfo();
 updateStorageStatus();

@@ -13,13 +13,9 @@ const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY |
 const SUPABASE_KEY = SUPABASE_SECRET_KEY || SUPABASE_SERVICE_ROLE_KEY;
 const SUPABASE_KEY_IS_NEW = SUPABASE_KEY.startsWith('sb_secret_');
 const CLOUD_CONFIGURED = !!(SUPABASE_URL && SUPABASE_KEY);
-function keyRole(key){try{if(!key||!key.includes('.'))return '';const part=key.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');return String(JSON.parse(Buffer.from(part,'base64').toString('utf8'))?.role||'');}catch{return '';}}
-const SUPABASE_KEY_ROLE=keyRole(SUPABASE_KEY);
-const SUPABASE_PUBLIC_KEY=SUPABASE_KEY.startsWith('sb_publishable_')||SUPABASE_KEY_ROLE==='anon';
-const CLOUD_WRITABLE=CLOUD_CONFIGURED&&!SUPABASE_PUBLIC_KEY;
 const supabase = CLOUD_CONFIGURED ? createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { autoRefreshToken:false, persistSession:false, detectSessionInUrl:false },
-  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.7' } }
+  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.6' } }
 }) : null;
 
 app.use(express.json({ limit: '256kb' }));
@@ -287,9 +283,6 @@ app.get('/api/storage', async (_req, res) => {
   if (!CLOUD_CONFIGURED) {
     return res.json({ ok:true, mode:'local', configured:false, connected:false, permanent:false });
   }
-  if(SUPABASE_PUBLIC_KEY){
-    return res.status(503).json({ok:false,mode:'cloud-error',configured:true,connected:false,permanent:false,error:'SERVER_SECRET_KEY_REQUIRED'});
-  }
   try {
     await cloudGetLeaderboard(1);
     return res.json({ ok:true, mode:'cloud', configured:true, connected:true, permanent:true });
@@ -369,7 +362,6 @@ app.post('/api/score', async (req, res) => {
   };
 
   if (CLOUD_CONFIGURED) {
-    if(!CLOUD_WRITABLE)return res.status(503).json({ok:false,permanent:false,verified:false,queued:true,storage:'local-backup',submittedScore:score,error:'SERVER_SECRET_KEY_REQUIRED'});
     try {
       const previous = await cloudGetPlayer(playerId);
       const previousScore = previous ? Number(previous.score || 0) : null;
@@ -457,11 +449,11 @@ app.post('/api/score', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.7' });
+  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.6' });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n몰락자 Normal Mode v0.9.7`);
+  console.log(`\n몰락자 Normal Mode v0.9.6`);
   console.log(`http://localhost:${PORT}`);
   console.log(`랭킹 설정: ${CLOUD_CONFIGURED ? 'Supabase 환경변수 있음 (실연결은 /api/storage에서 검증)' : '로컬 파일'}\n`);
 });

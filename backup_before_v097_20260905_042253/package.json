@@ -1,6 +1,6 @@
 {
   "name": "fallen-normal-mode",
-  "version": "0.9.7",
+  "version": "0.9.6",
   "private": true,
   "scripts": {
     "start": "node server.js"
