@@ -54,7 +54,7 @@ const ENDINGS = {
   'BAD END': { icon:'†', kind:'BAD END', bonus:0, epilogue:'당신의 여정은 여기서 끝났다.\n하지만 실패조차 하나의 기록으로 남는다.' },
   '명예 회복': { icon:'⚜', kind:'NORMAL END', bonus:5000, epilogue:'도적단의 깃발이 쓰러졌다.\n한때 쫓겨났던 당신의 이름은 다시 사람들의 입에 오르기 시작했다.' },
   '반란': { icon:'⚔', kind:'HARD END', bonus:10000, epilogue:'왕의 분노도 왕국의 성벽도 끝내 당신들을 막지 못했다.\n새로운 질서가 피와 함성 속에서 시작된다.' },
-  '모두와 친구': { icon:'◇', kind:'SECRET END', bonus:12000, epilogue:'칼을 뽑지 않고도 바뀌는 것이 있었다.\n왕국과 도적단, 상인들은 불편한 평화를 받아들였다. 그리고 그 중심에 당신이 있었다.' },
+  '모두와 친구': { icon:'◇', kind:'SECRET END', bonus:18000, epilogue:'칼을 뽑지 않고도 바뀌는 것이 있었다.\n왕국과 도적단, 상인들은 불편한 평화를 받아들였다. 그리고 그 중심에 당신이 있었다.' },
   '지배자': { icon:'♛', kind:'LEGEND END', bonus:15000, epilogue:'전설마저 쓰러졌다.\n왕좌를 지킬 자도, 당신에게 명령할 자도 더는 남지 않았다.' }
 };
 
@@ -190,7 +190,7 @@ function endingProfile(name) {
 
 function freshState() {
   return {
-    version: 92,
+    version: 94,
     classId: null,
     p: null,
     sceneId: 'intro',
@@ -202,6 +202,7 @@ function freshState() {
     escapeAttempted: false,
     escapeSerial: 0,
     talkCount: {},
+    talkRisk: {},
     encounterMods: {},
     entered: {},
     lastToast: '',
@@ -210,7 +211,7 @@ function freshState() {
     stats: {
       progress:0, goldEarned:0, goldSpent:0, kills:0, eliteKills:0, riskyWins:0,
       talkSolved:0, socialSuccess:0, socialFail:0, runSuccess:0, secrets:0,
-      survivors:0, growths:0, comebackWins:0, talkInteractions:0, itemsUsed:0, ending:'', maxAttackChanceBeaten:100
+      survivors:0, growths:0, comebackWins:0, talkInteractions:0, overTalks:0, itemsUsed:0, ending:'', maxAttackChanceBeaten:100
     }
   };
 }
@@ -692,9 +693,10 @@ const SCENES = {
     chapter:'FINAL CROSSROAD', location:'왕국과 숲 사이의 오래된 다리', art:'crossroad',
     text:`숲도 왕국도 등 뒤에 있다.\n당신은 어느 한쪽을 완전히 무너뜨리지 않았다.\n\n남은 것은 서로에게 칼을 겨누는 이유를 멈추게 하는 일이다.`,
     choices:() => [
-      c('왕국과 도적단의 협상을 주선한다','관계와 생존한 인물에 따라 결과가 달라진다.',()=>{
-        if(canFriendEnding(true)) finish('모두와 친구');
-        else go('kingdomGate');
+      c('왕국과 도적단의 협상을 주선한다',friendEndingHint(true),()=>{
+        const check=friendEndingCheck(true);
+        if(check.ok) finish('모두와 친구');
+        else queueOutcome(`협상 조건이 아직 부족하다.\n\n${friendEndingHint(true)}\n\n서로를 한 번 살려둔 것만으로는 신뢰가 생기지 않는다. 왕국·도적단·상인 모두에게 실제로 쌓아둔 근거가 필요하다.`,null);
       }),
       !state.flags.rebellionRetreated && c('도적단에 돌아가 왕국을 공격한다','반란으로 끝을 본다.',()=>{state.flags.rebel=true;go('rebelMarch');})
     ].filter(Boolean)
@@ -983,6 +985,60 @@ const TALK_PROFILES = {
   ]}
 };
 
+
+// ---------- v0.9.4: stat thresholds + dialogue pressure ----------
+const TALK_RISKS = {
+  gangster:          {safe:3, max:2, social:-5, enemyAtk:1, text:'같은 이야기를 계속 캐묻자 남자의 표정이 굳는다.'},
+  kingdomGate:       {safe:2, max:2, social:-8, enemyAtk:1, text:'뒤의 줄이 길어진다. 경비병이 노골적으로 짜증을 낸다.'},
+  citizen:           {safe:2, max:1, social:-12, attack:-2, text:'시민은 질문이 지나치다고 느끼고 주변을 살핀다.'},
+  captainEnraged:    {safe:2, max:2, social:-8, enemyAtk:2, attack:-2, text:'레오른은 대화를 시간 끌기로 받아들인다. 검을 쥔 손에 힘이 들어간다.'},
+  oldVeteran:        {safe:3, max:2, social:-6, enemyAtk:1, text:'아르벤은 더 캐묻는 태도를 시험이 아니라 무례로 받아들인다.'},
+  forestMerchant:    {safe:3, max:2, social:-7, text:'로벤이 손바닥을 내민다. “정보도 상품이라고 했지?”'},
+  merchantCaptured:  {safe:2, max:2, social:-8, enemyAtk:1, text:'갈고리는 협상이 아니라 시간 끌기라고 판단하기 시작한다.'},
+  officer2:          {safe:2, max:2, social:-8, enemyAtk:1, text:'붉은 모자의 웃음이 사라진다. 자존심을 건드린 모양이다.'},
+  guildNovice:       {safe:2, max:2, social:-10, enemyAtk:1, text:'초급 기사는 말을 더 들을수록 규정대로 처리하려 한다.'},
+  midKnight:         {safe:0, max:2, social:-10, enemyAtk:2, attack:-4, text:'중급 기사는 당신이 말하는 동안 호흡과 발버릇을 읽는다.'},
+  banditBossForest:  {safe:3, max:2, social:-8, enemyAtk:1, text:'세리아는 결정을 미루는 태도에 인내심을 잃기 시작한다.'},
+  banditBossRoyal:   {safe:3, max:2, social:-8, enemyAtk:1, text:'세리아는 결정을 미루는 태도에 인내심을 잃기 시작한다.'},
+  kingEnraged:       {safe:1, max:2, social:-9, enemyAtk:2, attack:-2, text:'왕은 더 이어지는 말을 변명으로 받아들인다. 분노가 짙어진다.'}
+};
+
+function attackTierBonus(atk=effectiveAttack()){
+  atk=Number(atk||0);
+  if(atk>=20)return 12;
+  if(atk>=16)return 9;
+  if(atk>=13)return 6;
+  if(atk>=10)return 3;
+  return 0;
+}
+function lowSocialPenalty(v=effectiveSocial()){
+  v=Number(v||0);
+  if(v<=1)return 20;
+  if(v<=3)return 12;
+  if(v<=5)return 6;
+  return 0;
+}
+function riskProfile(){
+  if(TALK_RISKS[state.sceneId])return TALK_RISKS[state.sceneId];
+  if(state.sceneId==='banditBossRoyal')return TALK_RISKS.banditBossForest;
+  return null;
+}
+function applyTalkRisk(forceExtra=false){
+  const r=riskProfile(); if(!r)return null;
+  const useful=state.talkCount[state.sceneId]||0;
+  const nextLevel=(state.talkRisk[state.sceneId]||0)+1;
+  const should=forceExtra || useful>Number(r.safe||0);
+  if(!should || nextLevel>Number(r.max||2))return null;
+  state.talkRisk[state.sceneId]=nextLevel;
+  state.stats.overTalks=(state.stats.overTalks||0)+1;
+  const m=encMod();
+  m.socialPct+=Number(r.social||0);
+  m.attackPct+=Number(r.attack||0);
+  m.enemyAtk+=Number(r.enemyAtk||0);
+  if(nextLevel>=Number(r.max||2)) state.flags['dialogueBurned_'+state.sceneId]=true;
+  return {level:nextLevel, text:r.text||'상대가 대화에 지치기 시작한다.'};
+}
+
 function richSceneText(sc){
   const r=RICH_TEXT[state.sceneId];
   if(r) return typeof r==='function'?r():r;
@@ -996,35 +1052,62 @@ function encMod(id=state.sceneId){
 function effectiveSpeed(){return Number(state.p?.speed||0)+Number(encMod().speed||0);}
 function effectiveAttack(){return Math.max(0,Number(state.p?.atk||0)+Number(encMod().attackStat||0));}
 function effectiveSocial(){return Math.max(0,Number(state.p?.social||0)+Number(encMod().socialStat||0));}
-function talkProfile(){return TALK_PROFILES[state.sceneId]||null;}
+function talkProfile(){return TALK_PROFILES[state.sceneId]||(state.sceneId==='banditBossRoyal'?TALK_PROFILES.banditBossForest:null);}
 function talkLabel(){
   const p=talkProfile(); if(!p)return '상대와 이야기한다';
-  const n=state.talkCount[state.sceneId]||0;
-  if(n>=p.steps.length)return `대화 완료 · ${p.steps.length}/${p.steps.length}`;
-  return `대화 ${n+1}/${p.steps.length} · 말에 따라 판정 변화`;
+  const n=state.talkCount[state.sceneId]||0, risk=riskProfile();
+  if(n>=p.steps.length){
+    const rr=state.talkRisk[state.sceneId]||0;
+    if(risk && rr<(risk.max||2)) return `⚠ 더 캐묻기 · 대화 리스크`;
+    return `대화 종료 · ${p.steps.length}/${p.steps.length}`;
+  }
+  const risky=risk && (n+1)>Number(risk.safe||0);
+  return `${risky?'⚠ ':''}대화 ${n+1}/${p.steps.length}${risky?' · 리스크 있음':' · 말에 따라 판정 변화'}`;
 }
 function handleTalk(sc){
   const p=talkProfile();
   if(!p){ if(sc.talk)sc.talk(); else toast('상대는 대화를 이어갈 생각이 없어 보인다.'); return; }
   const done=state.talkCount[state.sceneId]||0;
-  if(done>=p.steps.length){queueOutcome(p.end||'더 이어갈 대화가 없다.',null);return;}
+  const before={a:attackChance(getEnemy(sc)),s:socialChance(getEnemy(sc),sc),r:runChance(getEnemy(sc))};
+  if(done>=p.steps.length){
+    const risk=applyTalkRisk(true);
+    if(!risk){queueOutcome(p.end||'더 이어갈 대화가 없다.',null);return;}
+    state.stats.talkInteractions=(state.stats.talkInteractions||0)+1;
+    const enemy=getEnemy(sc), after={a:attackChance(enemy),s:socialChance(enemy,sc),r:runChance(enemy)};
+    const changes=[];
+    if(after.a!==before.a)changes.push(`공격 ${before.a}% → ${after.a}%`);
+    if(!sc.socialDisabled&&after.s!==before.s)changes.push(`처세 ${before.s}% → ${after.s}%`);
+    if(after.r!==before.r)changes.push(`도망 ${before.r}% → ${after.r}%`);
+    queueOutcome(`[과대화 · 경계 ${risk.level}]\n${risk.text}\n\n${p.end||'이제 상대는 결정을 요구한다.'}${changes.length?`\n\n[리스크] ${changes.join(' · ')}`:''}`,null);
+    save(); return;
+  }
   const step=p.steps[done];
   bumpTalk(state.sceneId); state.stats.talkInteractions=(state.stats.talkInteractions||0)+1;
-  const before={a:attackChance(getEnemy(sc)),s:socialChance(getEnemy(sc),sc),r:runChance(getEnemy(sc))};
   if(step.on)step.on();
+  const risk=applyTalkRisk(false);
   const enemy=getEnemy(sc);
   const after={a:attackChance(enemy),s:socialChance(enemy,sc),r:runChance(enemy)};
   const changes=[];
   if(after.a!==before.a)changes.push(`공격 ${before.a}% → ${after.a}%`);
   if(!sc.socialDisabled&&after.s!==before.s)changes.push(`처세 ${before.s}% → ${after.s}%`);
   if(after.r!==before.r)changes.push(`도망 ${before.r}% → ${after.r}%`);
-  queueOutcome(`[대화 ${done+1}/${p.steps.length}]\n${step.text}${changes.length?`\n\n[판정 변화] ${changes.join(' · ')}`:''}`,null);
+  queueOutcome(`[대화 ${done+1}/${p.steps.length}]\n${step.text}${risk?`\n\n[대화 리스크] ${risk.text}`:''}${changes.length?`\n\n[판정 변화] ${changes.join(' · ')}`:''}`,null);
 }
 
 const DIALOGUE_EXIT_CHOICES = {
   kingdomGate(){const p=talkProfile();if(!p||(state.talkCount.kingdomGate||0)<p.steps.length)return [];return [c('검문에 끝까지 협조한다','충분히 이야기를 나눈 덕에 경비의 경계가 누그러졌다.',()=>{state.stats.talkSolved++;state.relation.kingdom+=1;resolve('talk','cityEntry','신분과 목적을 솔직하게 설명했다. 경비병은 몇 가지를 더 확인한 뒤 창을 거뒀다.\n\n“들어가. 대신 사고 치지 마.”');})];},
   citizen(){if((state.talkCount.citizen||0)<1)return [];return [c('이야기를 마치고 헤어진다','시민에게서 들은 소문을 기억하고 중앙가로 돌아간다.',()=>{state.stats.talkSolved++;resolve('talk','citySquare','시민은 마지막으로 빵 봉투를 고쳐 들고 시장 안쪽으로 사라졌다.\n\n짧은 대화였지만 왕국 사람들이 무엇을 두려워하는지는 조금 더 선명해졌다.');})];},
   forestMerchant(){if((state.talkCount.forestMerchant||0)<2)return [];return [c('정보를 충분히 들었다고 말한다','로벤을 해치지 않고 숲 안쪽으로 들어간다.',()=>{state.flags.merchantAlive=true;state.relation.merchants+=1;state.stats.talkSolved++;resolve('talk','forestRoad','로벤은 수레 고삐를 다시 잡는다.\n\n“살아서 또 보자고. 그게 상인한텐 제일 좋은 거래니까.”\n\n당신은 그가 알려준 길을 따라 숲 안쪽으로 향한다.');})];},
+  merchantCaptured(){
+    if((state.talkCount.merchantCaptured||0)<2||!state.flags.merchantBalancedView)return [];
+    const cost=state.classId==='noble'?6:12;
+    return [c(`갈고리와 로벤의 거래를 중재한다`, `골드 ${cost} · 양쪽 체면을 살려 로벤을 풀어준다. 모두와 친구 루트의 핵심 조건.`,()=>{
+      if(!spendGold(cost)){queueOutcome(`중재안을 내놓았지만 거래를 메울 골드가 부족하다. 필요한 골드: ${cost}`,null);return;}
+      state.flags.merchantAlive=true;state.flags.merchantRescuedPeace=true;state.flags.officer1Allied=true;
+      state.relation.bandits+=2;state.relation.merchants+=2;state.stats.talkSolved++;
+      resolve('talk','officer2',`당신이 손실 일부를 메우고, 로벤이 겨울 물자를 다시 공급하는 조건으로 거래를 묶었다.\n\n갈고리는 칼을 내리고 로벤의 밧줄을 끊는다. 로벤은 투덜거리지만 약속을 부정하지 않는다.\n\n골드 -${cost} · 도적단 신뢰 +2 · 상인 신뢰 +2`);
+    })];
+  },
   guildNovice(){if((state.talkCount.guildNovice||0)<2||!state.flags.merchantAlive||state.flags.merchantKilled)return [];return [c('로벤에게 확인하라고 한다','살려둔 상인이 당신의 말에 신빙성을 더한다.',()=>{state.stats.talkSolved++;state.relation.merchants+=2;resolve('talk','forestBeforeBoss','초급 기사는 한참 망설이다 검을 내린다.\n\n“로벤이 살아 있다면 확인하겠다. 하지만 도적단 편에 완전히 서지는 마.”\n\n싸움 없이 교역로를 통과했다.');})];}
 };
 function dialogueExitChoices(){const f=DIALOGUE_EXIT_CHOICES[state.sceneId];return f?f():[];}
@@ -1032,6 +1115,9 @@ function encounterStatusHtml(enemy,sc){
   const m=encMod(), chips=[];
   const t=state.talkCount[state.sceneId]||0, p=talkProfile();
   if(p)chips.push(`<span class="encounter-chip info">대화 ${Math.min(t,p.steps.length)}/${p.steps.length}</span>`);
+  const atkTier=attackTierBonus(); if(atkTier)chips.push(`<span class="encounter-chip good">고공격 보너스 +${atkTier}%</span>`);
+  const socialLow=lowSocialPenalty(); if(socialLow)chips.push(`<span class="encounter-chip bad">저처세 패널티 -${socialLow}%</span>`);
+  const tr=state.talkRisk[state.sceneId]||0; if(tr)chips.push(`<span class="encounter-chip bad">대화 경계 ${tr}</span>`);
   if(m.attackStat||m.attackPct)chips.push(`<span class="encounter-chip good">공격 보정 ${m.attackStat?`+${m.attackStat} 능력`:''}${m.attackPct?` ${m.attackPct>0?'+':''}${m.attackPct}%`:''}</span>`);
   if(m.socialStat||m.socialPct)chips.push(`<span class="encounter-chip ${m.socialPct<0?'bad':'good'}">처세 보정 ${m.socialStat?`+${m.socialStat} 능력`:''}${m.socialPct?` ${m.socialPct>0?'+':''}${m.socialPct}%`:''}</span>`);
   if(m.speed)chips.push(`<span class="encounter-chip good">속도 ${m.speed>0?'+':''}${m.speed}</span>`);
@@ -1165,18 +1251,20 @@ function getEnemy(sc=SCENES[state.sceneId]) {
 }
 function attackChance(enemy) {
   const m=encMod();
-  const mine=Math.max(1,state.p.hp*effectiveAttack()), theirs=Math.max(1,enemy.hp*enemy.atk);
-  return clamp(Math.round(mine/(mine+theirs)*100)+Number(m.attackPct||0),3,97);
+  const atk=effectiveAttack();
+  const mine=Math.max(1,state.p.hp*atk), theirs=Math.max(1,enemy.hp*enemy.atk);
+  return clamp(Math.round(mine/(mine+theirs)*100)+attackTierBonus(atk)+Number(m.attackPct||0),3,97);
 }
 function socialChance(enemy,sc) {
   const m=encMod();
   const social=effectiveSocial();
   let chance=Math.round((Math.max(0,social)/(Math.max(0,social)+Math.max(1,enemy.social)))*100);
   if(state.classId==='noble') chance+=14;
+  chance-=lowSocialPenalty(social);
   chance-=sc.socialPenalty||0;
   chance+=Number(m.socialPct||0);
   if(state.flags.gangsterTruth && state.sceneId==='gangster') chance+=16;
-  return clamp(chance,3,95);
+  return clamp(chance,1,95);
 }
 function runChance(enemy) {
   const mySpeed=effectiveSpeed();
@@ -1436,10 +1524,33 @@ function heal(v,visual=true){const before=state.p.hp;state.p.hp=Math.min(state.p
 function damagePlayer(v,canDie=true){state.p.hp-=v;if(state.p.hp<=0){state.p.hp=0;if(canDie)die('상처를 버티지 못하고 쓰러졌다.');else state.p.hp=1;}}
 function gainStat(kind,amount=1){amount=Math.max(1,Math.floor(amount));if(kind==='hp'){state.p.maxHp+=amount;state.p.hp+=amount;floatText(`최대 HP +${amount}`);}else if(kind==='atk'){state.p.atk+=amount;floatText(`공격력 +${amount}`);}else if(kind==='social'){state.p.social+=amount;floatText(`처세 +${amount}`);}else if(kind==='speed'){state.p.speed+=amount;floatText(`속도 +${amount}`);}state.stats.growths=(state.stats.growths||0)+amount;save();}
 function takeGrowth(flag,kind,msg,next=null){if(state.flags[flag]){if(next)go(next);return;}state.flags[flag]=true;gainStat(kind,1);state.stats.progress++;queueOutcome(msg,next);}
-function canFriendEnding(loose=false){
-  const keyKills=state.flags.citizenKilled||state.flags.guardKilled||state.flags.guardResponseKilled||state.flags.captainKilled||state.flags.officer1Killed||state.flags.officer2Killed||state.flags.noviceKilled||state.flags.midKnightKilled;
-  const relations=state.relation.kingdom>=2 && state.relation.bandits>=3 && state.relation.merchants>=1;
-  return !keyKills && relations && (loose || state.flags.merchantAlive!==false);
+function friendEndingCheck(loose=false){
+  const missing=[];
+  const coreKills=state.flags.gangsterKilled||state.flags.citizenKilled||state.flags.guardKilled||state.flags.guardResponseKilled||state.flags.captainKilled||state.flags.officer1Killed||state.flags.officer2Killed||state.flags.noviceKilled||state.flags.midKnightKilled||state.flags.banditBossKilled||state.flags.merchantKilled;
+  if(coreKills)missing.push('핵심 인물 살해 없이 진행');
+  if(!state.flags.gangsterPeace)missing.push('빈민가 사건을 화해로 해결');
+  if(!state.flags.citizenView)missing.push('왕국 시민의 속사정까지 듣기');
+  if(!state.flags.merchantAlive||state.flags.merchantAbandoned)missing.push('로벤을 살리고 버리지 않기');
+  if(!state.flags.merchantRescuedPeace)missing.push('갈고리와 거래를 중재해 로벤을 평화적으로 구출');
+  if(!state.flags.merchantBalancedView)missing.push('로벤에게 양쪽 세력의 사정을 듣기');
+  if(!state.flags.friendTalkOpen)missing.push('세리아와 충분히 대화해 협상 가능성 열기');
+  if(state.relation.kingdom<4)missing.push(`왕국 신뢰 4 이상 (${state.relation.kingdom}/4)`);
+  if(state.relation.bandits<4)missing.push(`도적단 신뢰 4 이상 (${state.relation.bandits}/4)`);
+  if(state.relation.merchants<3)missing.push(`상인 신뢰 3 이상 (${state.relation.merchants}/3)`);
+  if((state.stats.socialSuccess||0)<3)missing.push(`처세 성공 3회 이상 (${state.stats.socialSuccess||0}/3)`);
+  if((state.stats.secrets||0)<2)missing.push(`핵심 정보 2개 이상 (${state.stats.secrets||0}/2)`);
+  const risky=(state.stats.overTalks||0);
+  if(risky>2)missing.push(`과대화 2회 이하 (${risky}/2)`);
+  if(state.flags.dialogueBurned_banditBossForest||state.flags.dialogueBurned_banditBossRoyal||state.flags.dialogueBurned_kingdomGate)missing.push('핵심 협상 상대의 인내심을 완전히 소진하지 않기');
+  if(state.flags.rebel)missing.push('왕국 공격에 완전히 가담하지 않기');
+  if(!loose && state.flags.kingdomHostile)missing.push('왕국의 공식 적대 상태 해소');
+  return {ok:missing.length===0,missing};
+}
+function canFriendEnding(loose=false){return friendEndingCheck(loose).ok;}
+function friendEndingHint(loose=false){
+  const c=friendEndingCheck(loose);
+  if(c.ok)return '모든 조건을 갖췄다. 양쪽이 당신의 중재를 들을 준비가 됐다.';
+  return '아직 부족한 조건\n· '+c.missing.slice(0,5).join('\n· ')+(c.missing.length>5?`\n· 외 ${c.missing.length-5}개`:'');
 }
 
 function finish(name) {
@@ -1454,7 +1565,7 @@ function finish(name) {
   $('playStyle').textContent=`플레이 스타일 · ${playStyle()}`;
   $('endScore').textContent=clientScore().toLocaleString();
   const deathBlock=e.bad&&state.flags.deathReason?`<b>최후의 순간</b> · ${escapeHtml(state.flags.deathReason)}<br><b>사망 장소</b> · ${escapeHtml(SCENES[state.flags.deathScene]?.location||'알 수 없는 장소')}<br><b>배드엔딩 보정</b> · +${Number(e.bonus||0).toLocaleString()}<br><br>`:'';
-  $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>`;
+  $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 과대화 <b>${state.stats.overTalks||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>`;
   resetRankSubmitUI();
   fx(e.bad?'bad':'good');showScreen('endScreen');
 }
@@ -1473,7 +1584,7 @@ function playStyle(){
   const pairs=[['전투광',s.kills*3+s.riskyWins*2],['협상가',s.socialSuccess*3+s.talkSolved],['생존가',s.runSuccess*4],['탐색가',s.secrets*5+s.talkSolved],['파괴자',s.eliteKills*5+s.kills]];
   pairs.sort((a,b)=>b[1]-a[1]);return pairs[0][1]===0?'방랑자':pairs[0][0];
 }
-function clientScore(){const s=state.stats,b=Number(endingProfile(s.ending)?.bonus||s.endingBonus||0);return Math.max(0,Math.floor(s.progress*115+s.goldEarned*3+state.p.gold*1.2+s.kills*170+s.eliteKills*950+s.riskyWins*650+(s.comebackWins||0)*900+s.talkSolved*170+s.socialSuccess*185+s.runSuccess*85+s.secrets*500+(s.growths||0)*140+s.survivors*220-s.socialFail*25+b));}
+function clientScore(){const s=state.stats,b=Number(endingProfile(s.ending)?.bonus||s.endingBonus||0);return Math.max(0,Math.floor(s.progress*115+s.goldEarned*3+state.p.gold*1.2+s.kills*170+s.eliteKills*950+s.riskyWins*650+(s.comebackWins||0)*900+s.talkSolved*170+s.socialSuccess*185+s.runSuccess*85+s.secrets*500+(s.growths||0)*140+s.survivors*220-s.socialFail*25-(s.overTalks||0)*90+b));}
 
 // ---------- Inventory / shop ----------
 const ITEMS = {
@@ -1540,11 +1651,13 @@ function normalizeLoadedState(data){
   merged.escapeAttempted=Number(data.version||0)>=91 ? !!data.escapeAttempted : false;
   merged.escapeSerial=Number(data.escapeSerial||0);
   merged.talkCount={...(data.talkCount||{})};
+  merged.talkRisk={...(data.talkRisk||{})};
   merged.encounterMods={...(data.encounterMods||{})};
   merged.entered={...(data.entered||{})};
   merged.inventory=Array.isArray(data.inventory)?data.inventory:[];
   merged.stats={...base.stats,...(data.stats||{})};
-  merged.version=93;
+  merged.stats.overTalks=Number(data.stats?.overTalks||0);
+  merged.version=94;
   return merged;
 }
 function save(){localStorage.setItem(SAVE_KEY,JSON.stringify(state));updateMenuSaveInfo();}
@@ -1606,7 +1719,7 @@ async function submitScore(){
   try{
     const r=await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store'});
     let d={};try{d=await r.json();}catch{}
-    if(!r.ok||!d.ok||!d.permanent||!d.verified||d.storage!=='cloud')throw new Error(d.error||`HTTP_${r.status}`);
+    if(!r.ok||!d.ok||!d.permanent||!d.verified||d.storage!=='cloud'||(Number(d.rank||999)<=50&&d.leaderboardVisible!==true))throw new Error(d.error||`HTTP_${r.status}`);
 
     // A second client-side read proves that the public server can really read the permanent row back.
     const verify=await verifyPermanentRecord(playerId,d.bestScore);
@@ -1644,8 +1757,12 @@ async function showLeaderboard(){
     if(!lr.ok)throw new Error('LEADERBOARD_HTTP');
     const rows=await lr.json();if(!Array.isArray(rows))throw new Error('LEADERBOARD_FORMAT');
     let me=null;if(mr&&mr.ok){try{const md=await mr.json();if(md.ok&&md.found&&md.storage==='cloud')me=md;}catch{}}
-    const myCard=me?`<div class="my-rank-card"><b>내 영구 최고기록</b><div class="rank-status-grid"><span>점수</span><b>${Number(me.record.score).toLocaleString()}</b><span>현재 순위</span><b>${me.rank?me.rank+'위':'확인됨'}</b><span>엔딩</span><b>${escapeHtml(me.record.ending)}</b></div></div>`:'<div class="modal-sub">아직 이 기기의 영구 최고기록이 없습니다.</div>';
-    $('modal').innerHTML=`<h2>노말 모드 기록</h2><div class="modal-sub">Supabase 영구 DB · 플레이어별 최고 점수 1개</div>${myCard}${rows.length?rows.map((x,i)=>`<div class="rank-row ${x.playerId===playerId?'mine':''}"><div class="rank-num">${i+1}</div><div><b>${escapeHtml(x.nickname)}${x.playerId===playerId?' · 나':''}</b><div class="rank-meta">${escapeHtml(x.className)} · ${escapeHtml(x.ending)}</div></div><div class="rank-score">${Number(x.score).toLocaleString()}</div></div>`).join(''):'<p class="modal-sub">아직 기록이 없다.</p>'}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;
+    // Personal permanent record is always visible in this screen, even if a TOP50 response is temporarily inconsistent.
+    if(me?.record && !rows.some(x=>x.playerId===playerId)) rows.push({...me.record,_personalFallback:true,_actualRank:me.rank});
+    rows.sort((a,b)=>Number(b.score||0)-Number(a.score||0) || Number(a.time||0)-Number(b.time||0));
+    const myCard=me?`<div class="my-rank-card"><b>내 영구 최고기록</b><div class="rank-status-grid"><span>점수</span><b>${Number(me.record.score).toLocaleString()}</b><span>현재 순위</span><b>${me.rank?me.rank+'위':'확인됨'}</b><span>직업</span><b>${escapeHtml(me.record.className)}</b><span>엔딩</span><b>${escapeHtml(me.record.ending)}</b></div></div>`:'<div class="modal-sub">이 기기로 등록한 영구 기록은 아직 없습니다.</div>';
+    const listHtml=rows.length?rows.slice(0,50).map((x,i)=>`<div class="rank-row ${x.playerId===playerId?'mine':''}"><div class="rank-num">${x._actualRank||i+1}</div><div><b>${escapeHtml(x.nickname)}${x.playerId===playerId?' · 나':''}</b><div class="rank-meta">${escapeHtml(x.className)} · ${escapeHtml(x.ending)}${x._personalFallback?' · 개인기록 재조회':''}</div></div><div class="rank-score">${Number(x.score).toLocaleString()}</div></div>`).join(''):(me?'<p class="modal-sub">내 영구 기록은 위에서 확인되었습니다. TOP50 목록을 다시 불러오는 중 문제가 있었습니다.</p>':'<p class="modal-sub">서버에 아직 등록된 노말 모드 기록이 없습니다.</p>');
+    $('modal').innerHTML=`<h2>노말 모드 기록</h2><div class="modal-sub">Supabase 영구 DB · TOP 50 · 플레이어별 최고 점수 1개</div>${myCard}${listHtml}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;
   }catch(err){
     $('modal').innerHTML='<h2>노말 모드 기록</h2><p class="modal-sub">영구 랭킹 DB에서 기록을 읽지 못했습니다. 잠시 후 다시 시도해 주세요.</p><button class="btn modal-close" onclick="closeModal()">닫기</button>';
     console.warn('[leaderboard]',err?.message||err);

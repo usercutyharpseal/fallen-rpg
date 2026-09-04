@@ -1,6 +1,6 @@
-# 몰락자 — Normal Mode v0.9.3
+# 몰락자 — Normal Mode v0.9.4
 
-## v0.9.3 — Verified Permanent Ranking
+## v0.9.4 — Verified Permanent Ranking
 - Supabase 저장 성공 후 서버가 같은 행을 다시 조회해 검증
 - 브라우저도 /api/player 재조회로 영구 기록을 한 번 더 확인
 - DB 실패/로컬 백업은 절대 등록 성공으로 표시하지 않음
@@ -28,3 +28,10 @@
 - Render 공개 배포 설정 포함
 
 로컬 실행: `npm install && npm start`
+
+## v0.9.4
+- 공격력 10/13/16/20 고점 보너스
+- 저처세 패널티
+- NPC별 과대화 리스크
+- 모두와 친구 엔딩 조건 강화
+- Supabase 공식 서버 클라이언트 기반 랭킹 조회/저장 통합

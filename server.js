@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,6 +13,10 @@ const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY |
 const SUPABASE_KEY = SUPABASE_SECRET_KEY || SUPABASE_SERVICE_ROLE_KEY;
 const SUPABASE_KEY_IS_NEW = SUPABASE_KEY.startsWith('sb_secret_');
 const CLOUD_CONFIGURED = !!(SUPABASE_URL && SUPABASE_KEY);
+const supabase = CLOUD_CONFIGURED ? createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { autoRefreshToken:false, persistSession:false, detectSessionInUrl:false },
+  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.4' } }
+}) : null;
 
 app.use(express.json({ limit: '256kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -47,7 +52,7 @@ const ENDING_BONUS = {
   '이름 없는 최후': 0,
   '명예 회복': 5000,
   '반란': 10000,
-  '모두와 친구': 12000,
+  '모두와 친구': 18000,
   '지배자': 15000,
 };
 
@@ -72,6 +77,7 @@ function scoreRun(s = {}) {
   const secrets = n(s.secrets, 100);
   const survivors = n(s.survivors, 100);
   const growths = n(s.growths, 100);
+  const overTalks = n(s.overTalks, 100);
   const ending = String(s.ending || 'BAD END').slice(0, 30);
 
   let score = 0;
@@ -89,6 +95,7 @@ function scoreRun(s = {}) {
   score += survivors * 220;
   score += growths * 140;
   score -= socialFail * 25;
+  score -= overTalks * 90;
   score += ENDING_BONUS[ending] || 0;
   return Math.max(0, Math.floor(score));
 }
@@ -104,20 +111,76 @@ function writeScores(rows) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(rows, null, 2));
 }
 
-function cloudHeaders(extra = {}) {
-  const headers = { apikey: SUPABASE_KEY, 'Content-Type': 'application/json', ...extra };
-  // Legacy service_role keys are JWTs. New sb_secret_* keys are API keys and must not be used as Bearer JWTs.
-  if (!SUPABASE_KEY_IS_NEW) headers.Authorization = `Bearer ${SUPABASE_KEY}`;
-  return headers;
+async function cloudGetLeaderboard(limit = 50) {
+  const { data, error } = await supabase
+    .from('fallen_scores')
+    .select('player_id,nickname,class_name,ending,score,kills,gold,progress,updated_at')
+    .order('score', { ascending:false })
+    .order('updated_at', { ascending:true })
+    .limit(Math.max(1, Math.min(200, Number(limit)||50)));
+  if (error) throw new Error(`SUPABASE_LEADERBOARD:${error.message}`);
+  return (data || []).map(mapCloudRow);
 }
 
-async function cloudRequest(url, options = {}, label = 'REQUEST') {
-  const r = await fetch(url, options);
-  if (!r.ok) {
-    const body = (await r.text()).slice(0, 500);
-    throw new Error(`SUPABASE_${label}_${r.status}:${body}`);
+async function cloudGetPlayer(playerId) {
+  const { data, error } = await supabase
+    .from('fallen_scores')
+    .select('player_id,nickname,class_name,ending,score,kills,gold,progress,updated_at')
+    .eq('player_id', playerId)
+    .maybeSingle();
+  if (error) throw new Error(`SUPABASE_PLAYER:${error.message}`);
+  return data ? mapCloudRow(data) : null;
+}
+
+async function cloudUpdateNickname(playerId, nickname) {
+  const { data, error } = await supabase
+    .from('fallen_scores')
+    .update({ nickname, updated_at:new Date().toISOString() })
+    .eq('player_id', playerId)
+    .select('player_id,nickname,class_name,ending,score,kills,gold,progress,updated_at')
+    .single();
+  if (error) throw new Error(`SUPABASE_NICKNAME:${error.message}`);
+  return data;
+}
+
+async function cloudUpsert(entry, stats) {
+  const body = {
+    player_id: entry.playerId,
+    nickname: entry.nickname,
+    class_name: entry.className,
+    ending: entry.ending,
+    score: entry.score,
+    kills: entry.kills,
+    gold: entry.gold,
+    progress: entry.progress,
+    stats,
+    updated_at: new Date().toISOString(),
+  };
+  const { data, error } = await supabase
+    .from('fallen_scores')
+    .upsert(body, { onConflict:'player_id' })
+    .select('player_id,nickname,class_name,ending,score,kills,gold,progress,updated_at')
+    .single();
+  if (error) throw new Error(`SUPABASE_UPSERT:${error.message}`);
+  return data;
+}
+
+async function cloudRank(score) {
+  const { count, error } = await supabase
+    .from('fallen_scores')
+    .select('player_id', { count:'exact', head:true })
+    .gt('score', Math.floor(score));
+  if (error) throw new Error(`SUPABASE_RANK:${error.message}`);
+  return Number(count || 0) + 1;
+}
+
+async function verifyCloudRecord(playerId, expectedScore) {
+  const row = await cloudGetPlayer(playerId);
+  if (!row) throw new Error('VERIFY_RECORD_MISSING');
+  if (Number(row.score) !== Number(expectedScore)) {
+    throw new Error(`VERIFY_SCORE_MISMATCH:${row.score}:${expectedScore}`);
   }
-  return r;
+  return row;
 }
 
 function mapCloudRow(x) {
@@ -132,77 +195,6 @@ function mapCloudRow(x) {
     progress: Number(x.progress || 0),
     time: x.updated_at ? Date.parse(x.updated_at) : Date.now(),
   };
-}
-
-async function cloudGetLeaderboard(limit = 50) {
-  const url = `${SUPABASE_URL}/rest/v1/fallen_scores?select=player_id,nickname,class_name,ending,score,kills,gold,progress,updated_at&order=score.desc,updated_at.asc&limit=${limit}`;
-  const r = await cloudRequest(url, { headers: cloudHeaders() }, 'LEADERBOARD');
-  const rows = await r.json();
-  return rows.map(mapCloudRow);
-}
-
-async function cloudGetPlayer(playerId) {
-  const q = encodeURIComponent(playerId);
-  const url = `${SUPABASE_URL}/rest/v1/fallen_scores?select=player_id,nickname,class_name,ending,score,kills,gold,progress,updated_at&player_id=eq.${q}&limit=1`;
-  const r = await cloudRequest(url, { headers: cloudHeaders() }, 'PLAYER');
-  const rows = await r.json();
-  return rows[0] ? mapCloudRow(rows[0]) : null;
-}
-
-async function cloudUpdateNickname(playerId, nickname) {
-  const q = encodeURIComponent(playerId);
-  const url = `${SUPABASE_URL}/rest/v1/fallen_scores?player_id=eq.${q}`;
-  const r = await cloudRequest(url, {
-    method: 'PATCH',
-    headers: cloudHeaders({ Prefer: 'return=representation' }),
-    body: JSON.stringify({ nickname, updated_at: new Date().toISOString() }),
-  }, 'NICKNAME');
-  const rows = await r.json();
-  if (!Array.isArray(rows) || !rows.length) throw new Error('SUPABASE_NICKNAME_EMPTY_RESPONSE');
-  return rows[0];
-}
-
-async function cloudUpsert(entry, stats) {
-  const url = `${SUPABASE_URL}/rest/v1/fallen_scores?on_conflict=player_id`;
-  const body = {
-    player_id: entry.playerId,
-    nickname: entry.nickname,
-    class_name: entry.className,
-    ending: entry.ending,
-    score: entry.score,
-    kills: entry.kills,
-    gold: entry.gold,
-    progress: entry.progress,
-    stats,
-    updated_at: new Date().toISOString(),
-  };
-  const r = await cloudRequest(url, {
-    method: 'POST',
-    headers: cloudHeaders({ Prefer: 'resolution=merge-duplicates,return=representation' }),
-    body: JSON.stringify(body),
-  }, 'UPSERT');
-  const rows = await r.json();
-  if (!Array.isArray(rows) || !rows.length) throw new Error('SUPABASE_UPSERT_EMPTY_RESPONSE');
-  return rows[0];
-}
-
-async function cloudRank(score) {
-  const url = `${SUPABASE_URL}/rest/v1/fallen_scores?select=player_id&score=gt.${Math.floor(score)}`;
-  const r = await cloudRequest(url, {
-    headers: cloudHeaders({ Prefer: 'count=exact', Range: '0-0' })
-  }, 'RANK');
-  const cr = r.headers.get('content-range') || '';
-  const m = cr.match(/\/(\d+)$/);
-  return m ? Number(m[1]) + 1 : null;
-}
-
-async function verifyCloudRecord(playerId, expectedScore) {
-  const row = await cloudGetPlayer(playerId);
-  if (!row) throw new Error('VERIFY_RECORD_MISSING');
-  if (Number(row.score) !== Number(expectedScore)) {
-    throw new Error(`VERIFY_SCORE_MISMATCH:${row.score}:${expectedScore}`);
-  }
-  return row;
 }
 
 function localLeaderboard() {
@@ -238,16 +230,20 @@ app.get('/api/storage', async (_req, res) => {
 });
 
 app.get('/api/leaderboard', async (_req, res) => {
+  res.set('Cache-Control','no-store, no-cache, must-revalidate, proxy-revalidate');
   if (CLOUD_CONFIGURED) {
     try {
       const rows = await cloudGetLeaderboard(50);
+      console.log(`[leaderboard] cloud rows=${rows.length}`);
       return res.json(rows);
     } catch (e) {
       console.error('[leaderboard cloud]', e.message);
-      return res.status(503).json({ ok:false, error:'CLOUD_LEADERBOARD_UNAVAILABLE' });
+      return res.status(503).json({ ok:false, error:'CLOUD_LEADERBOARD_UNAVAILABLE', detail:String(e.message||'').slice(0,180) });
     }
   }
-  return res.json(localLeaderboard());
+  const rows=localLeaderboard();
+  console.log(`[leaderboard] local rows=${rows.length}`);
+  return res.json(rows);
 });
 
 app.get('/api/player/:playerId', async (req, res) => {
@@ -311,6 +307,13 @@ app.post('/api/score', async (req, res) => {
       }
 
       const rank = await cloudRank(bestScore);
+      // Keep a best-effort local mirror for diagnostics; cloud remains the source of truth.
+      localSubmit({ ...entry, score:bestScore, nickname:verifiedRow.nickname, ending:verifiedRow.ending, className:verifiedRow.className });
+      // The public ranking must be able to read the same row too. Never report success when
+      // the player row exists but the TOP 50 query cannot actually see it.
+      const leaderboardProbe = await cloudGetLeaderboard(50);
+      const visibleInTop50 = leaderboardProbe.some(x => x.playerId === playerId);
+      if (rank <= 50 && !visibleInTop50) throw new Error('VERIFY_LEADERBOARD_ROW_MISSING');
       return res.json({
         ok:true,
         permanent:true,
@@ -322,6 +325,7 @@ app.post('/api/score', async (req, res) => {
         previousBest:previousScore,
         bestScore,
         rank,
+        leaderboardVisible: rank > 50 || visibleInTop50,
         record:verifiedRow,
       });
     } catch (e) {
@@ -355,11 +359,11 @@ app.post('/api/score', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.3' });
+  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.4' });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n몰락자 Normal Mode v0.9.3`);
+  console.log(`\n몰락자 Normal Mode v0.9.4`);
   console.log(`http://localhost:${PORT}`);
   console.log(`랭킹 설정: ${CLOUD_CONFIGURED ? 'Supabase 환경변수 있음 (실연결은 /api/storage에서 검증)' : '로컬 파일'}\n`);
 });
