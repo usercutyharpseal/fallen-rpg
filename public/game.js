@@ -2125,6 +2125,12 @@ function useItem(nm,fromEncounter=false){
 function showModal(){$('modalOverlay').classList.remove('hidden');}
 function closeModal(){$('modalOverlay').classList.add('hidden');}
 
+function fetchTimed(url, options={}, timeoutMs=7000){
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),timeoutMs);
+  return fetch(url,{...options,signal:ctrl.signal}).finally(()=>clearTimeout(timer));
+}
+
 // ---------- Save / ranking ----------
 function normalizeLoadedState(data){
   const base=freshState();
@@ -2218,7 +2224,7 @@ async function submitScore(){
   if(btn){btn.disabled=true;btn.textContent='영구 DB에 저장 확인 중...';}
   setRankSubmitStatus('keep','서버에 기록을 확인하고 있습니다.','<div>저장 후 실제 DB에서 다시 읽어 검증합니다.</div>');
   try{
-    const r=await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store'});
+    const r=await fetchTimed('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store'},9000);
     let d={};try{d=await r.json();}catch{}
     if(!r.ok||!d.ok||!d.permanent||!d.verified||d.storage!=='cloud'||!d.runId||(Number(d.submittedRank||999)<=50&&d.leaderboardVisible!==true))throw new Error(d.error||`HTTP_${r.status}`);
 
@@ -2255,8 +2261,8 @@ async function showLeaderboard(){
   const playerId=getPlayerId();
   try{
     const [lr,mr]=await Promise.all([
-      fetch(`/api/leaderboard?t=${Date.now()}`,{cache:'no-store'}),
-      fetch(`/api/player/${encodeURIComponent(playerId)}?t=${Date.now()}`,{cache:'no-store'}).catch(()=>null)
+      fetchTimed(`/api/leaderboard?t=${Date.now()}`,{cache:'no-store'},7000),
+      fetchTimed(`/api/player/${encodeURIComponent(playerId)}?t=${Date.now()}`,{cache:'no-store'},7000).catch(()=>null)
     ]);
     if(!lr.ok)throw new Error('LEADERBOARD_HTTP');
     const rows=await lr.json();if(!Array.isArray(rows))throw new Error('LEADERBOARD_FORMAT');
@@ -2275,13 +2281,19 @@ async function showLeaderboard(){
 
 async function updateStorageStatus(){
   const el=$('storageInfo'); if(!el)return;
+  el.textContent='랭킹 저장 상태 확인 중…';el.className='storage-info';
   try{
-    const r=await fetch(`/api/storage?t=${Date.now()}`,{cache:'no-store'});const d=await r.json();
-    if(d.permanent&&d.connected){el.textContent='● 영구 랭킹 DB 실제 연결 확인';el.className='storage-info cloud';}
+    const r=await fetchTimed(`/api/storage?t=${Date.now()}`,{cache:'no-store'},5500);
+    let d={};try{d=await r.json();}catch{}
+    if(d.permanent&&d.connected){el.textContent='● 영구 랭킹 DB 연결됨';el.className='storage-info cloud';}
     else if(d.error==='SERVER_SECRET_KEY_REQUIRED'){el.textContent='● Supabase Secret Key 확인 필요';el.className='storage-info cloud-error';}
-    else if(d.configured&&!d.connected){el.textContent='● 영구 DB 설정됨 · 연결 오류';el.className='storage-info cloud-error';}
+    else if(d.error==='CLOUD_DB_TIMEOUT'){el.textContent='△ 랭킹 DB 응답 지연 · 게임은 정상 이용 가능';el.className='storage-info local';}
+    else if(d.configured&&!d.connected){el.textContent='△ 랭킹 DB 연결 오류 · 게임은 정상 이용 가능';el.className='storage-info cloud-error';}
     else{el.textContent='○ 영구 랭킹 DB 미연결';el.className='storage-info local';}
-  }catch{el.textContent='○ 랭킹 서버 상태 확인 불가';el.className='storage-info local';}
+  }catch(err){
+    el.textContent=(err?.name==='AbortError')?'△ 랭킹 확인 지연 · 게임은 정상 이용 가능':'○ 랭킹 서버 상태 확인 불가';
+    el.className='storage-info local';
+  }
 }
 
 async function flushPending(){
@@ -2290,7 +2302,7 @@ async function flushPending(){
   const remain=[];
   for(const payload of q){
     try{
-      const r=await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store'});
+      const r=await fetchTimed('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store'},9000);
       let d={};try{d=await r.json();}catch{}
       if(!r.ok||!d.ok||!d.permanent||!d.verified||d.storage!=='cloud'){remain.push(payload);continue;}
       await verifyPermanentRecord(payload.playerId,d.bestScore);if(d.runId)await verifySubmittedRun(d.runId,d.submittedScore);

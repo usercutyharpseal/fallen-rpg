@@ -19,8 +19,16 @@ const SUPABASE_PUBLIC_KEY=SUPABASE_KEY.startsWith('sb_publishable_')||SUPABASE_K
 const CLOUD_WRITABLE=CLOUD_CONFIGURED&&!SUPABASE_PUBLIC_KEY;
 const supabase = CLOUD_CONFIGURED ? createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { autoRefreshToken:false, persistSession:false, detectSessionInUrl:false },
-  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.7' } }
+  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.12' } }
 }) : null;
+
+function withTimeout(promise, ms = 6000, code = 'UPSTREAM_TIMEOUT') {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(code)), ms);
+  });
+  return Promise.race([Promise.resolve(promise), timeout]).finally(() => clearTimeout(timer));
+}
 
 app.use(express.json({ limit: '256kb' }));
 app.use((req,res,next)=>{
@@ -291,11 +299,12 @@ app.get('/api/storage', async (_req, res) => {
     return res.status(503).json({ok:false,mode:'cloud-error',configured:true,connected:false,permanent:false,error:'SERVER_SECRET_KEY_REQUIRED'});
   }
   try {
-    await cloudGetLeaderboard(1);
+    await withTimeout(cloudGetLeaderboard(1), 4500, 'CLOUD_STORAGE_TIMEOUT');
     return res.json({ ok:true, mode:'cloud', configured:true, connected:true, permanent:true });
   } catch (e) {
     console.error('[storage cloud]', e.message);
-    return res.json({ ok:false, mode:'cloud-error', configured:true, connected:false, permanent:false, error:'CLOUD_DB_UNREACHABLE' });
+    const timedOut=String(e.message||'').includes('TIMEOUT');
+    return res.status(timedOut?504:503).json({ ok:false, mode:'cloud-error', configured:true, connected:false, permanent:false, error:timedOut?'CLOUD_DB_TIMEOUT':'CLOUD_DB_UNREACHABLE' });
   }
 });
 
@@ -457,7 +466,7 @@ app.post('/api/score', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.11' });
+  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.12' });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
