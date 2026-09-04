@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <meta name="theme-color" content="#090a0d" />
+  <title>몰락자</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main id="app">
+    <section id="menuScreen" class="screen active menu-screen">
+      <div class="menu-vignette"></div>
+      <div class="crest">♜</div>
+      <h1>몰락자</h1>
+      <p class="eng">THE FALLEN</p>
+      <p class="menu-copy">이름을 잃은 자의 기록</p>
+      <div class="menu-buttons">
+        <button class="btn primary" data-action="new-game">새 게임</button>
+        <button id="continueGameBtn" class="btn" data-action="continue">이어하기</button>
+        <div id="continueInfo" class="continue-info">저장된 여정 없음</div>
+        <button class="btn" data-action="leaderboard">노말 모드 기록</button>
+      </div>
+      <div class="version">NORMAL MODE · v0.9.0</div>
+      <div id="storageInfo" class="storage-info">랭킹 저장 상태 확인 중…</div>
+    </section>
+
+    <section id="classScreen" class="screen">
+      <header class="topbar">
+        <button class="icon-btn" data-action="back-menu">‹</button>
+        <div><b>직업 선택</b><small>몰락 이전의 당신</small></div>
+        <span></span>
+      </header>
+      <div id="classGrid" class="class-grid"></div>
+    </section>
+
+    <section id="gameScreen" class="screen game-screen">
+      <header class="hud">
+        <div class="hud-left">
+          <div class="hud-row"><b id="hudClass"></b><span id="hudGold" class="gold"></span></div>
+          <div class="hp-shell"><div id="hpBar" class="hp-bar"></div><span id="hpText"></span></div>
+          <div id="hudStats" class="hud-stats"></div>
+        </div>
+        <div class="hud-actions"><button class="bag-btn" data-action="bag">가방</button><button class="bag-btn save-exit-btn" data-action="save-exit">저장 후 나가기</button></div>
+      </header>
+
+      <section id="sceneCard" class="scene-card">
+        <div id="sceneArt" class="scene-art"></div>
+        <div class="scene-shade"></div>
+        <div class="scene-content">
+          <div id="chapter" class="chapter"></div>
+          <div id="location" class="location"></div>
+          <div id="enemyPanel" class="enemy-panel hidden">
+            <div class="enemy-title-row"><h2 id="enemyName"></h2><span id="enemyRank" class="rank"></span></div>
+            <div id="enemyStats" class="enemy-stats"></div>
+          </div>
+          <div id="story" class="story"></div>
+          <div id="resultToast" class="result-toast hidden"></div>
+          <button id="continueBtn" class="continue-result hidden" data-action="continue-result">계속 <span>›</span></button>
+        </div>
+      </section>
+
+      <div id="choiceArea" class="choice-area"></div>
+
+      <div id="actionGrid" class="action-grid hidden">
+        <button class="action-btn talk" data-game-action="talk"><span class="action-icon">◌</span><b>대화</b><small id="talkInfo">상대와 이야기한다</small></button>
+        <button class="action-btn attack" data-game-action="attack"><span class="action-icon">⚔</span><b>공격</b><small id="attackInfo"></small></button>
+        <button class="action-btn social" data-game-action="social"><span class="action-icon">♢</span><b>처세</b><small id="socialInfo"></small></button>
+        <button class="action-btn run" data-game-action="run"><span class="action-icon">➜</span><b>도망</b><small id="runInfo"></small></button>
+      </div>
+      <div id="encounterTools" class="encounter-tools hidden">
+        <button id="encounterItemBtn" class="encounter-item-btn" data-action="encounter-items">
+          <span>▣ 조우 아이템</span><small id="encounterItemInfo">상대와 마주친 상태에서 사용</small>
+        </button>
+      </div>
+    </section>
+
+    <section id="endScreen" class="screen ending-screen">
+      <div id="endingArt" class="ending-art"></div>
+      <div id="endKind" class="end-kind"></div>
+      <h2 id="endTitle"></h2>
+      <p id="endEpilogue" class="epilogue"></p>
+      <div id="playStyle" class="play-style"></div>
+      <div class="score-label">SCORE</div>
+      <div id="endScore" class="score"></div>
+      <div id="endStats" class="result-box"></div>
+      <input id="nickname" maxlength="12" placeholder="랭킹에 표시할 이름" autocomplete="off" />
+      <button class="btn primary full" data-action="submit-score">기록 등록</button>
+      <button class="btn full" data-action="back-menu">메인으로</button>
+    </section>
+  </main>
+
+  <div id="battleOverlay" class="battle-overlay hidden" aria-live="polite">
+    <div class="battle-stage">
+      <div class="battle-head"><span>전투</span><b id="battleEnemyName"></b></div>
+      <div class="battle-vs">
+        <div class="battle-side player"><small>YOU</small><strong id="battlePlayerName"></strong><div id="battlePlayerHp" class="battle-hp"></div></div>
+        <div class="battle-clash">⚔</div>
+        <div class="battle-side enemy"><small>ENEMY</small><strong id="battleEnemyLabel"></strong><div id="battleEnemyHp" class="battle-hp"></div></div>
+      </div>
+      <div id="battleText" class="battle-text">전투 개시</div>
+      <div id="battleDiceWrap" class="battle-dice-wrap hidden">
+        <div class="dice-caption">역전 판정 · 6이 나오면 뒤집는다</div>
+        <div id="battleDie" class="battle-die">1</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalOverlay" class="modal-overlay hidden">
+    <div id="modal" class="modal"></div>
+  </div>
+
+  <div id="flash" class="flash"></div>
+  <div id="floatLayer" class="float-layer"></div>
+
+  <script src="/game.js"></script>
+</body>
+</html>
