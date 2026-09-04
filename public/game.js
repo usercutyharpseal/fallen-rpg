@@ -55,6 +55,9 @@ const ENDINGS = {
   '명예 회복': { icon:'⚜', kind:'NORMAL END', bonus:5000, epilogue:'도적단의 깃발이 쓰러졌다.\n한때 쫓겨났던 당신의 이름은 다시 사람들의 입에 오르기 시작했다.' },
   '반란': { icon:'⚔', kind:'HARD END', bonus:10000, epilogue:'왕의 분노도 왕국의 성벽도 끝내 당신들을 막지 못했다.\n새로운 질서가 피와 함성 속에서 시작된다.' },
   '모두와 친구': { icon:'◇', kind:'SECRET END', bonus:18000, epilogue:'칼을 뽑지 않고도 바뀌는 것이 있었다.\n왕국과 도적단, 상인들은 불편한 평화를 받아들였다. 그리고 그 중심에 당신이 있었다.' },
+  '위선적인 영웅': { icon:'⚜', kind:'SPECIAL END · 위선', bonus:8500, epilogue:'사람들은 당신을 영웅이라 불렀다.\n당신이 쓰러뜨린 약자들의 이름은 승전 연설 어디에도 없었다. 칼로 만든 문제를 말로 덮었고, 왕국은 듣고 싶은 이야기만 들었다.\n명예는 돌아왔다. 진실만 돌아오지 못했다.' },
+  '피 묻은 중재자': { icon:'◇', kind:'SPECIAL END · 불완전한 평화', bonus:13500, epilogue:'왕국과 숲은 결국 같은 탁자에 앉았다.\n그러나 그 탁자를 닦아도 지워지지 않는 피가 있었다. 사람들은 당신의 중재를 받아들였지만, 살아남은 자들은 당신이 평화를 말하기 전에 무엇을 했는지 기억했다.\n평화는 이루어졌다. 결백은 아니었다.' },
+  '두 개의 깃발': { icon:'⚔', kind:'SPECIAL END · 배신', bonus:12000, epilogue:'당신은 한때 왕국의 깃발 아래 섰고, 마지막에는 그것을 향해 검을 들었다.\n왕국은 당신을 배신자라 불렀고 반란군은 영웅이라 불렀다. 둘 다 틀리지 않았다.\n되찾은 것은 명예가 아니라, 어느 편에서도 완전히 지워지지 않을 이름이었다.' },
   '지배자': { icon:'♛', kind:'LEGEND END', bonus:15000, epilogue:'전설마저 쓰러졌다.\n왕좌를 지킬 자도, 당신에게 명령할 자도 더는 남지 않았다.' }
 };
 
@@ -190,7 +193,7 @@ function endingProfile(name) {
 
 function freshState() {
   return {
-    version: 94,
+    version: 95,
     classId: null,
     p: null,
     sceneId: 'intro',
@@ -695,7 +698,7 @@ const SCENES = {
     choices:() => [
       c('왕국과 도적단의 협상을 주선한다',friendEndingHint(true),()=>{
         const check=friendEndingCheck(true);
-        if(check.ok) finish('모두와 친구');
+        if(canFriendEnding(true)) finish('모두와 친구');
         else queueOutcome(`협상 조건이 아직 부족하다.\n\n${friendEndingHint(true)}\n\n서로를 한 번 살려둔 것만으로는 신뢰가 생기지 않는다. 왕국·도적단·상인 모두에게 실제로 쌓아둔 근거가 필요하다.`,null);
       }),
       !state.flags.rebellionRetreated && c('도적단에 돌아가 왕국을 공격한다','반란으로 끝을 본다.',()=>{state.flags.rebel=true;go('rebelMarch');})
@@ -1524,6 +1527,21 @@ function heal(v,visual=true){const before=state.p.hp;state.p.hp=Math.min(state.p
 function damagePlayer(v,canDie=true){state.p.hp-=v;if(state.p.hp<=0){state.p.hp=0;if(canDie)die('상처를 버티지 못하고 쓰러졌다.');else state.p.hp=1;}}
 function gainStat(kind,amount=1){amount=Math.max(1,Math.floor(amount));if(kind==='hp'){state.p.maxHp+=amount;state.p.hp+=amount;floatText(`최대 HP +${amount}`);}else if(kind==='atk'){state.p.atk+=amount;floatText(`공격력 +${amount}`);}else if(kind==='social'){state.p.social+=amount;floatText(`처세 +${amount}`);}else if(kind==='speed'){state.p.speed+=amount;floatText(`속도 +${amount}`);}state.stats.growths=(state.stats.growths||0)+amount;save();}
 function takeGrowth(flag,kind,msg,next=null){if(state.flags[flag]){if(next)go(next);return;}state.flags[flag]=true;gainStat(kind,1);state.stats.progress++;queueOutcome(msg,next);}
+function softKillCount(){
+  return ['gangsterKilled','citizenKilled','merchantKilled','guardKilled','guardResponseKilled'].filter(f=>state.flags[f]).length;
+}
+function bloodyMediatorEligible(){
+  const soft=softKillCount();
+  const hardKill=state.flags.captainKilled||state.flags.officer1Killed||state.flags.officer2Killed||state.flags.noviceKilled||state.flags.midKnightKilled||state.flags.banditBossKilled;
+  return soft>=1 && soft<=3 && !hardKill && !!state.flags.merchantRescuedPeace && !!state.flags.merchantBalancedView && !!state.flags.friendTalkOpen && state.relation.kingdom>=3 && state.relation.bandits>=3 && state.relation.merchants>=3 && (state.stats.socialSuccess||0)>=4 && (state.stats.secrets||0)>=2 && !state.flags.rebel;
+}
+function specialEndingFor(baseName){
+  const s=state.stats||{};
+  if(baseName==='모두와 친구' && bloodyMediatorEligible()) return '피 묻은 중재자';
+  if(baseName==='명예 회복' && softKillCount()>=1 && (s.socialSuccess||0)>=3 && (s.talkSolved||0)>=2) return '위선적인 영웅';
+  if(baseName==='반란' && state.flags.enlisted && state.flags.rebel) return '두 개의 깃발';
+  return baseName;
+}
 function friendEndingCheck(loose=false){
   const missing=[];
   const coreKills=state.flags.gangsterKilled||state.flags.citizenKilled||state.flags.guardKilled||state.flags.guardResponseKilled||state.flags.captainKilled||state.flags.officer1Killed||state.flags.officer2Killed||state.flags.noviceKilled||state.flags.midKnightKilled||state.flags.banditBossKilled||state.flags.merchantKilled;
@@ -1546,15 +1564,18 @@ function friendEndingCheck(loose=false){
   if(!loose && state.flags.kingdomHostile)missing.push('왕국의 공식 적대 상태 해소');
   return {ok:missing.length===0,missing};
 }
-function canFriendEnding(loose=false){return friendEndingCheck(loose).ok;}
+function canFriendEnding(loose=false){const c=friendEndingCheck(loose);return c.ok||bloodyMediatorEligible();}
 function friendEndingHint(loose=false){
   const c=friendEndingCheck(loose);
   if(c.ok)return '모든 조건을 갖췄다. 양쪽이 당신의 중재를 들을 준비가 됐다.';
+  if(bloodyMediatorEligible())return '완전한 우정은 이미 불가능하다. 하지만 피 묻은 손으로도 불완전한 평화를 중재할 수 있다.';
   return '아직 부족한 조건\n· '+c.missing.slice(0,5).join('\n· ')+(c.missing.length>5?`\n· 외 ${c.missing.length-5}개`:'');
 }
 
 function finish(name) {
-  if(state.ended)return; state.ended=true; state.stats.ending=name;
+  if(state.ended)return;
+  name=specialEndingFor(name);
+  state.ended=true; state.stats.ending=name;
   state.stats.survivors = ['merchantAlive','gangsterPeace'].filter(f=>state.flags[f]).length + (!state.flags.citizenKilled?1:0) + (!state.flags.captainKilled?1:0);
   const e=endingProfile(name);
   state.stats.endingBonus=Number(e.bonus||0);
@@ -1657,7 +1678,7 @@ function normalizeLoadedState(data){
   merged.inventory=Array.isArray(data.inventory)?data.inventory:[];
   merged.stats={...base.stats,...(data.stats||{})};
   merged.stats.overTalks=Number(data.stats?.overTalks||0);
-  merged.version=94;
+  merged.version=95;
   return merged;
 }
 function save(){localStorage.setItem(SAVE_KEY,JSON.stringify(state));updateMenuSaveInfo();}
@@ -1708,6 +1729,14 @@ async function verifyPermanentRecord(playerId,expectedBest){
   if(Number(d.record?.score)!==Number(expectedBest))throw new Error('VERIFY_SCORE');
   return d;
 }
+async function verifySubmittedRun(runId,expectedScore){
+  const r=await fetch(`/api/run/${encodeURIComponent(runId)}?t=${Date.now()}`,{cache:'no-store'});
+  if(!r.ok)throw new Error('VERIFY_RUN_HTTP');
+  const d=await r.json();
+  if(!d.ok||!d.found||d.storage!=='cloud'||!d.verified)throw new Error('VERIFY_RUN_NOT_CLOUD');
+  if(Number(d.record?.score)!==Number(expectedScore))throw new Error('VERIFY_RUN_SCORE');
+  return d;
+}
 async function submitScore(){
   const btn=$('submitScoreBtn');
   if(btn?.disabled)return;
@@ -1719,21 +1748,24 @@ async function submitScore(){
   try{
     const r=await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store'});
     let d={};try{d=await r.json();}catch{}
-    if(!r.ok||!d.ok||!d.permanent||!d.verified||d.storage!=='cloud'||(Number(d.rank||999)<=50&&d.leaderboardVisible!==true))throw new Error(d.error||`HTTP_${r.status}`);
+    if(!r.ok||!d.ok||!d.permanent||!d.verified||d.storage!=='cloud'||!d.runId||(Number(d.submittedRank||999)<=50&&d.leaderboardVisible!==true))throw new Error(d.error||`HTTP_${r.status}`);
 
-    // A second client-side read proves that the public server can really read the permanent row back.
+    // Verify both the canonical personal best and this exact run.
     const verify=await verifyPermanentRecord(playerId,d.bestScore);
+    const runVerify=await verifySubmittedRun(d.runId,d.submittedScore);
     const rank=verify.rank??d.rank;
     const rankText=rank?`${rank}위`:'순위 확인됨';
+    const runRank=runVerify.rank??d.submittedRank;
+    const runRankText=runRank?`${runRank}위`:'등록 확인됨';
     const submitted=Number(d.submittedScore||0).toLocaleString();
     const best=Number(d.bestScore||0).toLocaleString();
 
     if(d.recordStatus==='created'){
-      setRankSubmitStatus('success','✓ 영구 랭킹 등록 완료',`<div>Supabase 저장 후 재조회까지 확인했습니다.</div><div class="rank-status-grid"><span>이번 점수</span><b>${submitted}</b><span>서버 최고기록</span><b>${best}</b><span>현재 순위</span><b>${rankText}</b></div>`);
+      setRankSubmitStatus('success','✓ 첫 플레이 기록 영구 등록 완료',`<div>이번 플레이 기록과 개인 최고기록을 모두 Supabase에서 다시 읽어 확인했습니다.</div><div class="rank-status-grid"><span>이번 점수</span><b>${submitted}</b><span>이번 기록 순위</span><b>${runRankText}</b><span>개인 최고</span><b>${best}</b><span>최고기록 순위</span><b>${rankText}</b></div>`);
     }else if(d.recordStatus==='updated'){
-      setRankSubmitStatus('success','✓ 최고 기록 갱신 완료',`<div>새 기록이 영구 DB에 저장됐고 다시 읽어 확인했습니다.</div><div class="rank-status-grid"><span>이번 점수</span><b>${submitted}</b><span>새 최고기록</span><b>${best}</b><span>현재 순위</span><b>${rankText}</b></div>`);
+      setRankSubmitStatus('success','✓ 플레이 기록 등록 + 최고기록 갱신',`<div>이번 플레이를 별도 기록으로 저장했고 개인 최고도 갱신했습니다.</div><div class="rank-status-grid"><span>이번 점수</span><b>${submitted}</b><span>이번 기록 순위</span><b>${runRankText}</b><span>새 개인 최고</span><b>${best}</b><span>최고기록 순위</span><b>${rankText}</b></div>`);
     }else{
-      setRankSubmitStatus('keep','✓ 서버 기록 확인 완료 · 최고기록 유지',`<div>랭킹은 플레이어별 최고 점수 1개만 보관합니다. 이번 점수는 낮아서 기존 기록을 유지했습니다.</div><div class="rank-status-grid"><span>이번 점수</span><b>${submitted}</b><span>기존 최고기록</span><b>${best}</b><span>현재 순위</span><b>${rankText}</b></div>`);
+      setRankSubmitStatus('success','✓ 낮은 점수도 영구 기록 등록 완료',`<div>기존 최고기록은 유지하면서 <b>이번 플레이도 별도 기록으로 저장</b>했습니다.</div><div class="rank-status-grid"><span>이번 점수</span><b>${submitted}</b><span>이번 기록 순위</span><b>${runRankText}</b><span>개인 최고</span><b>${best}</b><span>최고기록 순위</span><b>${rankText}</b></div>`);
     }
     // Remove queued copies for this player after a verified permanent connection succeeds.
     try{const q=JSON.parse(localStorage.getItem(PENDING_KEY)||'[]');localStorage.setItem(PENDING_KEY,JSON.stringify((Array.isArray(q)?q:[]).filter(x=>x.playerId!==playerId)));}catch{}
@@ -1761,8 +1793,8 @@ async function showLeaderboard(){
     if(me?.record && !rows.some(x=>x.playerId===playerId)) rows.push({...me.record,_personalFallback:true,_actualRank:me.rank});
     rows.sort((a,b)=>Number(b.score||0)-Number(a.score||0) || Number(a.time||0)-Number(b.time||0));
     const myCard=me?`<div class="my-rank-card"><b>내 영구 최고기록</b><div class="rank-status-grid"><span>점수</span><b>${Number(me.record.score).toLocaleString()}</b><span>현재 순위</span><b>${me.rank?me.rank+'위':'확인됨'}</b><span>직업</span><b>${escapeHtml(me.record.className)}</b><span>엔딩</span><b>${escapeHtml(me.record.ending)}</b></div></div>`:'<div class="modal-sub">이 기기로 등록한 영구 기록은 아직 없습니다.</div>';
-    const listHtml=rows.length?rows.slice(0,50).map((x,i)=>`<div class="rank-row ${x.playerId===playerId?'mine':''}"><div class="rank-num">${x._actualRank||i+1}</div><div><b>${escapeHtml(x.nickname)}${x.playerId===playerId?' · 나':''}</b><div class="rank-meta">${escapeHtml(x.className)} · ${escapeHtml(x.ending)}${x._personalFallback?' · 개인기록 재조회':''}</div></div><div class="rank-score">${Number(x.score).toLocaleString()}</div></div>`).join(''):(me?'<p class="modal-sub">내 영구 기록은 위에서 확인되었습니다. TOP50 목록을 다시 불러오는 중 문제가 있었습니다.</p>':'<p class="modal-sub">서버에 아직 등록된 노말 모드 기록이 없습니다.</p>');
-    $('modal').innerHTML=`<h2>노말 모드 기록</h2><div class="modal-sub">Supabase 영구 DB · TOP 50 · 플레이어별 최고 점수 1개</div>${myCard}${listHtml}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;
+    const listHtml=rows.length?rows.slice(0,50).map((x,i)=>`<div class="rank-row ${x.playerId===playerId?'mine':''}"><div class="rank-num">${x._actualRank||i+1}</div><div><b>${escapeHtml(x.nickname)}${x.playerId===playerId?' · 나':''}</b><div class="rank-meta">${escapeHtml(x.className)} · ${escapeHtml(x.ending)} · ${x.recordType==='run'?'플레이 기록':'기존 기록'}${x._personalFallback?' · 개인기록 재조회':''}</div></div><div class="rank-score">${Number(x.score).toLocaleString()}</div></div>`).join(''):(me?'<p class="modal-sub">내 영구 기록은 위에서 확인되었습니다. TOP50 목록을 다시 불러오는 중 문제가 있었습니다.</p>':'<p class="modal-sub">서버에 아직 등록된 노말 모드 기록이 없습니다.</p>');
+    $('modal').innerHTML=`<h2>노말 모드 기록</h2><div class="modal-sub">Supabase 영구 DB · 모든 플레이 기록 TOP 50 · 예전 기록도 유지</div>${myCard}${listHtml}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;
   }catch(err){
     $('modal').innerHTML='<h2>노말 모드 기록</h2><p class="modal-sub">영구 랭킹 DB에서 기록을 읽지 못했습니다. 잠시 후 다시 시도해 주세요.</p><button class="btn modal-close" onclick="closeModal()">닫기</button>';
     console.warn('[leaderboard]',err?.message||err);
@@ -1788,7 +1820,7 @@ async function flushPending(){
       const r=await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store'});
       let d={};try{d=await r.json();}catch{}
       if(!r.ok||!d.ok||!d.permanent||!d.verified||d.storage!=='cloud'){remain.push(payload);continue;}
-      await verifyPermanentRecord(payload.playerId,d.bestScore);
+      await verifyPermanentRecord(payload.playerId,d.bestScore);if(d.runId)await verifySubmittedRun(d.runId,d.submittedScore);
     }catch{remain.push(payload);}
   }
   localStorage.setItem(PENDING_KEY,JSON.stringify(remain));

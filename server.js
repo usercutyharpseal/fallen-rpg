@@ -15,7 +15,7 @@ const SUPABASE_KEY_IS_NEW = SUPABASE_KEY.startsWith('sb_secret_');
 const CLOUD_CONFIGURED = !!(SUPABASE_URL && SUPABASE_KEY);
 const supabase = CLOUD_CONFIGURED ? createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { autoRefreshToken:false, persistSession:false, detectSessionInUrl:false },
-  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.4' } }
+  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.5' } }
 }) : null;
 
 app.use(express.json({ limit: '256kb' }));
@@ -53,6 +53,9 @@ const ENDING_BONUS = {
   '명예 회복': 5000,
   '반란': 10000,
   '모두와 친구': 18000,
+  '위선적인 영웅': 8500,
+  '피 묻은 중재자': 13500,
+  '두 개의 깃발': 12000,
   '지배자': 15000,
 };
 
@@ -114,18 +117,21 @@ function writeScores(rows) {
 async function cloudGetLeaderboard(limit = 50) {
   const { data, error } = await supabase
     .from('fallen_scores')
-    .select('player_id,nickname,class_name,ending,score,kills,gold,progress,updated_at')
+    .select('player_id,nickname,class_name,ending,score,kills,gold,progress,stats,updated_at')
     .order('score', { ascending:false })
     .order('updated_at', { ascending:true })
-    .limit(Math.max(1, Math.min(200, Number(limit)||50)));
+    .limit(Math.max(50, Math.min(1000, Math.max(Number(limit)||50, 300))));
   if (error) throw new Error(`SUPABASE_LEADERBOARD:${error.message}`);
-  return (data || []).map(mapCloudRow);
+  const mapped=(data || []).map(mapCloudRow);
+  // Canonical best rows created by v0.9.5 are hidden from the run leaderboard to avoid duplicates.
+  // Legacy rows have no recordType and remain visible so old scores are never lost from view.
+  return mapped.filter(x => x.recordType !== 'best').slice(0, Math.max(1, Math.min(200, Number(limit)||50)));
 }
 
 async function cloudGetPlayer(playerId) {
   const { data, error } = await supabase
     .from('fallen_scores')
-    .select('player_id,nickname,class_name,ending,score,kills,gold,progress,updated_at')
+    .select('player_id,nickname,class_name,ending,score,kills,gold,progress,stats,updated_at')
     .eq('player_id', playerId)
     .maybeSingle();
   if (error) throw new Error(`SUPABASE_PLAYER:${error.message}`);
@@ -137,7 +143,7 @@ async function cloudUpdateNickname(playerId, nickname) {
     .from('fallen_scores')
     .update({ nickname, updated_at:new Date().toISOString() })
     .eq('player_id', playerId)
-    .select('player_id,nickname,class_name,ending,score,kills,gold,progress,updated_at')
+    .select('player_id,nickname,class_name,ending,score,kills,gold,progress,stats,updated_at')
     .single();
   if (error) throw new Error(`SUPABASE_NICKNAME:${error.message}`);
   return data;
@@ -153,25 +159,73 @@ async function cloudUpsert(entry, stats) {
     kills: entry.kills,
     gold: entry.gold,
     progress: entry.progress,
-    stats,
+    stats:{ ...stats, recordType:'best', ownerPlayerId:entry.playerId },
     updated_at: new Date().toISOString(),
   };
   const { data, error } = await supabase
     .from('fallen_scores')
     .upsert(body, { onConflict:'player_id' })
-    .select('player_id,nickname,class_name,ending,score,kills,gold,progress,updated_at')
+    .select('player_id,nickname,class_name,ending,score,kills,gold,progress,stats,updated_at')
     .single();
   if (error) throw new Error(`SUPABASE_UPSERT:${error.message}`);
   return data;
 }
 
-async function cloudRank(score) {
-  const { count, error } = await supabase
+async function cloudInsertRun(entry, stats) {
+  const runId = `run_${Date.now().toString(36)}_${crypto.randomBytes(5).toString('hex')}`;
+  const body = {
+    player_id: runId,
+    nickname: entry.nickname,
+    class_name: entry.className,
+    ending: entry.ending,
+    score: entry.score,
+    kills: entry.kills,
+    gold: entry.gold,
+    progress: entry.progress,
+    stats:{ ...stats, recordType:'run', ownerPlayerId:entry.playerId },
+    updated_at:new Date().toISOString(),
+  };
+  const { data, error } = await supabase
     .from('fallen_scores')
-    .select('player_id', { count:'exact', head:true })
-    .gt('score', Math.floor(score));
+    .insert(body)
+    .select('player_id,nickname,class_name,ending,score,kills,gold,progress,stats,updated_at')
+    .single();
+  if (error) throw new Error(`SUPABASE_RUN_INSERT:${error.message}`);
+  return mapCloudRow(data);
+}
+
+async function cloudGetRun(runId) {
+  const { data, error } = await supabase
+    .from('fallen_scores')
+    .select('player_id,nickname,class_name,ending,score,kills,gold,progress,stats,updated_at')
+    .eq('player_id', runId)
+    .maybeSingle();
+  if (error) throw new Error(`SUPABASE_RUN:${error.message}`);
+  return data ? mapCloudRow(data) : null;
+}
+
+async function cloudRunRank(score) {
+  // Ranking is based on visible run/legacy records, not hidden canonical-best mirror rows.
+  const { data, error } = await supabase
+    .from('fallen_scores')
+    .select('player_id,score,stats')
+    .order('score', { ascending:false })
+    .limit(1000);
+  if (error) throw new Error(`SUPABASE_RUN_RANK:${error.message}`);
+  const visible=(data||[]).filter(x => String(x?.stats?.recordType||'') !== 'best');
+  return visible.filter(x => Number(x.score||0) > Number(score||0)).length + 1;
+}
+
+async function cloudRank(score) {
+  // Personal-best rank counts canonical/legacy player rows only, never per-run rows.
+  const { data, error } = await supabase
+    .from('fallen_scores')
+    .select('player_id,score,stats')
+    .order('score', { ascending:false })
+    .limit(1000);
   if (error) throw new Error(`SUPABASE_RANK:${error.message}`);
-  return Number(count || 0) + 1;
+  const bestRows=(data||[]).filter(x => !String(x.player_id||'').startsWith('run_'));
+  return bestRows.filter(x => Number(x.score||0) > Number(score||0)).length + 1;
 }
 
 async function verifyCloudRecord(playerId, expectedScore) {
@@ -184,8 +238,13 @@ async function verifyCloudRecord(playerId, expectedScore) {
 }
 
 function mapCloudRow(x) {
+  const meta=(x && typeof x.stats==='object' && x.stats) ? x.stats : {};
+  const recordType=String(meta.recordType||'legacy');
+  const ownerPlayerId=String(meta.ownerPlayerId||'');
   return {
-    playerId: x.player_id,
+    rowId: x.player_id,
+    playerId: ownerPlayerId || x.player_id,
+    recordType,
     nickname: x.nickname,
     className: x.class_name,
     ending: x.ending,
@@ -268,6 +327,21 @@ app.get('/api/player/:playerId', async (req, res) => {
   return res.json({ ok:true, found:true, storage:'local', verified:false, rank:rows.findIndex(x=>x.playerId===playerId)+1, record:row });
 });
 
+app.get('/api/run/:runId', async (req, res) => {
+  const runId = String(req.params.runId || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0,120);
+  if (!runId) return res.status(400).json({ ok:false, error:'RUN_ID_REQUIRED' });
+  if (!CLOUD_CONFIGURED) return res.status(503).json({ ok:false, error:'PERMANENT_DB_NOT_CONFIGURED' });
+  try {
+    const row=await cloudGetRun(runId);
+    if (!row || row.recordType!=='run') return res.json({ ok:true, found:false, storage:'cloud' });
+    const rank=await cloudRunRank(row.score);
+    return res.json({ ok:true, found:true, verified:true, storage:'cloud', rank, record:row });
+  } catch (e) {
+    console.error('[run cloud]', e.message);
+    return res.status(503).json({ ok:false, error:'CLOUD_RUN_LOOKUP_FAILED' });
+  }
+});
+
 app.post('/api/score', async (req, res) => {
   const body = req.body || {};
   const playerId = String(body.playerId || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0,80);
@@ -288,32 +362,41 @@ app.post('/api/score', async (req, res) => {
       const previous = await cloudGetPlayer(playerId);
       const previousScore = previous ? Number(previous.score || 0) : null;
       const shouldUpdate = !previous || score > previousScore;
-      const recordStatus = !previous ? 'created' : shouldUpdate ? 'updated' : 'kept';
+      const recordStatus = !previous ? 'created' : shouldUpdate ? 'updated' : 'registered';
+
+      // Every finished run is permanently inserted, even when it is lower than the old best.
+      const insertedRun = await cloudInsertRun(entry, stats);
+      const verifiedRun = await cloudGetRun(insertedRun.rowId);
+      if (!verifiedRun || Number(verifiedRun.score)!==Number(score) || verifiedRun.recordType!=='run') {
+        throw new Error('VERIFY_RUN_MISSING_OR_MISMATCH');
+      }
 
       let bestScore = previous ? previousScore : score;
       let verifiedRow = previous;
-
       if (shouldUpdate) {
+        if (previous && previous.recordType === 'legacy') {
+          await cloudInsertRun({
+            playerId, nickname:previous.nickname, className:previous.className, ending:previous.ending,
+            score:previous.score, kills:previous.kills, gold:previous.gold, progress:previous.progress
+          }, { recordType:'run', ownerPlayerId:playerId, migratedLegacy:true });
+        }
         await cloudUpsert(entry, stats);
         verifiedRow = await verifyCloudRecord(playerId, score);
         bestScore = verifiedRow.score;
       } else {
-        // A lower run does not replace the best gameplay record, but the display nickname may still be changed.
         if (previous.nickname !== nickname) await cloudUpdateNickname(playerId, nickname);
-        // Even when this run is lower, verify that the permanent best record really exists.
         verifiedRow = await verifyCloudRecord(playerId, previousScore);
         if (verifiedRow.nickname !== nickname) throw new Error('VERIFY_NICKNAME_MISMATCH');
         bestScore = verifiedRow.score;
       }
 
-      const rank = await cloudRank(bestScore);
-      // Keep a best-effort local mirror for diagnostics; cloud remains the source of truth.
+      const bestRank = await cloudRank(bestScore);
+      const submittedRank = await cloudRunRank(score);
       localSubmit({ ...entry, score:bestScore, nickname:verifiedRow.nickname, ending:verifiedRow.ending, className:verifiedRow.className });
-      // The public ranking must be able to read the same row too. Never report success when
-      // the player row exists but the TOP 50 query cannot actually see it.
+
       const leaderboardProbe = await cloudGetLeaderboard(50);
-      const visibleInTop50 = leaderboardProbe.some(x => x.playerId === playerId);
-      if (rank <= 50 && !visibleInTop50) throw new Error('VERIFY_LEADERBOARD_ROW_MISSING');
+      const visibleInTop50 = leaderboardProbe.some(x => x.rowId === verifiedRun.rowId);
+      if (submittedRank <= 50 && !visibleInTop50) throw new Error('VERIFY_LEADERBOARD_RUN_MISSING');
       return res.json({
         ok:true,
         permanent:true,
@@ -324,9 +407,12 @@ app.post('/api/score', async (req, res) => {
         submittedScore:score,
         previousBest:previousScore,
         bestScore,
-        rank,
-        leaderboardVisible: rank > 50 || visibleInTop50,
+        rank:bestRank,
+        submittedRank,
+        runId:verifiedRun.rowId,
+        leaderboardVisible: submittedRank > 50 || visibleInTop50,
         record:verifiedRow,
+        runRecord:verifiedRun,
       });
     } catch (e) {
       console.error('[score cloud]', e.message);
@@ -359,11 +445,11 @@ app.post('/api/score', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.4' });
+  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.5' });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n몰락자 Normal Mode v0.9.4`);
+  console.log(`\n몰락자 Normal Mode v0.9.5`);
   console.log(`http://localhost:${PORT}`);
   console.log(`랭킹 설정: ${CLOUD_CONFIGURED ? 'Supabase 환경변수 있음 (실연결은 /api/storage에서 검증)' : '로컬 파일'}\n`);
 });
