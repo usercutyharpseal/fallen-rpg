@@ -7,7 +7,7 @@ const META_KEY = 'fallen_meta_v1';
 const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
 const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
 const PVP_NICK_KEY = 'fallen_pvp_nickname';
-const GAME_VERSION = 132;
+const GAME_VERSION = 133;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5 };
 function loadMeta(){
@@ -2835,6 +2835,24 @@ const ESCAPE_ROUTES = {
   hardGraveCaptain:{to:'hardGraveAfter',text:'무명군 대열 사이의 빈틈을 뚫고 왕좌 계단까지 올라갔다.'},
   phantomEncounter:{to:'phantomAfterEscape',text:'팬텀의 손이 닿기 직전 어둠을 가르며 달아났다.'}
 };
+function validateHardEscapeRoutes(){
+  const ids=[
+    'hardRoadMarauder','hardTollGate','hardScout','hardOuterGate',
+    'hardWarden','hardForgeKnight','hardConfessor','hardChainKnight','hardGraveCaptain'
+  ];
+  const missing=[];
+  for(const id of ids){
+    const sc=SCENES[id];
+    const route=ESCAPE_ROUTES[id];
+    if(!sc){missing.push(id+':scene');continue;}
+    if(sc.runDisabled)continue;
+    if(!route){missing.push(id+':route');continue;}
+    if(typeof route.to==='string'&&!SCENES[route.to])missing.push(id+'->'+route.to);
+  }
+  if(missing.length)console.error('[HARD ESCAPE ROUTES]',missing);
+  return missing;
+}
+
 function handleEscapeSuccess(){
   const route=ESCAPE_ROUTES[state.sceneId];
   if(!route){
@@ -2928,7 +2946,14 @@ function gameAction(type) {
     setEscapeUsed();
     if(chance===100 || Math.random()*100<chance){
       state.stats.runSuccess++;fx('good');floatText('도주 성공');
-      if(sc.runSuccess)sc.runSuccess();else resolve('run',null,'도망쳤다.');
+      if(sc.runSuccess){
+        sc.runSuccess();
+      }else if(ESCAPE_ROUTES[state.sceneId]){
+        handleEscapeSuccess();
+      }else{
+        console.error('[ESCAPE] no route for',state.sceneId);
+        resolve('run',null,'도망쳤다. 하지만 다음 경로를 찾지 못했다.');
+      }
     } else {
       fx('hit');floatText('도주 실패');
       const damage=Math.max(1,Math.floor(enemy.atk/3));
@@ -3851,6 +3876,7 @@ const nicknameInput=$('nickname');if(nicknameInput)nicknameInput.addEventListene
 const pvpNicknameInput=$('pvpNickname');if(pvpNicknameInput)pvpNicknameInput.addEventListener('input',()=>pvpNicknameInput.classList.toggle('nickname-invalid',!nicknameAllowed(pvpNicknameInput.value)));
 const transferCodeInput=$('transferCodeInput');if(transferCodeInput)transferCodeInput.addEventListener('input',()=>{transferCodeInput.value=transferCodeInput.value.replace(/\D/g,'').slice(0,4);});
 
+validateHardEscapeRoutes();
 updateMenuSaveInfo();
 updateStorageStatus();
 flushPending();
