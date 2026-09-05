@@ -19,7 +19,7 @@ const SUPABASE_PUBLIC_KEY=SUPABASE_KEY.startsWith('sb_publishable_')||SUPABASE_K
 const CLOUD_WRITABLE=CLOUD_CONFIGURED&&!SUPABASE_PUBLIC_KEY;
 const supabase = CLOUD_CONFIGURED ? createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { autoRefreshToken:false, persistSession:false, detectSessionInUrl:false },
-  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.14' } }
+  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.16' } }
 }) : null;
 
 function withTimeout(promise, ms = 6000, code = 'UPSTREAM_TIMEOUT') {
@@ -73,6 +73,8 @@ const ENDING_BONUS = {
   '피 묻은 중재자': 20000,
   '두 개의 깃발': 18000,
   '지배자': 30000,
+  '길을 잃은 자': 420,
+  '빈 호칭': 900,
 };
 
 function n(v, max = 100000) {
@@ -80,6 +82,40 @@ function n(v, max = 100000) {
   if (!Number.isFinite(x)) return 0;
   return Math.max(0, Math.min(max, Math.floor(x)));
 }
+
+
+// Nicknames are public leaderboard text, so validate them on the server as well as in the browser.
+const NICK_BLOCK_CONTAINS = [
+  '섹스','야동','자위','질싸','노콘','딜도','오나홀','정액','강간','윤간','성폭행','성추행','야설','야짤','음란','포르노',
+  '좆','씹새','씨발','시발','개새끼','병신','창녀','매춘','후장','ㅅㅂ','ㅆㅂ','ㅂㅅ',
+  'porn','hentai','blowjob','handjob','fuck','pussy','penis','vagina','gangbang','creampie','masturbat','dildo','cumshot'
+];
+const NICK_BLOCK_EXACT = new Set([
+  '보지','자지','성기','항문','꼬추','유두','ㅂㅈ','ㅈㅈ',
+  'sex','anal','cum','dick','cock','tits','boobs','nude','nudes','rape','slut','whore','bitch'
+]);
+const NICK_JAMO_CONTAINS = ['ㅅㅔㄱㅅㅡ','ㅈㅏㅇㅟ','ㅇㅑㄷㅗㅇ','ㅆㅣㅂㅏㄹ','ㅅㅣㅂㅏㄹ','ㅂㅕㅇㅅㅣㄴ','ㅈㅗㅈ'];
+function nicknameForms(value) {
+  const raw=String(value??'').trim();
+  const lower=raw.toLowerCase();
+  const rawCompact=lower.replace(/[\s._\-~`'"·•:;,+*()[\]{}\\/]+/g,'');
+  const nfkc=raw.normalize('NFKC').toLowerCase();
+  const compact=nfkc.replace(/[\u200B-\u200D\uFEFF\s._\-~`'"·•:;,+*()[\]{}\\/]+/g,'');
+  const leet=compact.replace(/[@4]/g,'a').replace(/3/g,'e').replace(/[1!|]/g,'i').replace(/0/g,'o').replace(/[5$]/g,'s').replace(/7/g,'t');
+  return { raw, rawCompact, compact, leet };
+}
+function nicknameAllowed(value) {
+  const {raw,rawCompact,compact,leet}=nicknameForms(value);
+  if(!raw) return {ok:true,value:'익명'};
+  const clipped=Array.from(raw.normalize('NFKC')).slice(0,12).join('').trim();
+  if(!clipped) return {ok:true,value:'익명'};
+  const forms=[rawCompact,compact,leet];
+  const blocked=NICK_BLOCK_CONTAINS.some(w=>forms.some(f=>f.includes(w))) ||
+    forms.some(f=>NICK_BLOCK_EXACT.has(f)) ||
+    NICK_JAMO_CONTAINS.some(w=>rawCompact.includes(w));
+  return blocked ? {ok:false,value:'익명'} : {ok:true,value:clipped};
+}
+function safeNickname(value){const r=nicknameAllowed(value);return r.ok?r.value:'검열된 이름';}
 
 function scoreRun(s = {}) {
   const progress = n(s.progress, 500);
@@ -261,7 +297,7 @@ function mapCloudRow(x) {
     rowId: x.player_id,
     playerId: ownerPlayerId || x.player_id,
     recordType,
-    nickname: x.nickname,
+    nickname: safeNickname(x.nickname),
     className: x.class_name,
     ending: x.ending,
     score: Number(x.score || 0),
@@ -367,7 +403,9 @@ app.post('/api/score', async (req, res) => {
   const playerId = String(body.playerId || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0,80);
   if (!playerId) return res.status(400).json({ ok:false, error:'PLAYER_ID_REQUIRED' });
 
-  const nickname = String(body.nickname || '익명').trim().slice(0,12) || '익명';
+  const nickCheck=nicknameAllowed(body.nickname || '익명');
+  if(!nickCheck.ok)return res.status(400).json({ok:false,error:'NICKNAME_NOT_ALLOWED'});
+  const nickname=nickCheck.value;
   const className = String(body.className || '?').trim().slice(0,12);
   const stats = body.stats || {};
   const ending = String(stats.ending || 'BAD END').slice(0,30);
@@ -466,11 +504,11 @@ app.post('/api/score', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.14' });
+  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.16' });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n몰락자 Normal Mode v0.9.7`);
+  console.log(`\n몰락자 Normal Mode v0.9.16`);
   console.log(`http://localhost:${PORT}`);
   console.log(`랭킹 설정: ${CLOUD_CONFIGURED ? 'Supabase 환경변수 있음 (실연결은 /api/storage에서 검증)' : '로컬 파일'}\n`);
 });

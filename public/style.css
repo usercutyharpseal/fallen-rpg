@@ -70,3 +70,5 @@ button,input{font:inherit}button{color:inherit}button:disabled{opacity:.36}
 .scene-card.aftermath-dead .scene-shade{background:linear-gradient(180deg,#11131733 0,#08090de0 46%,#08090d 100%)}
 .scene-card.aftermath-trail .scene-art{filter:saturate(.55) contrast(1.05)}
 .scene-card.aftermath-trail .scene-shade{background:linear-gradient(180deg,#17302a20 0,#080b0ae0 48%,#080a0a 100%)}
+
+#nickname.nickname-invalid{border-color:#7d3a3a;box-shadow:0 0 0 1px rgba(125,58,58,.35) inset;}

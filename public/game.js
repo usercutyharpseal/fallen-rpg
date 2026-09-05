@@ -4,7 +4,7 @@ const SAVE_KEY = 'fallen_normal_v08';
 const PLAYER_ID_KEY = 'fallen_player_id';
 const PENDING_KEY = 'fallen_pending_scores';
 const META_KEY = 'fallen_meta_v1';
-const GAME_VERSION = 103;
+const GAME_VERSION = 105;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, necromancer:3, dictator:5 };
 function loadMeta(){
@@ -92,7 +92,8 @@ const ENDINGS = {
   '피 묻은 중재자': { icon:'◇', kind:'SPECIAL END · 불완전한 평화', bonus:20000, epilogue:'왕국과 숲은 결국 같은 탁자에 앉았다.\n그러나 그 탁자를 닦아도 지워지지 않는 피가 있었다. 사람들은 당신의 중재를 받아들였지만, 살아남은 자들은 당신이 평화를 말하기 전에 무엇을 했는지 기억했다.\n평화는 이루어졌다. 결백은 아니었다.' },
   '두 개의 깃발': { icon:'⚔', kind:'SPECIAL END · 배신', bonus:18000, epilogue:'당신은 한때 왕국의 깃발 아래 섰고, 마지막에는 그것을 향해 검을 들었다.\n왕국은 당신을 배신자라 불렀고 반란군은 영웅이라 불렀다. 둘 다 틀리지 않았다.\n되찾은 것은 명예가 아니라, 어느 편에서도 완전히 지워지지 않을 이름이었다.' },
   '지배자': { icon:'♛', kind:'LEGEND END', bonus:30000, epilogue:'전설마저 쓰러졌다.\n왕좌를 지킬 자도, 당신에게 명령할 자도 더는 남지 않았다.' },
-  '길을 잃은 자': { icon:'∅', kind:'BAD END · 방황', bonus:420, epilogue:'다리의 한쪽에는 왕국이, 다른 한쪽에는 숲이 있었다.\n당신은 두 곳에서 모두 물러났고 어느 쪽에도 돌아갈 이유를 남기지 못했다.\n해가 질 때까지 다리 위에 서 있었지만 누구도 당신을 부르러 오지 않았다.\n결국 길을 잃은 것은 발이 아니라, 선택이었다.' }
+  '길을 잃은 자': { icon:'∅', kind:'BAD END · 방황', bonus:420, bad:true, art:'crossroad', epilogue:'다리의 한쪽에는 왕국이, 다른 한쪽에는 숲이 있었다.\n당신은 두 곳에서 모두 물러났고 어느 쪽에도 돌아갈 이유를 남기지 못했다.\n해가 질 때까지 다리 위에 서 있었지만 누구도 당신을 부르러 오지 않았다.\n결국 길을 잃은 것은 발이 아니라, 선택이었다.' },
+  '빈 호칭': { icon:'♙', kind:'BAD END · 귀족', bonus:900, bad:true, art:'crossroad', epilogue:'당신은 다리 한가운데에서 끝까지 말을 골랐다.\n한때는 가문의 이름 하나로 문이 열렸고, 말 한마디로 싸움을 미룰 수 있었다. 하지만 굶주림과 죽음은 예법을 몰랐다.\n해가 기울자 왕국도 숲도 먼저 돌아섰다. 어느 쪽도 당신을 적으로 부르지는 않았다. 그렇다고 자기 사람이라 부르지도 않았다.\n끝내 남은 것은, 아무도 불러주지 않는 호칭뿐이었다.' }
 };
 
 
@@ -970,14 +971,24 @@ const SCENES = {
     chapter:'FINAL CROSSROAD', location:'왕국과 숲 사이의 오래된 다리', art:'crossroad',
     text:`숲도 왕국도 등 뒤에 있다.\n당신은 어느 한쪽을 완전히 무너뜨리지 않았다.\n\n남은 것은 서로에게 칼을 겨누는 이유를 멈추게 하는 일이다.`,
     choices:() => {
-      const stranded=state.flags.lastEscapeTo==='friendBridge' && !canFriendEnding(true) && !state.flags.rebel && !state.flags.banditTruce && !state.flags.friendTalkOpen;
-      if(stranded)return [c('어느 쪽에도 돌아가지 못한다','',()=>finish('길을 잃은 자'))];
+      const peaceReady=canFriendEnding(true);
+      const rebelAvailable=!state.flags.rebellionRetreated;
+      const strandedByEscape=state.flags.lastEscapeTo==='friendBridge' && !peaceReady && !state.flags.rebel && !state.flags.banditTruce && !state.flags.friendTalkOpen;
+
+      // No valid route must ever leave the player trapped on this screen.
+      // A noble who talked their way this far gets a class-specific bad ending.
+      if(!peaceReady && !rebelAvailable){
+        if(state.classId==='noble') return [c('끝까지 말을 이어간다','',()=>finish('빈 호칭'))];
+        return [c('어느 쪽에도 돌아가지 못한다','',()=>finish('길을 잃은 자'))];
+      }
+      if(strandedByEscape)return [c('어느 쪽에도 돌아가지 못한다','',()=>finish('길을 잃은 자'))];
+
       return [
         c('왕국과 도적단의 협상을 주선한다','',()=>{
-          if(canFriendEnding(true)) finish('모두와 친구');
+          if(peaceReady) finish('모두와 친구');
           else queueOutcome(`${friendEndingHint(true)}\n\n다리 양쪽의 사람들은 아직 무기를 내려놓지 않는다.`,null);
         }),
-        !state.flags.rebellionRetreated && c('도적단에 돌아가 왕국을 공격한다','',()=>{state.flags.rebel=true;go('rebelMarch');})
+        rebelAvailable && c('도적단에 돌아가 왕국을 공격한다','',()=>{state.flags.rebel=true;go('rebelMarch');})
       ].filter(Boolean);
     }
   }),
@@ -2319,10 +2330,43 @@ async function verifySubmittedRun(runId,expectedScore){
   if(Number(d.record?.score)!==Number(expectedScore))throw new Error('VERIFY_RUN_SCORE');
   return d;
 }
+
+
+const NICK_BLOCK_CONTAINS = [
+  '섹스','야동','자위','질싸','노콘','딜도','오나홀','정액','강간','윤간','성폭행','성추행','야설','야짤','음란','포르노',
+  '좆','씹새','씨발','시발','개새끼','병신','창녀','매춘','후장','ㅅㅂ','ㅆㅂ','ㅂㅅ',
+  'porn','hentai','blowjob','handjob','fuck','pussy','penis','vagina','gangbang','creampie','masturbat','dildo','cumshot'
+];
+const NICK_BLOCK_EXACT = new Set(['보지','자지','성기','항문','꼬추','유두','ㅂㅈ','ㅈㅈ','sex','anal','cum','dick','cock','tits','boobs','nude','nudes','rape','slut','whore','bitch']);
+const NICK_JAMO_CONTAINS = ['ㅅㅔㄱㅅㅡ','ㅈㅏㅇㅟ','ㅇㅑㄷㅗㅇ','ㅆㅣㅂㅏㄹ','ㅅㅣㅂㅏㄹ','ㅂㅕㅇㅅㅣㄴ','ㅈㅗㅈ'];
+function nicknameAllowed(value){
+  const raw=String(value??'').trim();
+  if(!raw)return true;
+  const lower=raw.toLowerCase();
+  const rawCompact=lower.replace(/[\s._\-~`'"·•:;,+*()[\]{}\\/]+/g,'');
+  const compact=raw.normalize('NFKC').toLowerCase().replace(/[\u200B-\u200D\uFEFF\s._\-~`'"·•:;,+*()[\]{}\\/]+/g,'');
+  const leet=compact.replace(/[@4]/g,'a').replace(/3/g,'e').replace(/[1!|]/g,'i').replace(/0/g,'o').replace(/[5$]/g,'s').replace(/7/g,'t');
+  const forms=[rawCompact,compact,leet];
+  return !(NICK_BLOCK_CONTAINS.some(w=>forms.some(f=>f.includes(w))) || forms.some(f=>NICK_BLOCK_EXACT.has(f)) || NICK_JAMO_CONTAINS.some(w=>rawCompact.includes(w)));
+}
+function refreshNicknameValidation(){
+  const input=$('nickname'),btn=$('submitScoreBtn');if(!input||!btn)return;
+  const ok=nicknameAllowed(input.value);
+  input.classList.toggle('nickname-invalid',!ok);
+  input.setAttribute('aria-invalid',ok?'false':'true');
+  if(!ok){btn.disabled=true;btn.textContent='사용할 수 없는 이름';}
+  else if(btn.textContent==='사용할 수 없는 이름'){btn.disabled=false;btn.textContent='영구 랭킹에 기록 등록';}
+}
 async function submitScore(){
   const btn=$('submitScoreBtn');
+  const input=$('nickname');
+  const nickname=input.value.trim()||'익명';
+  if(!nicknameAllowed(nickname)){
+    input.classList.add('nickname-invalid');input.setAttribute('aria-invalid','true');
+    setRankSubmitStatus('error','사용할 수 없는 이름입니다.','<div>다른 이름을 입력해주세요.</div>');
+    return;
+  }
   if(btn?.disabled)return;
-  const nickname=$('nickname').value.trim()||'익명';
   const playerId=getPlayerId();
   const payload={playerId,nickname,className:state.p.className,stats:{...state.stats,goldHeld:state.p.gold}};
   if(btn){btn.disabled=true;btn.textContent='영구 DB에 저장 확인 중...';}
@@ -2330,7 +2374,7 @@ async function submitScore(){
   try{
     const r=await fetchTimed('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store'},9000);
     let d={};try{d=await r.json();}catch{}
-    if(!r.ok||!d.ok||!d.permanent||!d.verified||d.storage!=='cloud'||!d.runId||(Number(d.submittedRank||999)<=50&&d.leaderboardVisible!==true))throw new Error(d.error||`HTTP_${r.status}`);
+    if(!r.ok||!d.ok||!d.permanent||!d.verified||d.storage!=='cloud'||!d.runId||(Number(d.submittedRank||999)<=50&&d.leaderboardVisible!==true)){const ex=new Error(d.error||`HTTP_${r.status}`);ex.code=d.error||'';throw ex;}
 
     // Verify both the canonical personal best and this exact run.
     const verify=await verifyPermanentRecord(playerId,d.bestScore);
@@ -2353,8 +2397,13 @@ async function submitScore(){
     try{const q=JSON.parse(localStorage.getItem(PENDING_KEY)||'[]');localStorage.setItem(PENDING_KEY,JSON.stringify((Array.isArray(q)?q:[]).filter(x=>x.playerId!==playerId)));}catch{}
     updateStorageStatus();
   }catch(err){
-    queuePendingScore(payload);
-    setRankSubmitStatus('error','✕ 영구 랭킹 저장 실패',`<div>이번 기록은 기기에 재전송 대기 상태로 보관했습니다. <b>영구 DB에 실제 저장된 것으로 처리하지 않았습니다.</b></div><div class="rank-status-grid"><span>이번 점수</span><b>${clientScore().toLocaleString()}</b><span>상태</span><b>재전송 대기</b></div>`);
+    if(err?.code==='NICKNAME_NOT_ALLOWED'||err?.message==='NICKNAME_NOT_ALLOWED'){
+      setRankSubmitStatus('error','사용할 수 없는 이름입니다.','<div>다른 이름을 입력해주세요.</div>');
+      if(input){input.classList.add('nickname-invalid');input.setAttribute('aria-invalid','true');}
+    }else{
+      queuePendingScore(payload);
+      setRankSubmitStatus('error','✕ 영구 랭킹 저장 실패',`<div>이번 기록은 기기에 재전송 대기 상태로 보관했습니다. <b>영구 DB에 실제 저장된 것으로 처리하지 않았습니다.</b></div><div class="rank-status-grid"><span>이번 점수</span><b>${clientScore().toLocaleString()}</b><span>상태</span><b>재전송 대기</b></div>`);
+    }
     console.warn('[ranking submit]',err?.message||err);
   }finally{
     if(btn){btn.disabled=false;btn.textContent='기록 다시 확인 / 등록';}
@@ -2408,6 +2457,7 @@ async function flushPending(){
     try{
       const r=await fetchTimed('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),cache:'no-store'},9000);
       let d={};try{d=await r.json();}catch{}
+      if(d.error==='NICKNAME_NOT_ALLOWED')continue;
       if(!r.ok||!d.ok||!d.permanent||!d.verified||d.storage!=='cloud'){remain.push(payload);continue;}
       await verifyPermanentRecord(payload.playerId,d.bestScore);if(d.runId)await verifySubmittedRun(d.runId,d.submittedScore);
     }catch{remain.push(payload);}
@@ -2441,6 +2491,7 @@ document.addEventListener('click',e=>{
   if(ga)gameAction(ga);
 });
 window.selectClass=selectClass;window.recoverFromAnomaly=recoverFromAnomaly;window.summonWraith=summonWraith;window.openShop=openShop;window.openBag=openBag;window.openEncounterItems=openEncounterItems;window.closeModal=closeModal;window.continueOutcome=continueOutcome;window.saveAndExit=saveAndExit;
+const nicknameInput=$('nickname');if(nicknameInput)nicknameInput.addEventListener('input',refreshNicknameValidation);
 
 updateMenuSaveInfo();
 updateStorageStatus();
