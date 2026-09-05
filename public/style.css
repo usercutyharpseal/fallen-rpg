@@ -105,7 +105,7 @@ button,input{font:inherit}button{color:inherit}button:disabled{opacity:.36}
 @media (max-width:480px){.class-portrait-wrap{height:132px}.scene-class-cameo{width:46px;height:62px;left:8px;bottom:10px}}
 
 
-/* v0.9.24 class-select — native 4:5 artwork, no text/image overlap */
+/* v0.9.25 class-select — native 4:5 artwork, no text/image overlap */
 #classScreen{max-width:620px;margin:0 auto}
 #classScreen .class-grid{display:grid;gap:18px}
 #classScreen .class-card{padding:0!important;border-radius:20px;overflow:hidden;background:linear-gradient(180deg,#17191f 0,#0c0e12 100%);box-shadow:0 18px 44px #0009}
@@ -136,14 +136,27 @@ button,input{font:inherit}button{color:inherit}button:disabled{opacity:.36}
   #classScreen .class-card>.btn{width:calc(100% - 26px);margin:14px 13px 14px!important}
 }
 
-/* v0.9.24 main menu sword crest */
+/* v0.9.25 main menu sword crest */
 .menu-sword-wrap{position:relative;width:96px;height:96px;margin:0 auto 5px;display:grid;place-items:center}
 .menu-sword-wrap:before{content:"";position:absolute;width:82px;height:82px;border-radius:50%;background:radial-gradient(circle,#b99a5a24 0,transparent 68%);filter:blur(1px)}
 .menu-sword{position:relative;width:92px;height:92px;object-fit:contain;filter:drop-shadow(0 10px 14px #000) drop-shadow(0 0 10px #9f824433)}
 .menu-screen h1{margin-top:2px}
 
-/* v0.9.24 class cameo uses the same uncropped 4:5 portrait */
+/* v0.9.25 class cameo uses the same uncropped 4:5 portrait */
 .scene-class-cameo{width:56px;height:70px;border-radius:5px}
 .scene-class-cameo img{object-fit:cover;object-position:50% 50%}
 @media(max-width:480px){.scene-class-cameo{width:48px;height:60px}}
 
+
+
+/* v0.9.25 HARD MODE · boss gimmicks */
+.gimmick-inline{color:#d6a36d;font-weight:800}
+.hard-gimmick-overlay{position:fixed;inset:0;z-index:88;display:grid;place-items:center;padding:22px;background:radial-gradient(circle at 50% 45%,#3b211dcc,transparent 42%),#050608e8;opacity:0;pointer-events:none;transition:opacity .24s ease;overflow:hidden}
+.hard-gimmick-overlay.hidden{display:none!important}.hard-gimmick-overlay.show{opacity:1}
+.hard-gimmick-card{position:relative;z-index:2;width:min(92vw,520px);border:1px solid #8b6844;border-radius:18px;padding:26px 22px 24px;text-align:center;background:linear-gradient(180deg,#211710f5,#0b0d11f8);box-shadow:0 30px 100px #000,0 0 70px #6e381c44;transform:scale(.93);transition:transform .3s ease}
+.hard-gimmick-overlay.show .hard-gimmick-card{transform:scale(1)}
+.hard-gimmick-kicker{font-size:8px;letter-spacing:.28em;color:#c28d55}.hard-gimmick-card h2{font-family:Georgia,"Noto Serif KR",serif;margin:8px 0 9px;font-size:30px}.hard-gimmick-card p{margin:0;color:#d2c7b7;font-size:12px;line-height:1.75;white-space:pre-line}
+.hard-gimmick-chain{position:absolute;width:140%;height:12px;background:repeating-linear-gradient(90deg,#1d1a17 0 18px,#8c6d48 18px 25px,#2b241d 25px 43px);box-shadow:0 0 0 2px #0009,0 8px 22px #000b;opacity:.88}.hard-gimmick-chain.chain-a{transform:rotate(24deg)}.hard-gimmick-chain.chain-b{transform:rotate(-24deg)}
+.battle-overlay.algon-lock:before,.battle-overlay.algon-lock:after{content:"";position:absolute;left:-15%;top:48%;width:130%;height:10px;z-index:1;background:repeating-linear-gradient(90deg,#251f19 0 20px,#987247 20px 27px,#30271e 27px 48px);box-shadow:0 2px 12px #000;pointer-events:none;opacity:.75}.battle-overlay.algon-lock:before{transform:rotate(18deg)}.battle-overlay.algon-lock:after{transform:rotate(-18deg)}.battle-overlay.algon-lock .battle-stage{position:relative;z-index:2;border-color:#74512f;box-shadow:0 0 55px #6b361c44}
+.mode-card.hard .mode-state.playable{color:#d7a663;border-color:#755738;background:#2b1b102b}.hard-setup .hard-banner{border-color:#5b4333;background:radial-gradient(circle at 82% 0,#9d633529,transparent 35%),linear-gradient(145deg,#18130f,#0b0d11 72%)}
+@media(max-width:480px){.hard-gimmick-card{padding:22px 17px}.hard-gimmick-card h2{font-size:25px}.hard-gimmick-card p{font-size:11px}}

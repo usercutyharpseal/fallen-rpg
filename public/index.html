@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <meta name="theme-color" content="#090a0d" />
   <title>몰락자</title>
-  <link rel="stylesheet" href="/style.css?v=0924" />
+  <link rel="stylesheet" href="/style.css?v=0925" />
 </head>
 <body>
   <main id="app">
     <section id="menuScreen" class="screen active menu-screen">
       <div class="menu-vignette"></div>
-      <div class="menu-sword-wrap"><img class="menu-sword" src="/assets/ui/fallen-sword.webp?v=0924" alt="몰락자의 검"></div>
+      <div class="menu-sword-wrap"><img class="menu-sword" src="/assets/ui/fallen-sword.webp?v=0925" alt="몰락자의 검"></div>
       <h1>몰락자</h1>
       <p class="eng">THE FALLEN</p>
       <p class="menu-copy">이름을 잃은 자의 기록</p>
@@ -22,7 +22,7 @@
         <button class="btn" data-action="leaderboard">노말 모드 기록</button>
         <button class="btn" data-action="pvp-leaderboard">PVP 레이팅</button>
       </div>
-      <div class="version">THE FALLEN · v0.9.24</div>
+      <div class="version">THE FALLEN · v0.9.25</div>
       <div id="storageInfo" class="storage-info">랭킹 저장 상태 확인 중…</div>
     </section>
 
@@ -91,7 +91,7 @@
       <div class="hard-banner">
         <span>HARD MODE</span>
         <h2>혼자 버틸 것인가,<br>다른 몰락자와 맞설 것인가</h2>
-        <p>하드 모드의 본편은 제작 중입니다.</p>
+        <p>세 갈래 운명 중 로드 알곤 루트가 열렸습니다. 최후의 기사와 데몬 알터닐은 이후 개방됩니다.</p>
       </div>
       <div id="hardChoiceGrid" class="hard-choice-grid"></div>
     </section>
@@ -198,6 +198,15 @@
     </div>
   </div>
 
+  <div id="hardGimmickOverlay" class="hard-gimmick-overlay hidden" aria-live="assertive">
+    <div class="hard-gimmick-chain chain-a"></div><div class="hard-gimmick-chain chain-b"></div>
+    <div class="hard-gimmick-card">
+      <div class="hard-gimmick-kicker">HARD BOSS GIMMICK</div>
+      <h2 id="hardGimmickTitle">왕의 폐쇄령</h2>
+      <p id="hardGimmickBody"></p>
+    </div>
+  </div>
+
   <div id="modalOverlay" class="modal-overlay hidden">
     <div id="modal" class="modal"></div>
   </div>
@@ -213,6 +222,6 @@
     });
   </script>
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/game.js?v=0924"></script>
+  <script src="/game.js?v=0925"></script>
 </body>
 </html>

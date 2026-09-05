@@ -7,7 +7,7 @@ const META_KEY = 'fallen_meta_v1';
 const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
 const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
 const PVP_NICK_KEY = 'fallen_pvp_nickname';
-const GAME_VERSION = 124;
+const GAME_VERSION = 125;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5 };
 function loadMeta(){
@@ -89,6 +89,16 @@ const ENEMIES = {
   midKnight: { name:'상인협회 중급 기사', hp:21, atk:16, social:23, speed:9, gold:95, rank:'매우 강함', elite:true },
   banditBoss: { name:'도적단 두목 세리아', hp:19, atk:14, social:19, speed:10, gold:125, rank:'두목', elite:true },
   king: { name:'격분한 왕 에드란', hp:22, atk:17, social:25, speed:9, gold:180, rank:'왕', elite:true },
+  hardMarauder: { name:'북부 약탈병', hp:13, atk:11, social:10, speed:9, gold:34, rank:'하드 · 약탈병' },
+  hardTollGuard: { name:'검은 관문 징수병', hp:16, atk:13, social:15, speed:8, gold:48, rank:'하드 · 관문병' },
+  hardScout: { name:'알곤의 까마귀 정찰병', hp:15, atk:12, social:14, speed:10, gold:46, rank:'하드 · 정찰병' },
+  hardOuterGuard: { name:'폐쇄성 외성 기사', hp:19, atk:15, social:18, speed:9, gold:62, rank:'하드 · 기사' },
+  hardWarden: { name:'명부 감옥장 바르몬', hp:23, atk:18, social:20, speed:8, gold:88, rank:'하드 · 감옥장', elite:true },
+  hardForgeKnight: { name:'서약로 기사 하르트', hp:25, atk:19, social:22, speed:8, gold:96, rank:'하드 · 서약기사', elite:true },
+  hardConfessor: { name:'검은 고해사제 모르가', hp:20, atk:16, social:25, speed:7, gold:82, rank:'하드 · 고해사제', elite:true },
+  hardChainKnight: { name:'사슬문 기사 로드릭', hp:28, atk:21, social:24, speed:9, gold:112, rank:'하드 · 사슬기사', elite:true },
+  hardGraveCaptain: { name:'무명군 대장 카르센', hp:31, atk:23, social:26, speed:10, gold:135, rank:'하드 · 무명군 대장', elite:true },
+  lordAlgon: { name:'로드 알곤', hp:44, atk:29, social:34, speed:8, gold:260, rank:'HARD BOSS · 폐쇄성의 군주', elite:true },
   phantom: { name:'밤의 괴수 팬텀', hp:26, atk:19, social:99, speed:5, gold:0, rank:'밤의 괴수', elite:true }
 };
 
@@ -105,11 +115,18 @@ const ENDINGS = {
   '빈 호칭': { icon:'♙', kind:'BAD END · 귀족', bonus:900, bad:true, art:'crossroad', epilogue:'당신은 다리 한가운데에서 끝까지 말을 골랐다.\n한때는 가문의 이름 하나로 문이 열렸고, 말 한마디로 싸움을 미룰 수 있었다. 하지만 굶주림과 죽음은 예법을 몰랐다.\n해가 기울자 왕국도 숲도 먼저 돌아섰다. 어느 쪽도 당신을 적으로 부르지는 않았다. 그렇다고 자기 사람이라 부르지도 않았다.\n끝내 남은 것은, 아무도 불러주지 않는 호칭뿐이었다.' },
   '팬텀': { icon:'◐', kind:'BAD END · 밤의 괴수', bonus:1800, bad:true, art:'phantom', epilogue:'몇 번이나 지나온 길 끝에서, 이번에는 길이 먼저 당신을 알아보았다.\n검은 형체는 발소리도 숨소리도 없이 거리를 지웠다. 칼이 닿았는지조차 알 수 없었다.\n다음 날 그 길에는 발자국 하나만 남았다. 시작은 있었지만 끝은 없었다.' },
   '끝없는 악몽': { icon:'∞', kind:'BAD END · 반복', bonus:2400, bad:true, art:'phantom', epilogue:'당신은 싸우지 않았다. 멈추지도 않았다. 익숙한 길을 고르고 또 골랐다.\n숲은 같은 나무를 내놓았고 성벽은 같은 종을 울렸다. 리안의 표식도, 모르텐의 흰 실도 어느 순간부터 매번 처음 보는 것처럼 느껴졌다.\n마지막에는 팬텀조차 보이지 않았다. 악몽에는 괴물조차 필요 없었다.' },
+  '검은 왕관의 몰락': { icon:'♜', kind:'HARD END · LORD ALGON', bonus:45000, art:'hard_algon', epilogue:'폐쇄성의 종이 멎었다.\n검은 장부가 불길 속에서 뒤틀리고, 살아 있는 자와 죽은 자의 이름을 가르던 선도 함께 사라졌다.\n당신은 왕좌를 차지하지 않았다. 대신 누구도 다시 그 문을 닫지 못하게 만들었다.' },
+  '이름을 돌려준 자': { icon:'◇', kind:'HARD SECRET END · LORD ALGON', bonus:56000, art:'hard_throne', epilogue:'세 개의 봉인이 동시에 깨지자 성채 아래에서 수천 개의 이름이 되돌아왔다.\n죽었다고 기록된 자, 추방되었다고 지워진 자, 명령 한 줄로 사람이 아니게 된 자들의 기록이 다시 세상 위로 올라왔다.\n아르벤이 없애려 했던 장부와 레오른이 거부했던 명령은 결국 당신의 손에서 끝났다.' },
+  '닫힌 성채의 새 주인': { icon:'♛', kind:'HARD HIDDEN END · LORD ALGON', bonus:50000, art:'hard_algon', epilogue:'알곤은 쓰러졌지만 왕좌는 비어 있었다.\n당신은 장부를 태우지 않았다. 사슬도 모두 풀지 않았다. 대신 가장 위에 있던 이름만 지우고 그 자리에 자신의 이름을 적었다.\n문은 다시 닫혔다. 이번에는 당신의 명령으로.' },
+  '폐쇄령의 마지막 이름': { icon:'⛓', kind:'BAD END · LORD ALGON', bonus:5200, bad:true, art:'hard_algon', epilogue:'로드 알곤은 도망칠 길부터 없앴다.\n당신이 마지막으로 들은 것은 검이 아니라 장부를 넘기는 소리였다.\n다음 날, 폐쇄성의 기록에는 새 줄 하나가 생겼다. 이름, 출신, 그리고 단 한 단어. 처리 완료.' },
   '노예': { icon:'⛓', kind:'HIDDEN END · 계약', bonus:6500, bad:true, art:'slave', epilogue:'마지막 선택이 끝났다고 생각한 순간, 오래전 받아들인 계약이 이름을 되찾았다.\n당신이 얻은 힘은 선물이 아니었다. 빚이었다.\n왕국도 숲도 당신을 붙잡지 못했지만, 보이지 않는 사슬은 처음부터 당신의 그림자에 묶여 있었다.\n당신의 여정은 끝났고, 이제부터는 다른 존재의 여정이 시작된다. 당신을 데리고.' }
 };
 
 
 const BAD_ENDINGS = {
+  hardAlgonBoss: { title:'폐쇄령의 마지막 이름', kind:'BAD END · LORD ALGON', art:'hard_algon', bonus:5200, epilogue:'도망칠 문은 먼저 닫혔다. 알곤은 쓰러진 당신을 보지 않고 장부만 펼쳤다.\n\n펜끝이 종이를 긁는 짧은 소리 뒤에, 당신의 이름은 사람의 이름이 아니라 처리된 항목이 되었다.' },
+  hardGraveCaptain: { title:'무명군의 새 병사', kind:'BAD END · HARD', art:'hard_lastbattle', bonus:3400, epilogue:'카르센의 창이 멈춘 뒤 무명군은 잠시 길을 열었다. 살아서 지나가라는 뜻은 아니었다.\n다음 밤, 성채를 도는 유령의 대열에는 낯선 그림자 하나가 더 섞여 있었다.' },
+  hardChainKnight: { title:'사슬문 아래', kind:'BAD END · HARD', art:'hard_throne', bonus:2800, epilogue:'사슬문은 한 번도 완전히 열린 적이 없었다. 로드릭은 쓰러진 당신을 문 안쪽으로 끌어들였고, 쇠사슬은 다시 제자리로 돌아갔다.' },
   phantomEncounter: { title:'팬텀', kind:'BAD END · 밤의 괴수', art:'phantom', bonus:1800, epilogue:'몇 번이나 지나온 길 끝에서, 이번에는 길이 먼저 당신을 알아보았다.\n검은 형체는 발소리도 숨소리도 없이 거리를 지웠다. 칼이 닿았는지조차 알 수 없었다.\n다음 날 그 길에는 발자국 하나만 남았다. 시작은 있었지만 끝은 없었다.' },
   gangster: {
     title:'첫 칼날', kind:'BAD END · 빈민가', art:'gangster', bonus:0,
@@ -1313,6 +1330,389 @@ ${state.flags.officer2Allied?'당신을 적으로 보지는 않지만 아직 완
     ].filter(Boolean)
   }),
 
+
+  hardPrologue: scene('hardPrologue', {
+    chapter:'HARD MODE · PROLOGUE', location:'왕국 북부로 향하는 폐도', art:'hard_crossroads',
+    text:()=>`노말에서 끝났어야 할 이야기가 북쪽에서 다시 움직인다.\n\n왕국의 오래된 문서에는 추방된 사람의 이름 옆에 작은 검은 점이 찍혀 있었다. 죽음도 사면도 아닌 표식. \"북부 이관\".\n\n레오른은 몇 차례 그 명령을 거부했고, 아르벤은 기록 자체를 없애려 했다는 흔적이 남아 있다. 세리아의 도적단이 겨울마다 북쪽 수송대를 노렸던 이유도 이제는 단순한 약탈처럼 보이지 않는다.\n\n며칠 뒤, 세 갈래 길이 나타난다. 어느 쪽이든 노말에서 보았던 세계보다 훨씬 깊고 잔혹하다.`,
+    choices:()=>[c('검은 표식을 따라간다','하드 모드의 세 갈래 운명을 확인한다.',()=>go('hardCrossroads'))]
+  }),
+
+  hardCrossroads: scene('hardCrossroads', {
+    chapter:'HARD MODE · THREE FATES', location:'이름 없는 삼거리', art:'hard_crossroads',
+    text:`세 개의 길에는 표지판 대신 서로 다른 흔적이 남아 있다.\n\n왼쪽에는 검은 밀랍과 왕가의 독수리. 폐쇄성을 다스리는 로드 알곤의 길이다.\n\n가운데에는 땅에 꽂힌 수백 자루의 검과 푸른 혼불. 죽지 못한 최후의 기사가 기다린다.\n\n오른쪽에는 주사위처럼 갈라진 붉은 돌과 타는 냄새. 데몬 알터닐이 운명을 부수는 곳이다.`,
+    choices:()=>[
+      c('검은 왕관 · 로드 알곤','현재 구현된 하드 본편. 폐쇄성으로 향한다.',()=>{state.flags.hardRoute='algon';go('hardAlgonRoad');}),
+      c('망자의 전장 · 최후의 기사','처세가 봉인되고 2페이즈를 가진 최난도 보스 루트.',()=>go('hardLastKnightPreview')),
+      c('붉은 제단 · 데몬 알터닐','역전 주사위를 파괴하는 악마 루트.',()=>go('hardAlternilPreview'))
+    ]
+  }),
+
+  hardLastKnightPreview: scene('hardLastKnightPreview', {
+    chapter:'HARD ROUTE · SEALED', location:'망자의 전장 입구', art:'hard_lastbattle',
+    text:`검이 묘비처럼 박힌 평원 끝에서 한 기사가 움직인다.\n\n그의 뒤로 죽은 병사들이 한 박자 늦게 같은 자세를 취한다. 말은 닿지 않는다. 설득도 협상도 없다. 그리고 한 번 쓰러뜨린다고 끝날 기척도 아니다.\n\n이 루트는 하드 모드 중 가장 어렵게 설계된다. 최종보스 \"최후의 기사\"는 처세가 완전히 봉인되며, 첫 육체가 무너지면 망령 갑주를 두른 2페이즈가 시작된다.`,
+    choices:()=>[c('지금은 검을 거둔다','로드 알곤 루트를 먼저 진행한다.',()=>go('hardCrossroads'))]
+  }),
+
+  hardAlternilPreview: scene('hardAlternilPreview', {
+    chapter:'HARD ROUTE · SEALED', location:'붉은 제단의 가장자리', art:'hard_altar',
+    text:`계단 아래에서 주사위가 굴러가는 소리가 난다. 그러나 바닥에 떨어지는 것은 주사위가 아니라 여섯 조각으로 갈라진 검은 돌이다.\n\n붉은 균열 너머의 데몬 알터닐은 결과가 마음에 들지 않으면 운명 그 자체를 깨뜨린다.\n\n이 루트의 최종전에서는 역전 주사위가 파괴된다. 한 번 밀리면 기존의 마지막 기회가 오지 않는다. 최후의 기사 다음으로 어려운 루트다.`,
+    choices:()=>[c('붉은 계단에서 물러난다','로드 알곤 루트를 먼저 진행한다.',()=>go('hardCrossroads'))]
+  }),
+
+  hardAlgonRoad: scene('hardAlgonRoad', {
+    chapter:'LORD ALGON · I', location:'북부 폐도', art:'hard_march',
+    text:`로드 알곤의 영지로 들어서자 길부터 달라진다. 왕국의 돌길은 멀쩡하지만 길가의 집들은 비어 있다.\n\n문마다 검은 밀랍이 발라져 있다. 살아 있는 집인지, 이미 장부에 넘어간 집인지 표시하는 봉인이다.\n\n멀리서 수레가 뒤집히는 소리와 짧은 비명이 들린다.`,
+    choices:()=>[c('소리가 난 곳으로 간다','북부의 첫 사건을 확인한다.',()=>go('hardRoadMarauder'))]
+  }),
+
+  hardRoadMarauder: scene('hardRoadMarauder', {
+    chapter:'LORD ALGON · I', location:'북부 폐도 · 뒤집힌 수레', art:'hard_march', enemy:'hardMarauder',
+    text:`약탈병 하나가 수레 밑에서 식량 자루를 끌어내고 있다. 갑옷은 왕국식이지만 문장은 칼로 긁어 지웠다.\n\n“알곤에게 바치느니 내가 먹는다.”\n\n그는 당신을 보자 검을 든다.`,
+    talk(){const n=bumpTalk('hardRoadMarauder');toast(n===1?'그는 원래 폐쇄성 보급병이었다. 가족 이름이 북부 장부로 넘어간 뒤 탈영했다고 한다.':'“성 안에 들어가면 이름부터 빼앗긴다.” 그가 더 말하지 않는다.');save();render();},
+    attackWin(){state.flags.hardMarauderKilled=true;gainGold(14);resolve('attack','hardAshVillage','탈영병을 쓰러뜨렸다. 그의 주머니에서 검은 밀랍 인장이 나온다.');},
+    socialSuccess(){state.flags.hardMarauderSpared=true;state.stats.secrets++;resolve('social','hardAshVillage','당신은 검을 내리게 만들었다. 떠나기 전 그는 폐쇄성의 장부가 사람을 죽은 것으로 만든 뒤 다시 군대로 끌어쓴다는 소문을 남겼다.');},
+    socialFail(){damagePlayer(2,true);if(state.p.hp>0)queueOutcome('말이 끝나기 전에 칼등이 어깨를 친다. 체력 2를 잃었다.',null);}
+  }),
+
+  hardAshVillage: scene('hardAshVillage', {
+    chapter:'LORD ALGON · I', location:'재가 내려앉은 마을', art:'hard_march',
+    text:`마을에는 불탄 흔적이 없는데도 지붕마다 회색 재가 쌓여 있다.\n\n사람들은 해가 지기 전에 모두 창문을 막는다. 노파 하나가 문틈으로 속삭인다.\n“밤마다 성채에서 이름을 부르는 종이 울려. 불린 집에서는 다음 날 한 사람이 사라져.”`,
+    choices:()=>[
+      c('사라진 사람들의 흔적을 조사한다','비밀 +1 / 시간이 걸린다.',()=>{state.stats.secrets++;state.flags.hardVillageClue=true;queueOutcome('빈집마다 같은 검은 실이 남아 있다. 실 끝에는 왕실이 아니라 알곤 개인의 인장이 찍혀 있다.','hardRefugeeLine');}),
+      c('곧장 북쪽으로 간다','폐쇄성을 향한다.',()=>go('hardRefugeeLine'))
+    ]
+  }),
+
+  hardRefugeeLine: scene('hardRefugeeLine', {
+    chapter:'LORD ALGON · I', location:'북부 검문로 · 피난 행렬', art:'hard_march',
+    text:`성채에서 멀어지는 사람과 성채로 끌려가는 사람이 같은 길에서 스친다.\n\n빠져나오는 사람은 손목에 검은 띠가 있고, 들어가는 사람은 목에 작은 나무패를 달았다. 나무패에는 이름 대신 번호만 적혀 있다.\n\n한 아이가 당신 소매를 붙잡는다. “우리 아빠 번호가 731인데, 성 안에서 찾아줄 수 있어요?”`,
+    choices:()=>[
+      c('번호를 기억한다','731번을 찾기로 한다.',()=>{state.flags.hardPrisoner731=true;state.stats.secrets++;go('hardTollGate');}),
+      c('약속하지 않는다','살아 돌아올 수 있을지부터 알 수 없다.',()=>go('hardTollGate'))
+    ]
+  }),
+
+  hardTollGate: scene('hardTollGate', {
+    chapter:'LORD ALGON · I', location:'검은 관문', art:'hard_march', enemy:'hardTollGuard',
+    text:`관문병은 통행세 대신 이름을 요구한다.\n\n“북부에서는 돈보다 기록이 먼저다. 이름을 말해. 들어간 시간부터 알곤 경의 장부에 적힌다.”\n\n문 옆에는 바깥으로 나간 사람의 이름을 지우는 칼이 걸려 있다.`,
+    talk(){bumpTalk('hardTollGate');state.flags.hardTollRule=true;toast('들어간 사람은 알곤의 허가 없이 다시 나올 수 없다. 이것이 ‘폐쇄령’의 첫 조항이다.');save();render();},
+    attackWin(){resolve('attack','hardTollAfter','관문병을 쓰러뜨리고 기록대를 넘어섰다. 뒤에서 경종이 한 번 울린다.');},
+    socialSuccess(){state.flags.hardFalseName=true;resolve('social','hardTollAfter','당신은 이미 등록된 조사관의 이름을 빌려 관문을 통과했다. 장부에는 가짜 이름 하나가 늘었다.');},
+    socialFail(){damagePlayer(3,true);if(state.p.hp>0)queueOutcome('관문병은 거짓을 알아챘다. 창자루가 갈비를 때린다. 체력 3을 잃었다.',null);}
+  }),
+
+  hardTollAfter: scene('hardTollAfter', {
+    chapter:'LORD ALGON · I', location:'검은 관문 너머', art:'hard_march',
+    text:`관문을 넘자 길 양쪽의 묘비가 이상하다는 걸 깨닫는다. 날짜가 없는 묘비가 너무 많다.\n\n죽은 날짜 대신 모두 같은 문장이 새겨져 있다. ‘이관 완료’.`,
+    choices:()=>[c('묘비의 번호를 따라간다','알곤의 정찰선으로 향한다.',()=>go('hardBlackMilestone'))]
+  }),
+
+  hardBlackMilestone: scene('hardBlackMilestone', {
+    chapter:'LORD ALGON · I', location:'검은 이정표', art:'hard_march',
+    text:`검은 돌기둥에는 왕국, 숲, 상인로 세 방향의 거리와 함께 수송량이 적혀 있다.\n\n상인로 옆에는 익숙한 상단 표식이 긁혀 있다. 로벤이 다니던 길이다. 숲 방향에는 세리아의 도적단이 여러 차례 수송대를 끊었다는 표시가 있다.\n\n노말에서 따로 보였던 사건들이 한 장부 위에서는 같은 선으로 이어져 있다.`,
+    choices:()=>[
+      c('수송 기록 일부를 뜯어 챙긴다','증거 +1',()=>{state.flags.algonEvidence1=true;state.stats.secrets++;queueOutcome('약품과 소금 대부분이 북부로 강제 징발된 기록이다. 세리아가 보급선을 노린 이유가 더 선명해진다.','hardScout');}),
+      c('흔적을 남기지 않는다','정찰병에게 들키기 전에 이동한다.',()=>go('hardScout'))
+    ]
+  }),
+
+  hardScout: scene('hardScout', {
+    chapter:'LORD ALGON · I', location:'까마귀 감시탑', art:'hard_march', enemy:'hardScout',
+    text:`탑 위에서 검은 깃털이 떨어진다. 알곤의 정찰병은 이미 당신을 보고 있었다.\n\n“관문 기록과 얼굴이 다르군.”\n\n그는 활보다 먼저 작은 종을 잡는다.`,
+    talk(){bumpTalk('hardScout');toast(state.flags.hardFalseName?'“가짜 이름을 썼군. 알곤 경은 이름을 훔치는 사람을 특히 싫어하지.”':'정찰병은 바깥에서 온 사람이 성 안 기록을 뒤지는 이유를 묻는다.');save();render();},
+    attackWin(){resolve('attack','hardScoutAfter','종이 울리기 전에 정찰병을 쓰러뜨렸다.');},
+    socialSuccess(){state.flags.hardScoutLie=true;resolve('social','hardScoutAfter','당신은 관문 명령이 갱신되었다고 우긴다. 정찰병은 의심하면서도 종을 놓는다.');},
+    socialFail(){encMod().enemyAtk+=2;queueOutcome('정찰병은 당신의 말을 듣는 동안 오히려 자세를 읽었다. 이 조우에서 적 공격력이 오른다.',null);}
+  }),
+
+  hardScoutAfter: scene('hardScoutAfter', {
+    chapter:'LORD ALGON · I', location:'감시탑 뒤편', art:'hard_march',
+    text:`탑 아래에는 최근 명령서가 쌓여 있다.\n\n‘무명군 보충 40. 이름 회수 17. 남부 이관자 중 저항 가능 인원 우선.’\n\n알곤은 죽은 병사를 부리는 것만으로 모자라, 살아 있는 사람을 먼저 죽은 것으로 기록하고 있다.`,
+    choices:()=>[c('성채로 계속 간다','묘지 평원을 지난다.',()=>go('hardGraveField'))]
+  }),
+
+  hardGraveField: scene('hardGraveField', {
+    chapter:'LORD ALGON · I', location:'번호 묘지', art:'hard_march',
+    text:`수백 개의 묘비 사이로 길이 난다. 몇몇 무덤에서는 흙이 안쪽이 아니라 바깥쪽으로 밀려나 있다.\n\n오래 머물면 좋지 않을 것 같다. 그래도 무덤 사이에는 버려진 군용 약품이 보인다.`,
+    choices:()=>[
+      !state.flags.hardGraveGrowth&&c('군용 약품을 챙겨 상처를 정리한다','최대 체력 +1 / 회복',()=>{heal(999,false);takeGrowth('hardGraveGrowth','hp','죽은 자에게 지급될 리 없는 약품이다. 몸을 추스르고 일부를 챙긴다. 최대 체력 +1','hardSupplyWagon');}),
+      c('무덤을 건드리지 않고 지나간다','보급 수레 쪽으로 이동한다.',()=>go('hardSupplyWagon'))
+    ].filter(Boolean)
+  }),
+
+  hardSupplyWagon: scene('hardSupplyWagon', {
+    chapter:'LORD ALGON · I', location:'버려진 보급 수레', art:'hard_march',
+    text:`뒤집힌 수레 안에서 상인 길드의 낙인이 찍힌 상자가 나온다. 로벤이 쓰던 것과 같은 규격이다.\n\n상자 안에는 붕대, 검은 밀랍, 그리고 사람 이름이 적힌 빈 목패가 함께 들어 있다.`,
+    choices:()=>[
+      c('붕대 두 개를 챙긴다','붕대 +2',()=>{addItem('붕대',2);queueOutcome('쓸 만한 붕대 두 개를 골라 넣었다.','hardOuterCamp');}),
+      c('목패와 밀랍을 조사한다','증거 +1',()=>{state.flags.algonEvidence2=true;state.stats.secrets++;queueOutcome('상단은 물자를 나른 게 아니라 사람의 번호표까지 공급하도록 강요받았다.','hardOuterCamp');})
+    ]
+  }),
+
+  hardOuterCamp: scene('hardOuterCamp', {
+    chapter:'LORD ALGON · II', location:'폐쇄성 외곽 야영지', art:'hard_throne',
+    text:`폐쇄성은 왕국의 성보다 높고 창문은 적다. 성벽 아래 야영지에서는 병사들이 서로 이름을 부르지 않는다.\n\n저녁 종이 울리면 모두 번호로 대답한다. 이름을 오래 쓰지 않으면 잃어버리기라도 하는 것처럼.`,
+    choices:()=>[
+      !state.flags.hardCampGrowth&&c('병사들의 훈련을 훔쳐본다','공격력 +1',()=>takeGrowth('hardCampGrowth','atk','폐쇄성 병사들은 공격보다 퇴로 차단을 먼저 연습한다. 그 습관을 역으로 읽는다. 공격력 +1','hardOuterGate')),
+      !state.flags.hardCampGrowth&&c('교대 시간을 외운다','속도 +1',()=>takeGrowth('hardCampGrowth','speed','종과 발소리의 간격을 외운다. 움직일 틈이 보인다. 속도 +1','hardOuterGate')),
+      !state.flags.hardCampGrowth&&c('번호로 부르는 규칙을 익힌다','처세 +1',()=>takeGrowth('hardCampGrowth','social','이 성에서 사람보다 번호가 먼저 움직인다는 걸 이해한다. 처세 +1','hardOuterGate')),
+      c('외성문으로 향한다','폐쇄성 안으로 들어간다.',()=>go('hardOuterGate'))
+    ].filter(Boolean)
+  }),
+
+  hardOuterGate: scene('hardOuterGate', {
+    chapter:'LORD ALGON · II', location:'폐쇄성 외성문', art:'hard_throne', enemy:'hardOuterGuard',
+    text:`외성 기사는 투구를 벗지 않는다. 투구의 눈구멍 안쪽에도 검은 밀랍이 발라져 있다.\n\n“들어온 기록은 있는데, 초대 기록은 없군.”\n\n그가 문을 닫는다.`,
+    talk(){bumpTalk('hardOuterGate');toast('기사는 “알곤 경의 폐쇄령은 적을 막는 법이 아니라 안에 있는 것을 내보내지 않는 법”이라고 말한다.');save();render();},
+    attackWin(){resolve('attack','hardOuterWard','외성 기사를 쓰러뜨리고 닫히던 문 사이로 몸을 밀어 넣었다.');},
+    socialSuccess(){resolve('social','hardOuterWard','당신은 정찰탑에서 받은 허가가 뒤늦게 반영될 거라고 밀어붙였다. 기사는 기록 담당관에게 확인하라며 문을 연다.');},
+    socialFail(){damagePlayer(3,true);if(state.p.hp>0)queueOutcome('기사는 대답 대신 방패로 밀어낸다. 체력 3을 잃었다.',null);}
+  }),
+
+  hardOuterWard: scene('hardOuterWard', {
+    chapter:'LORD ALGON · II', location:'폐쇄성 · 외성', art:'hard_throne',
+    text:`성 안에는 시장도 광장도 없다. 대신 기록실, 감옥, 대장간, 예배당이 도시처럼 각각 한 구역을 차지한다.\n\n사람이 살아가는 성이 아니라 사람을 분류하는 성이다.`,
+    choices:()=>[c('기록실부터 찾는다','이름이 어디로 가는지 확인한다.',()=>go('hardRegistryHall'))]
+  }),
+
+  hardRegistryHall: scene('hardRegistryHall', {
+    chapter:'LORD ALGON · II', location:'검은 기록실', art:'hard_throne',
+    text:`벽 하나가 전부 서랍이다. 왕국, 숲, 상단, 추방자, 전사자.\n\n서랍마다 사람의 이름이 들어 있고, 검은 줄이 그어진 이름은 다른 서랍으로 옮겨진다. 가장 아래 칸에는 ‘무명군’이라고 적혀 있다.`,
+    choices:()=>[
+      c('추방자 서랍을 연다','노말과 이어지는 기록을 찾는다.',()=>go('hardRegistryClerk')),
+      c('무명군 서랍부터 확인한다','봉인의 구조를 먼저 본다.',()=>go('hardNameVault'))
+    ]
+  }),
+
+  hardRegistryClerk: scene('hardRegistryClerk', {
+    chapter:'LORD ALGON · II', location:'검은 기록실 · 담당관 책상', art:'hard_throne',
+    text:`늙은 기록관은 당신을 보고도 소리치지 않는다.\n\n“여기까지 왔으면 이미 절반은 죽은 사람이지.”\n\n그는 레오른의 거부 서명이 찍힌 이관 명령과, 아르벤이 붉은 잉크로 ‘폐기’라고 적은 오래된 봉인령을 보여준다.`,
+    choices:()=>[
+      c('두 문서를 모두 챙긴다','증거 +2 / 알곤이 더 경계한다.',()=>{state.flags.algonEvidenceLeorn=true;state.flags.algonEvidenceArven=true;state.stats.secrets+=2;queueOutcome('레오른은 이관 명령을 거부했고 아르벤은 제도 자체를 없애려 했다. 두 사람이 서로 다른 자리에서 같은 것을 막고 있었다.','hardNameVault');}),
+      c('내용만 기억하고 놓아둔다','흔적을 줄인다.',()=>{state.flags.algonEvidenceLeorn=true;state.stats.secrets++;go('hardNameVault');})
+    ]
+  }),
+
+  hardNameVault: scene('hardNameVault', {
+    chapter:'LORD ALGON · II', location:'이름 금고', art:'hard_throne',
+    text:`철문 안에는 돈 대신 얇은 금속판이 수천 장 쌓여 있다. 금속판마다 이름 하나가 새겨져 있다.\n\n중앙의 검은 인장이 모든 판을 한 줄의 사슬처럼 묶고 있다. 이것이 첫 번째 봉인이다.`,
+    choices:()=>[
+      !state.flags.algonSealName&&c('이름의 봉인을 뽑아낸다','첫 번째 봉인 획득 / 체력 2 손실',()=>{damagePlayer(2,true);if(state.p.hp>0){state.flags.algonSealName=true;state.stats.secrets++;queueOutcome('손바닥이 타들어 가지만 검은 인장을 뜯어냈다. 금속판들이 아주 작게 떨린다.','hardPrisonWalk');}}),
+      c('봉인을 건드리지 않는다','감옥 구역으로 이동한다.',()=>go('hardPrisonWalk'))
+    ].filter(Boolean)
+  }),
+
+  hardPrisonWalk: scene('hardPrisonWalk', {
+    chapter:'LORD ALGON · II', location:'번호 감옥', art:'hard_throne',
+    text:`감옥 문에는 이름이 없고 숫자만 있다. 안쪽에서 죄수가 자신의 번호를 잊지 않으려고 계속 중얼거린다.\n\n731. 731. 731.\n\n피난 행렬의 아이가 말했던 번호와 같다.`,
+    choices:()=>[
+      state.flags.hardPrisoner731&&c('731번 감방을 연다','약속했던 사람을 찾는다.',()=>go('hardPrisoner')),
+      c('감옥장을 먼저 찾는다','열쇠를 가진 자에게 간다.',()=>go('hardWarden'))
+    ].filter(Boolean)
+  }),
+
+  hardPrisoner: scene('hardPrisoner', {
+    chapter:'LORD ALGON · II', location:'번호 감옥 · 731', art:'hard_throne',
+    text:`731번은 살아 있다. 다만 자신의 이름을 바로 말하지 못한다.\n\n“밖에서… 누가 기다립니까?”\n\n아이 이야기를 하자 한참 뒤에야 눈빛이 돌아온다. 그는 알곤이 사람을 ‘사망 처리’한 뒤 무명군 서약을 씌우는 과정을 설명한다.`,
+    choices:()=>[
+      c('감방을 부수고 그를 풀어준다','처세 +1 / 증거 +1',()=>{state.flags.hard731Freed=true;state.flags.algonEvidencePrison=true;gainStat('social',1);queueOutcome('731번은 자신의 이름을 다시 떠올리려 애쓰며 남쪽 통로로 사라진다.','hardWarden');}),
+      c('지금은 살아 있으라고 말한다','감옥장을 처리한 뒤 돌아오기로 한다.',()=>{state.flags.hard731Known=true;go('hardWarden');})
+    ]
+  }),
+
+  hardWarden: scene('hardWarden', {
+    chapter:'LORD ALGON · II', location:'번호 감옥 · 중앙 계단', art:'hard_throne', enemy:'hardWarden',
+    text:`감옥장 바르몬은 열쇠 꾸러미보다 두꺼운 장부를 허리에 차고 있다.\n\n“사람을 가두는 건 어렵지 않아. 어려운 건 스스로 번호가 사람보다 편하다고 믿게 만드는 거지.”`,
+    talk(){bumpTalk('hardWarden');toast('바르몬은 무명군이 자발적 서약이라고 주장하지만, 감방마다 서약 거부자의 손톱자국이 남아 있다.');save();render();},
+    attackWin(){state.flags.hardWardenKilled=true;gainGold(22);resolve('attack','hardWardenAfter','바르몬의 장부와 열쇠를 빼앗았다. 감옥 곳곳에서 문 두드리는 소리가 커진다.');},
+    socialSuccess(){state.flags.hardWardenYielded=true;resolve('social','hardWardenAfter','당신은 알곤의 명령서와 현재 수감 숫자가 맞지 않는다고 몰아붙인다. 책임을 뒤집어쓸 것을 두려워한 바르몬이 열쇠를 넘긴다.');},
+    socialFail(){encMod().enemyAtk+=2;queueOutcome('바르몬은 웃으며 열쇠 하나를 손가락 사이에서 돌린다. “말 잘하는 죄수도 많이 봤지.” 적 공격력 상승.',null);}
+  }),
+
+  hardWardenAfter: scene('hardWardenAfter', {
+    chapter:'LORD ALGON · II', location:'번호 감옥 · 열린 복도', art:'hard_throne',
+    text:()=>`중앙 열쇠를 손에 넣자 감옥의 구조가 한눈에 들어온다.\n\n${state.flags.hard731Freed?'731번 감방은 이미 비어 있다. 문 안쪽 벽에는 서툰 글씨로 자신의 이름을 다시 적어둔 흔적이 있다.':'731번을 포함해 아직 수십 개의 문이 닫혀 있다.'}\n\n가장 깊은 계단은 ‘서약로’라는 곳으로 이어진다.`,
+    choices:()=>[
+      !state.flags.hard731Freed&&state.flags.hardPrisoner731&&c('731번과 가까운 감방들을 연다','증거 +1 / 생존자 증가',()=>{state.flags.hard731Freed=true;state.flags.algonEvidencePrison=true;state.stats.secrets++;state.stats.survivors+=3;queueOutcome('열 수 있는 문부터 열었다. 죄수들은 남쪽 통로로 흩어진다.','hardOathForge');}),
+      c('서약로로 내려간다','두 번째 봉인을 찾는다.',()=>go('hardOathForge'))
+    ].filter(Boolean)
+  }),
+
+  hardOathForge: scene('hardOathForge', {
+    chapter:'LORD ALGON · III', location:'서약로', art:'hard_throne',
+    text:`대장간 한가운데 사람 모양의 갑옷이 줄지어 서 있다. 불은 붉지 않고 창백한 푸른색이다.\n\n망치가 갑옷을 칠 때마다 멀리 감옥에서 누군가 숨을 삼키는 소리가 난다. 이름과 갑옷이 연결되어 있다.`,
+    choices:()=>[c('푸른 불 가까이 다가간다','서약로 기사가 길을 막는다.',()=>go('hardForgeKnight'))]
+  }),
+
+  hardForgeKnight: scene('hardForgeKnight', {
+    chapter:'LORD ALGON · III', location:'서약로 · 푸른 화로', art:'hard_throne', enemy:'hardForgeKnight',
+    text:`하르트의 갑옷 안에서는 숨소리가 나지 않는다. 그래도 그는 살아 있는 사람처럼 검을 든다.\n\n“내 이름은 이미 반납했다. 네 이름도 곧 필요 없어질 거다.”`,
+    talk(){bumpTalk('hardForgeKnight');toast('하르트는 자신이 죽었는지 살아 있는지 대답하지 못한다. 알곤에게 이름을 맡긴 순간부터 그 질문 자체가 금지된 듯하다.');save();render();},
+    attackWin(){resolve('attack','hardForgeCore','푸른 화로 앞에서 하르트를 무너뜨렸다. 갑옷 안에서는 피 대신 검은 재가 쏟아진다.');},
+    socialSuccess(){state.flags.hardHartRemembered=true;resolve('social','hardForgeCore','당신은 하르트에게 이름을 반납했다면 왜 아직 그 이름에 반응하느냐고 묻는다. 검끝이 아주 잠깐 내려간다. 그 틈에 화로로 향한다.');},
+    socialFail(){damagePlayer(4,true);if(state.p.hp>0)queueOutcome('하르트의 검은 대답보다 빠르다. 체력 4를 잃었다.',null);}
+  }),
+
+  hardForgeCore: scene('hardForgeCore', {
+    chapter:'LORD ALGON · III', location:'서약로 · 심장 화로', art:'hard_throne',
+    text:`화로 안에는 석탄 대신 금속 이름표가 녹고 있다. 녹은 글자가 갑옷 안쪽으로 흘러 들어간다.\n\n화로를 잠그는 두 번째 검은 인장이 보인다.`,
+    choices:()=>[
+      !state.flags.algonSealForge&&c('서약의 봉인을 부순다','두 번째 봉인 / 공격력 +1 / 체력 3 손실',()=>{damagePlayer(3,true);if(state.p.hp>0){state.flags.algonSealForge=true;gainStat('atk',1);state.stats.secrets++;queueOutcome('화로가 울부짖듯 흔들린다. 여러 갑옷이 동시에 무릎을 꿇는다.','hardChapel');}}),
+      c('화로를 그대로 둔다','검은 예배당으로 이동한다.',()=>go('hardChapel'))
+    ].filter(Boolean)
+  }),
+
+  hardChapel: scene('hardChapel', {
+    chapter:'LORD ALGON · III', location:'검은 예배당', art:'hard_throne',
+    text:`제단 위에는 신상이 없다. 대신 거대한 빈 명패 하나가 세워져 있다.\n\n사람들은 이곳에서 자신의 이름을 말하고, 사제는 그 이름을 한 번 더 부른 뒤 장부에서 지운다고 한다.\n\n바닥에는 지워지지 않은 이름이 손톱으로 수백 개 긁혀 있다.`,
+    choices:()=>[
+      !state.flags.hardChapelGrowth&&c('바닥의 이름을 하나씩 읽는다','처세 +1 / 비밀 +1',()=>{state.stats.secrets++;takeGrowth('hardChapelGrowth','social','누군가의 이름을 끝까지 불러주는 행위가 이 성에서는 저항이라는 걸 깨닫는다. 처세 +1','hardConfessor');}),
+      c('제단 뒤편으로 간다','고해사제가 기다린다.',()=>go('hardConfessor'))
+    ].filter(Boolean)
+  }),
+
+  hardConfessor: scene('hardConfessor', {
+    chapter:'LORD ALGON · III', location:'검은 예배당 · 고해실', art:'hard_throne', enemy:'hardConfessor',
+    text:`모르가 사제는 무기를 들지 않은 채 문을 막는다. 그러나 그의 손에는 이름을 지우는 검은 못이 들려 있다.\n\n“알곤 경은 사람을 죽이지 않는다. 고통에서 이름을 분리할 뿐이다.”`,
+    talk(){const n=bumpTalk('hardConfessor');if(n===1){state.flags.algonDemonHint=true;state.stats.secrets++;toast('모르가는 알곤이 이 모든 일을 “아래쪽의 악마가 이름을 먹는 것을 막기 위해서”라고 믿는다고 말한다. 알터닐의 흔적이다.');}else toast('“악마를 막으려다 사람이 악마가 되는 경우도 있지.” 모르가가 처음으로 시선을 피한다.');save();render();},
+    attackWin(){resolve('attack','hardChapelSeal','고해실 문이 부서지고 마지막 제단으로 가는 길이 열린다.');},
+    socialSuccess(){state.flags.hardMorgaDoubt=true;resolve('social','hardChapelSeal','당신은 이름을 지키기 위해 이름을 없앤다는 모순을 반복해서 찌른다. 모르가는 검은 못을 내려놓는다.');},
+    socialFail(){encMod().socialPct-=8;queueOutcome('모르가는 당신의 논리를 고해의 일부로 받아들인다. 이 조우에서 처세가 더 어려워진다.',null);}
+  }),
+
+  hardChapelSeal: scene('hardChapelSeal', {
+    chapter:'LORD ALGON · III', location:'검은 예배당 · 무명 제단', art:'hard_throne',
+    text:`제단 뒤편에서 세 번째 인장이 모습을 드러낸다. 첫 번째는 이름을 묶고, 두 번째는 몸을 묶었다. 마지막 인장은 명령을 묶는다.\n\n세 개가 모두 있다면 무명군 전체에 걸린 서약을 끊을 수 있을지도 모른다.`,
+    choices:()=>[
+      !state.flags.algonSealCommand&&c('명령의 봉인을 뜯는다','세 번째 봉인 / 최대 체력 +1',()=>{state.flags.algonSealCommand=true;state.stats.secrets++;gainStat('hp',1);queueOutcome('제단의 빈 명패가 둘로 갈라진다. 성 전체에서 아주 멀리 사슬 끊어지는 소리가 난다.','hardArchiveCorridor');}),
+      c('왕좌로 가는 기록 통로를 찾는다','비밀 기록실로 향한다.',()=>go('hardArchiveCorridor'))
+    ].filter(Boolean)
+  }),
+
+  hardArchiveCorridor: scene('hardArchiveCorridor', {
+    chapter:'LORD ALGON · IV', location:'왕좌 아래 기록 통로', art:'hard_throne',
+    text:`왕좌로 가는 가장 짧은 길은 군사 계단이 아니라 기록실 뒤의 좁은 통로다.\n\n벽에는 북부가 처음 폐쇄된 해부터 현재까지의 명령서가 시간순으로 박혀 있다. 가장 오래된 문서에는 ‘알터닐 균열 봉쇄’라는 말이 적혀 있다.`,
+    choices:()=>[c('비밀 기록실을 연다','알곤의 명분과 거짓을 확인한다.',()=>go('hardSecretArchive'))]
+  }),
+
+  hardSecretArchive: scene('hardSecretArchive', {
+    chapter:'LORD ALGON · IV', location:'비밀 기록실', art:'hard_throne',
+    text:`알곤이 처음부터 폭군이었던 것은 아니다.\n\n수십 년 전 북부 지하에서 붉은 균열이 열렸고, 알곤은 이름을 매개로 사람의 운명을 잡아당기는 악마를 막기 위해 ‘이름 봉인’을 만들었다. 처음에는 죽은 병사의 이름만 썼다. 그다음에는 사형수, 추방자, 빚진 상인, 반항적인 병사로 범위가 늘었다.\n\n재앙을 막는 수단이 어느 순간 재앙보다 커졌다.`,
+    choices:()=>[
+      c('아르벤 관련 문서를 찾는다','전설의 전 친위대장이 왜 개입했는지 본다.',()=>go('hardArvenFile')),
+      c('레오른 관련 문서를 찾는다','현 친위대장이 무엇을 거부했는지 본다.',()=>go('hardLeornFile'))
+    ]
+  }),
+
+  hardArvenFile: scene('hardArvenFile', {
+    chapter:'LORD ALGON · IV', location:'비밀 기록실 · 아르벤 문서', art:'hard_throne',
+    text:`아르벤은 은퇴하기 전 마지막 임무로 북부를 조사했다.\n\n보고서 마지막 줄은 짧다.\n‘봉인은 필요했다. 알곤은 필요하지 않다.’\n\n그 아래에는 왕이 보고서를 묵살했다는 도장이 찍혀 있다.`,
+    choices:()=>[c('보고서를 챙긴다','증거 +1',()=>{state.flags.algonEvidenceArven=true;state.stats.secrets++;go('hardLeornFile');})]
+  }),
+
+  hardLeornFile: scene('hardLeornFile', {
+    chapter:'LORD ALGON · IV', location:'비밀 기록실 · 레오른 문서', art:'hard_throne',
+    text:`레오른은 왕의 명령을 직접 거역하지 않았다. 대신 이관 명단의 이름을 하나씩 문제 삼아 돌려보냈다.\n\n‘전투 능력 있음’이라고 적힌 추방자는 특히 많이 북부로 보내졌다. 당신 같은 사람들이다.\n\n레오른의 마지막 메모에는 이렇게 적혀 있다.\n‘다음 명단에는 내 이름을 적어 보내라.’`,
+    choices:()=>[c('메모를 챙긴다','증거 +1 / 왕좌로 가는 길을 연다.',()=>{state.flags.algonEvidenceLeorn=true;state.stats.secrets++;go('hardTransferLedger');})]
+  }),
+
+  hardTransferLedger: scene('hardTransferLedger', {
+    chapter:'LORD ALGON · IV', location:'비밀 기록실 · 이관 원장', art:'hard_throne',
+    text:`마지막 장부에는 노말에서 만났던 세력들이 한 줄씩 겹쳐 있다.\n\n상단 강제징발. 도적단 보급로 습격. 왕국 추방자 이관. 전사자 명부.\n\n각자 따로 싸우고 있다고 생각했지만, 북부 장부는 그 모든 손실을 한곳으로 모으고 있었다.`,
+    choices:()=>[
+      c('원장 일부를 찢어 챙긴다','최종 처세에 유리 / 비밀 +1',()=>{state.flags.algonEvidenceLedger=true;state.stats.secrets++;queueOutcome('알곤이 직접 승인한 명령들이 남아 있다. 말로 싸우게 된다면 가장 무거운 칼이 될 것이다.','hardInnerBridge');}),
+      c('더 늦기 전에 왕좌로 간다','내성 사슬문으로 이동한다.',()=>go('hardInnerBridge'))
+    ]
+  }),
+
+  hardInnerBridge: scene('hardInnerBridge', {
+    chapter:'LORD ALGON · IV', location:'내성 사슬문', art:'hard_throne',
+    text:`왕좌로 이어지는 다리는 양쪽에서 거대한 사슬로 매달려 있다. 아래에는 도시가 아니라 끝이 보이지 않는 기록 보관층이 내려다보인다.\n\n사슬문 앞에 로드릭이 검을 땅에 세운다.`,
+    choices:()=>[c('사슬문으로 다가간다','내성 기사가 막아선다.',()=>go('hardChainKnight'))]
+  }),
+
+  hardChainKnight: scene('hardChainKnight', {
+    chapter:'LORD ALGON · IV', location:'내성 사슬문', art:'hard_throne', enemy:'hardChainKnight',
+    text:`로드릭의 갑옷에는 왕가 문장과 알곤의 개인 문장이 겹쳐 있다.\n\n“여기서부터는 장부에 없는 사람이 걸을 수 없다.”\n\n그가 검을 뽑자 다리의 사슬이 동시에 팽팽해진다.`,
+    talk(){bumpTalk('hardChainKnight');toast(state.flags.algonSealCommand?'명령의 봉인이 깨진 탓인지 로드릭의 목소리에 아주 짧은 망설임이 섞인다.':'로드릭은 알곤을 왕보다 오래 섬겼다. 명령과 충성의 구분이 이미 사라졌다.');save();render();},
+    enemyMod(e){if(state.flags.algonSealCommand){e.atk-=2;e.social-=3;}return e;},
+    attackWin(){resolve('attack','hardChainAfter','사슬문 기사 로드릭이 무릎을 꿇는다. 팽팽하던 사슬 하나가 끊어져 아래로 떨어진다.');},
+    socialSuccess(){state.flags.hardRodricYielded=true;resolve('social','hardChainAfter','당신은 깨진 명령의 봉인을 보여준다. 로드릭은 처음으로 자신이 지키는 명령이 아직 존재하는지 의심한다. 검이 내려간다.');},
+    socialFail(){damagePlayer(4,true);if(state.p.hp>0)queueOutcome('로드릭은 대화가 끝나기 전에 사슬을 당겨 당신의 발을 묶는다. 체력 4를 잃었다.',null);}
+  }),
+
+  hardChainAfter: scene('hardChainAfter', {
+    chapter:'LORD ALGON · IV', location:'내성 상층', art:'hard_throne',
+    text:`사슬문 너머에는 병영이 있다. 침상은 수백 개지만 살아 있는 병사는 거의 없다.\n\n갑옷만 입은 채 벽을 바라보는 무명군이 당신이 지나갈 때마다 아주 조금씩 고개를 돌린다.`,
+    choices:()=>[c('무명군 병영을 통과한다','알곤의 마지막 방패를 만난다.',()=>go('hardGhostBarracks'))]
+  }),
+
+  hardGhostBarracks: scene('hardGhostBarracks', {
+    chapter:'LORD ALGON · IV', location:'무명군 병영', art:'hard_lastbattle',
+    text:`병영 중앙에는 이름이 지워지지 않은 검 한 자루가 있다. 주인은 오래전에 죽었지만 이름만은 칼날 안쪽에 남아 있다.\n\n세 봉인을 모두 모았다면 주변의 무명군이 당신을 공격하지 못하고 떨기 시작한다.`,
+    choices:()=>[
+      !state.flags.hardBarracksGrowth&&c('남은 검술 기록을 읽는다','공격력 +1',()=>takeGrowth('hardBarracksGrowth','atk','죽은 병사가 남긴 검술을 따라 한다. 공격력 +1','hardGraveCaptain')),
+      !state.flags.hardBarracksGrowth&&c('잠시 숨을 고른다','체력 완전 회복',()=>{state.flags.hardBarracksGrowth=true;heal(999,false);queueOutcome('왕좌를 앞두고 마지막으로 상처를 묶는다. 체력을 회복했다.','hardGraveCaptain');}),
+      c('왕좌 계단으로 간다','무명군 대장이 기다린다.',()=>go('hardGraveCaptain'))
+    ].filter(Boolean)
+  }),
+
+  hardGraveCaptain: scene('hardGraveCaptain', {
+    chapter:'LORD ALGON · IV', location:'왕좌 계단 · 무명군 전열', art:'hard_lastbattle', enemy:'hardGraveCaptain',
+    text:`카르센은 죽은 군대의 맨 앞에 서 있다. 투구 안에서는 푸른 불빛만 흔들린다.\n\n“내 이름은 기억나지 않는다. 하지만 마지막 명령은 기억한다. 누구도 군주에게 닿게 하지 마라.”`,
+    talk(){const n=bumpTalk('hardGraveCaptain');if(n===1&&state.flags.algonSealName){encMod().socialPct+=8;toast('이름의 봉인을 보여주자 카르센의 푸른 불빛이 크게 흔들린다. 처세 확률이 오른다.');}else toast('카르센은 자신의 이름을 기억하지 못하지만 ‘카르센’이라는 소리에 반응한다.');save();render();},
+    enemyMod(e){const seals=algonSealCount();e.atk-=Math.min(3,seals);return e;},
+    attackWin(){resolve('attack','hardGraveAfter','카르센이 쓰러지자 뒤의 무명군도 한꺼번에 검끝을 내린다. 왕좌로 가는 계단이 열린다.');},
+    socialSuccess(){state.flags.hardKarsenRemembered=true;resolve('social','hardGraveAfter','당신은 그의 이름을 계속 부른다. 카르센은 마지막 명령보다 자신의 이름을 먼저 기억하고, 대열에서 비켜선다.');},
+    socialFail(){damagePlayer(5,true);if(state.p.hp>0)queueOutcome('카르센의 창이 갑옷 틈을 찌른다. 체력 5를 잃었다.',null);}
+  }),
+
+  hardGraveAfter: scene('hardGraveAfter', {
+    chapter:'LORD ALGON · V', location:'왕좌 계단', art:'hard_algon',
+    text:`왕좌까지 남은 문은 하나뿐이다.\n\n뒤를 돌아보면 지금까지 지나온 성 전체가 아래에 있다. 이름 금고, 감옥, 서약로, 검은 예배당. 모두 한 사람의 명분 아래 만들어졌다.\n\n문 너머에서 알곤의 목소리가 들린다.\n“이제야 장부의 끝까지 왔군.”`,
+    choices:()=>[c('왕좌의 문을 연다','로드 알곤을 알현한다.',()=>go('hardThroneApproach'))]
+  }),
+
+  hardThroneApproach: scene('hardThroneApproach', {
+    chapter:'LORD ALGON · V', location:'폐쇄성 대왕좌', art:'hard_algon',
+    text:()=>`알곤은 군주라기보다 오래된 성의 일부처럼 왕좌에 앉아 있다.\n\n그의 뒤에는 검은 장부가 펼쳐져 있고, 양옆에는 이름 없는 기사들이 서 있다.\n\n“아르벤도 여기까지 왔고, 레오른도 문 앞까지는 왔다. 둘 다 왕국을 지키겠다는 이유로 돌아갔지. 넌 무엇 때문에 왔나?”\n\n당신이 모은 봉인은 ${algonSealCount()}개, 결정적인 증거는 ${hardEvidenceCount()}개다.`,
+    choices:()=>[
+      c('알곤의 명분을 끝까지 듣는다','그가 무엇을 두려워하는지 확인한다.',()=>go('hardAudience')),
+      c('장부를 가리키며 끝내자고 한다','즉시 마지막 대치로 들어간다.',()=>go('hardAlgonBoss'))
+    ]
+  }),
+
+  hardAudience: scene('hardAudience', {
+    chapter:'LORD ALGON · V', location:'폐쇄성 대왕좌', art:'hard_algon',
+    text:`알곤은 북부 지하의 균열과 알터닐을 말한다. 이름은 사람의 운명에 박힌 못이고, 그 못을 뽑아 보관하면 악마가 사람을 찾지 못한다고.\n\n“처음 천 명을 살리기 위해 열 명의 이름을 지웠다. 다음에는 만 명을 위해 백 명을. 숫자가 커질수록 계산은 쉬워졌다.”\n\n그는 자신이 틀렸다고 말하지 않는다. 다만 너무 오래 옳아야 했다고 말한다.`,
+    choices:()=>[
+      state.flags.algonDemonHint&&c('알터닐을 막는 방식이 알터닐과 무엇이 다르냐고 묻는다','증거와 봉인에 따라 최종 처세 유리',()=>{state.flags.algonMoralBreak=true;state.stats.secrets++;queueOutcome('알곤의 손이 장부 위에서 멈춘다. 처음으로 대답이 바로 나오지 않는다.','hardAlgonBoss');}),
+      c('희생을 숫자로 부르는 순간 이미 졌다고 말한다','최종 대치로 간다.',()=>{state.flags.algonMoralBreak=true;go('hardAlgonBoss');}),
+      c('더 들을 필요 없다','검을 든다.',()=>go('hardAlgonBoss'))
+    ].filter(Boolean)
+  }),
+
+  hardAlgonBoss: scene('hardAlgonBoss', {
+    chapter:'HARD BOSS · LORD ALGON', location:'폐쇄성 대왕좌 · 봉쇄된 왕좌', art:'hard_algon', enemy:'lordAlgon', runDisabled:true, bossGimmick:'algon',
+    onFirstEnter(){showHardGimmick('algon','왕의 폐쇄령','왕좌의 모든 문이 잠긴다. 이 조우에서는 속도와 직업 능력에 관계없이 도망칠 수 없다.');},
+    text:()=>`알곤이 왕좌에서 일어난다. 검이 바닥에서 빠져나오는 순간 성 전체의 사슬이 함께 울린다.\n\n“내 성에 들어온 이름은 내 허락 없이 나가지 않는다.”\n\n문이 닫힌다. 창문도, 비밀 통로도, 방금 지나온 계단도 검은 사슬에 묶인다.\n\n${algonSealCount()>=3?'당신이 모은 세 봉인이 서로 반응한다. 무명군의 속박이 느슨해지며 알곤의 힘 일부가 사라진다.':''}\n${hardEvidenceCount()>=3?'아르벤과 레오른, 이관 원장의 기록이 있다. 알곤의 명분을 말로 무너뜨릴 근거도 충분하다.':''}`,
+    talk(){const n=bumpTalk('hardAlgonBoss');if(n===1){state.stats.talkInteractions++;encMod().socialPct+=hardEvidenceCount()*3;toast('알곤은 도망갈 곳이 없다는 걸 확인한 뒤에야 대화를 허락한다. 모은 증거가 처세에 힘을 더한다.');}else{encMod().enemyAtk+=1;toast('알곤은 같은 질문을 반복하지 않는다. 대화를 끌수록 검에 힘이 실린다.');}save();render();},
+    enemyMod(e){const seals=algonSealCount(),evi=hardEvidenceCount();e.hp=Math.max(30,e.hp-seals*3);e.atk=Math.max(22,e.atk-seals);e.social=Math.max(20,e.social-evi*2-(state.flags.algonMoralBreak?3:0));return e;},
+    attackWin(){state.flags.algonDefeated='battle';resolve('attack','hardAlgonAfter','알곤의 검이 왕좌 계단 아래로 떨어진다. 왕의 폐쇄령을 유지하던 사슬들이 하나씩 느슨해진다.');},
+    socialSuccess(){state.flags.algonDefeated='social';state.stats.talkSolved++;resolve('social','hardAlgonAfter','당신은 그가 지키려던 사람들의 이름과, 그들을 지우기 위해 만든 희생의 숫자를 하나씩 되돌려 읽는다. 알곤은 끝내 다음 명령을 내리지 못한다.');},
+    socialFail(){damagePlayer(6,true);if(state.p.hp>0){encMod().enemyAtk+=2;queueOutcome('알곤은 장부를 덮는다. “말로 끝낼 기회는 줬다.” 체력 6을 잃고 그의 공격이 더 거칠어진다.',null);}}
+  }),
+
+  hardAlgonAfter: scene('hardAlgonAfter', {
+    chapter:'LORD ALGON · EPILOGUE', location:'무너지는 폐쇄성 왕좌', art:'hard_algon',
+    text:()=>`로드 알곤은 더 이상 명령하지 못한다. 하지만 성은 아직 그의 명령을 기억한다.\n\n왕좌 옆에는 세 가지가 남아 있다. 검은 장부, 봉인을 조종하는 왕좌, 그리고 당신이 모아온 ${algonSealCount()}개의 봉인.\n\n무엇을 남기고 무엇을 없앨지는 마지막으로 당신이 정해야 한다.`,
+    choices:()=>[
+      c('검은 장부와 왕좌를 모두 불태운다','HARD END · 검은 왕관의 몰락',()=>finish('검은 왕관의 몰락')),
+      algonSealCount()>=3&&hardEvidenceCount()>=3&&c('세 봉인을 역으로 사용해 모든 이름을 돌려준다','HARD SECRET END · 가장 어려운 알곤 결말',()=>finish('이름을 돌려준 자')),
+      c('장부에서 알곤의 이름만 지우고 왕좌에 앉는다','HARD HIDDEN END · 새 군주',()=>finish('닫힌 성채의 새 주인'))
+    ].filter(Boolean)
+  }),
+
   demonOffer: scene('demonOffer', {
     chapter:'A WHISPER BELOW', location:'어디에도 없는 방', art:'demon',
     text:()=>`길이 한순간 너무 조용해진다.
@@ -1694,7 +2094,28 @@ const DIALOGUE_EXIT_CHOICES = {
   guildNovice(){if((state.talkCount.guildNovice||0)<2||!state.flags.merchantAlive||state.flags.merchantKilled)return [];return [c('로벤에게 확인하라고 한다','살려둔 상인이 당신의 말에 신빙성을 더한다.',()=>{state.stats.talkSolved++;state.relation.merchants+=2;resolve('talk','forestBeforeBoss','초급 기사는 한참 망설이다 검을 내린다.\n\n“로벤이 살아 있다면 확인하겠다. 하지만 도적단 편에 완전히 서지는 마.”\n\n싸움 없이 교역로를 통과했다.');})];}
 };
 function dialogueExitChoices(){const f=DIALOGUE_EXIT_CHOICES[state.sceneId];return f?f():[];}
-function encounterStatusHtml(){ return ''; }
+function encounterStatusHtml(){ const sc=SCENES[state.sceneId]; if(sc?.runDisabled)return ' · <b class="gimmick-inline">도망 봉쇄</b>'; if(sc?.socialDisabled)return ' · <b class="gimmick-inline">처세 봉쇄</b>'; if(sc?.comebackDisabled)return ' · <b class="gimmick-inline">역전 파괴</b>'; return ''; }
+
+
+// ---------- Hard mode helpers ----------
+function isHardMode(){return state?.flags?.gameMode==='hard';}
+function algonSealCount(){return ['algonSealName','algonSealForge','algonSealCommand'].filter(k=>state?.flags?.[k]).length;}
+function hardEvidenceCount(){return ['algonEvidence1','algonEvidence2','algonEvidenceLeorn','algonEvidenceArven','algonEvidencePrison','algonEvidenceLedger'].filter(k=>state?.flags?.[k]).length;}
+function beginHardMode(){
+  const id=pendingClassId,cl=selectedClass();if(!id||!cl||!isClassUnlocked(id)){renderClasses();showScreen('classScreen');return;}
+  state=freshState();state.classId=id;
+  state.p={className:cl.name,maxHp:cl.hp,hp:cl.hp,atk:cl.atk,social:cl.social,speed:cl.speed,gold:8};
+  state.flags.gameMode='hard';state.flags.gameVariant='solo';state.flags.hardRoute='';state.sceneId='hardPrologue';
+  save();showScreen('gameScreen');enter('hardPrologue');
+}
+function showHardGimmick(type,title,body){
+  const ov=$('hardGimmickOverlay');if(!ov)return;
+  ov.className=`hard-gimmick-overlay ${type||''}`;
+  $('hardGimmickTitle').textContent=title||'특수 기믹';$('hardGimmickBody').textContent=body||'';
+  requestAnimationFrame(()=>ov.classList.add('show'));
+  clearTimeout(showHardGimmick._t);showHardGimmick._t=setTimeout(()=>{ov.classList.remove('show');setTimeout(()=>ov.classList.add('hidden'),260);},2300);
+  ov.classList.remove('hidden');
+}
 
 // ---------- Rendering / UI ----------
 const $ = (id) => document.getElementById(id);
@@ -1714,8 +2135,8 @@ const GAME_MODES = {
     enter:()=>openNormalSelection()
   },
   hard: {
-    id:'hard', name:'하드 모드', state:'PREVIEW', stateClass:'preview', symbol:'✦', cardClass:'hard',
-    desc:'더 가혹한 규칙 아래에서 다시 시작한다.', foot:'솔로 / PVP 선택 가능',
+    id:'hard', name:'하드 모드', state:'ROUTE 1 OPEN', stateClass:'playable', symbol:'✦', cardClass:'hard',
+    desc:'노말보다 훨씬 길고 가혹한 세 갈래 기록.', foot:'솔로 · 로드 알곤 루트 공개',
     enter:()=>openHardSelection()
   }
 };
@@ -1726,7 +2147,7 @@ const NORMAL_VARIANTS = {
 
 // Hard variants are likewise data-driven. Replace developmentOnly:false and provide enter() when implemented.
 const HARD_VARIANTS = {
-  solo: {id:'solo', name:'솔로', subtitle:'한 사람의 기록', icon:'◇', developmentOnly:true},
+  solo: {id:'solo', name:'솔로', subtitle:'세 갈래 운명 · 로드 알곤 루트 공개', icon:'◇', developmentOnly:false, enter:()=>beginHardMode()},
   pvp:  {id:'pvp',  name:'PVP',  subtitle:'두 몰락자의 결투', icon:'⚔', cardClass:'pvp', developmentOnly:true}
 };
 
@@ -1877,7 +2298,7 @@ function renderClasses() {
     const unlockText=classUnlockText(id);
     return `
     <article class="class-card ${unlocked?'':'locked'}">
-      <div class="class-portrait-wrap"><img class="class-portrait" src="${classArtUrl(id)}?v=0924" alt="${cl.name} 삽화" loading="lazy" decoding="async"></div>
+      <div class="class-portrait-wrap"><img class="class-portrait" src="${classArtUrl(id)}?v=0925" alt="${cl.name} 삽화" loading="lazy" decoding="async"></div>
       <div class="class-info">
         <div class="class-head"><div class="class-name">${unlocked?'':'🔒 '}${cl.name}</div><span class="tag">${unlocked?'선택 가능':unlockText}</span></div>
         <div class="stats-row">
@@ -1968,14 +2389,16 @@ const ART_FILES = {
   barracks:'city', bandits:'bandit_battle', camp:'merchant', banditcamp:'bandit_battle', boss:'bandit_battle',
   rebel:'bridge', bridge:'bridge', kingrage:'king', merchant:'merchant', forest:'forest', capture:'bridge', officer:'tavern',
   guild:'city', midknight:'city', crossroad:'bridge', undertaker:'undertaker', tracker:'phantom',
-  grave:'cathedral', trail:'forest', phantom:'phantom', demon:'demon', slave:'slave', honor:'honor_sword', honorend:'honor_end'
+  grave:'cathedral', trail:'forest', phantom:'phantom', demon:'demon', slave:'slave', honor:'honor_sword', honorend:'honor_end',
+  hard_crossroads:'hard_crossroads', hard_march:'hard_march', hard_throne:'hard_throne', hard_algon:'hard_algon',
+  hard_lastbattle:'hard_lastbattle', hard_lastknight:'hard_lastknight', hard_altar:'hard_altar', hard_alternil:'hard_alternil'
 };
 function art(kind) {
   const file=ART_FILES[kind]||ART_FILES.exile;
   const classFile=state?.classId?classArtUrl(state.classId):'';
-  const cameo=classFile?`<div class="scene-class-cameo"><img src="${classFile}?v=0924" alt=""></div>`:'';
+  const cameo=classFile?`<div class="scene-class-cameo"><img src="${classFile}?v=0925" alt=""></div>`:'';
   return `<div class="scene-illustration art-${escapeHtml(kind||'exile')}">
-    <img class="scene-illustration-bg" src="/assets/art/${file}.webp?v=0924" alt="" decoding="async">
+    <img class="scene-illustration-bg" src="/assets/art/${file}.webp?v=0925" alt="" decoding="async">
     <div class="scene-illustration-vignette"></div>${cameo}
   </div>`;
 }
@@ -2022,6 +2445,8 @@ function socialChance(enemy,sc) {
   return clamp(chance,1,95);
 }
 function runChance(enemy) {
+  const sc=SCENES[state.sceneId];
+  if(sc?.runDisabled)return 0;
   const mySpeed=effectiveSpeed();
   const enemySpeed=Number(enemy?.speed||0);
   if(mySpeed>enemySpeed) return 100;
@@ -2031,6 +2456,8 @@ function runChance(enemy) {
 }
 
 function runLabel(enemy, chance) {
+  const sc=SCENES[state.sceneId];
+  if(sc?.runDisabled)return sc.runDisabledLabel||'특수 기믹 · 도망 불가';
   if(escapeWasUsed()) return '이미 시도했다';
   if(chance===100) return '반드시 성공';
   if(chance===0) return '도망 불가';
@@ -2086,6 +2513,15 @@ const ESCAPE_ROUTES = {
   midKnight:         {to:'banditBossForest', text:'중급 기사의 추격을 따돌리고 도적단 본거지 안으로 뛰어들었다.', before(){state.flags.midKnightEscaped=true;}},
   banditBossForest:  {to:'friendBridge', text:'세리아와의 결판을 미루고 본거지를 빠져나왔다.'},
   banditBossAngryForest:{to:'friendBridge',text:'세리아와의 싸움을 피해 왕국과 숲 사이 다리로 이동했다.'},
+  hardRoadMarauder:{to:'hardAshVillage',text:'뒤집힌 수레를 넘어 약탈병의 시야에서 벗어났다.'},
+  hardTollGate:{to:'hardTollAfter',text:'관문 기록대를 우회해 절벽 아래 통로로 빠져나왔다.'},
+  hardScout:{to:'hardScoutAfter',text:'종이 울리기 전에 감시탑 아래 사각지대로 몸을 던졌다.'},
+  hardOuterGate:{to:'hardOuterWard',text:'외성문이 닫히기 전 틈을 비집고 성 안으로 달아났다.'},
+  hardWarden:{to:'hardWardenAfter',text:'감옥 열쇠 통로를 이용해 바르몬의 시야에서 벗어났다.'},
+  hardForgeKnight:{to:'hardForgeCore',text:'푸른 화로의 열기를 이용해 하르트의 추격을 끊었다.'},
+  hardConfessor:{to:'hardChapelSeal',text:'고해실의 좁은 문을 박차고 무명 제단 쪽으로 달아났다.'},
+  hardChainKnight:{to:'hardChainAfter',text:'끊어진 사슬을 타고 반대편 내성으로 넘어갔다.'},
+  hardGraveCaptain:{to:'hardGraveAfter',text:'무명군 대열 사이의 빈틈을 뚫고 왕좌 계단까지 올라갔다.'},
   phantomEncounter:{to:'phantomAfterEscape',text:'팬텀의 손이 닿기 직전 어둠을 가르며 달아났다.'}
 };
 function handleEscapeSuccess(){
@@ -2211,7 +2647,8 @@ function battleHitFx(){
 }
 function showBattleOverlay(enemy){
   const ov=$('battleOverlay');
-  ov.className='battle-overlay';
+  const sc=SCENES[state.sceneId];
+  ov.className=`battle-overlay${sc?.bossGimmick==='algon'?' algon-lock':''}`;
   $('battleEnemyName').textContent=enemy.name;
   $('battlePlayerName').textContent=state.p.className;
   $('battleEnemyLabel').textContent=enemy.name;
@@ -2220,7 +2657,7 @@ function showBattleOverlay(enemy){
   $('battleDiceWrap').classList.add('hidden');
   $('battleDie').classList.remove('rolling');
   $('actionGrid').classList.add('battle-locked');
-  setBattleText('서로의 거리를 재고 있다…');
+  setBattleText(sc?.bossGimmick==='algon'?'쇠사슬이 모든 출구를 잠근다…':'서로의 거리를 재고 있다…');
 }
 function hideBattleOverlay(){
   $('battleOverlay').classList.add('hidden');
@@ -2313,6 +2750,11 @@ async function startBattleSequence(sc, enemy){
     battleHitFx();
     setBattleText('밀리고 있다.\n한 번만 더 버티면 기회가 온다.','danger');
     await sleep(850);
+    if(sc.comebackDisabled){
+      $('battleOverlay').classList.add('defeat');
+      setBattleText('역전 주사위가 산산이 부서졌다.\n마지막 기회는 오지 않는다.','danger');
+      await sleep(1000);hideBattleOverlay();battleBusy=false;die(`${enemy.name}이 역전의 기회 자체를 파괴했다.`);return;
+    }
     const comebackMin=encMod().comebackMin||6;
     setBattleText(`역전 주사위를 굴린다.\n${comebackRuleText()}이면 전세를 뒤집는다.`,'danger');
     const roll=await rollComebackDie();
@@ -2394,7 +2836,7 @@ function strongestDemonStat(){
   return rows[0][1]>=DEMON_THRESHOLD?rows[0]:null;
 }
 function maybeTriggerDemonOffer(returnTarget,carryMessage=''){
-  if(!state?.p||state.ended||state.flags.demonOfferSeen||returnTarget==='demonOffer')return false;
+  if(!state?.p||state.ended||isHardMode()||state.flags.demonOfferSeen||returnTarget==='demonOffer')return false;
   const hit=strongestDemonStat();if(!hit)return false;
   state.flags.demonOfferSeen=true;state.flags.demonStat=hit[0];state.flags.demonReturn=returnTarget;state.flags.demonCarryMessage=carryMessage||'';
   state.sceneId='demonOffer';state.pending=null;state.lastToast='';save();showScreen('gameScreen');render();fx('bad');return true;
@@ -2485,7 +2927,7 @@ function friendEndingHint(loose=false){
 }
 
 function recordClearForUnlock(name,e){
-  if(e?.bad || String(e?.kind||'').startsWith('BAD END'))return [];
+  if(isHardMode()||e?.bad || String(e?.kind||'').startsWith('BAD END'))return [];
   const meta=loadMeta();
   const runId=String(state.runId||'');
   if(runId && meta.awardedRuns.includes(runId))return [];
@@ -2518,17 +2960,18 @@ function finish(name) {
   const deathBlock=e.bad&&state.flags.deathReason?`<b>최후의 순간</b> · ${escapeHtml(state.flags.deathReason)}<br><b>사망 장소</b> · ${escapeHtml(SCENES[state.flags.deathScene]?.location||'알 수 없는 장소')}<br><br><br>`:'';
   $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>협상 수익 <b>◆ ${state.stats.socialIncome||0}</b> · 고난도 협상 <b>${state.stats.riskySocial||0}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 과대화 <b>${state.stats.overTalks||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>${state.classId==='merchant'?`<br>장사 수익 <b>${state.stats.merchantIncome||0}</b> · 새 조우 <b>${state.stats.merchantDeals||0}</b>`:state.classId==='gambler'?`<br>강화한 눈 <b>${(state.stats.gamblerFaces||[]).length?(state.stats.gamblerFaces||[]).join(' · '):'없음'}</b> · 강화 역전 <b>${state.stats.gamblerFaceHits||0}</b> · 중복 꽝 <b>${state.stats.gamblerDuplicates||0}</b>`:''}`;
   const meta=loadMeta();
-  if(!e.bad){
+  const pvpMode=isPvpMode();
+  const hardMode=isHardMode();
+  if(!e.bad&&!hardMode){
     const unlockLine=state.flags.newClassUnlocks?.length?`<br><br><b>새 직업 해금 · ${state.flags.newClassUnlocks.map(escapeHtml).join(' / ')}</b>`:`<br><br>노말 엔딩 <b>${meta.normalClears}회</b>`;
     $('endStats').innerHTML+=unlockLine;
   }
   resetRankSubmitUI();
-  const pvpMode=isPvpMode();
-  if($('nickname'))$('nickname').classList.toggle('hidden',pvpMode);
-  if($('submitScoreBtn'))$('submitScoreBtn').classList.toggle('hidden',pvpMode);
-  if($('rankSubmitStatus'))$('rankSubmitStatus').classList.toggle('hidden',pvpMode);
+  if($('nickname'))$('nickname').classList.toggle('hidden',pvpMode||hardMode);
+  if($('submitScoreBtn'))$('submitScoreBtn').classList.toggle('hidden',pvpMode||hardMode);
+  if($('rankSubmitStatus'))$('rankSubmitStatus').classList.toggle('hidden',pvpMode||hardMode);
   if($('pvpEndPanel'))$('pvpEndPanel').classList.toggle('hidden',!pvpMode);
-  if($('endNormalLeaderboardBtn'))$('endNormalLeaderboardBtn').classList.toggle('hidden',pvpMode);
+  if($('endNormalLeaderboardBtn'))$('endNormalLeaderboardBtn').classList.toggle('hidden',pvpMode||hardMode);
   if($('endPvpLeaderboardBtn'))$('endPvpLeaderboardBtn').classList.toggle('hidden',!pvpMode);
   fx(e.bad?'bad':'good');showScreen('endScreen');
   if(pvpMode)pvpFinish();
@@ -2679,7 +3122,7 @@ function updateMenuSaveInfo(){
     const sc=SCENES[d.sceneId];
     const where=sc?.location||'알 수 없는 장소';
     if(d.ended){el.textContent=`${d.p.className} · ${d.stats?.ending||'끝난 여정'} · 기록 확인 가능`;return;}
-    el.textContent=`${d.p.className} · ${where} · HP ${d.p.hp}/${d.p.maxHp} · ◆ ${d.p.gold}`;
+    el.textContent=`${d.flags?.gameMode==='hard'?'HARD · ':''}${d.p.className} · ${where} · HP ${d.p.hp}/${d.p.maxHp} · ◆ ${d.p.gold}`;
   }catch{el.textContent='저장 데이터 확인 필요';}
 }
 function finishLoaded(){state.ended=false;finish(state.stats.ending||'BAD END');}
@@ -2755,6 +3198,7 @@ function refreshNicknameValidation(){
   else if(btn.textContent==='사용할 수 없는 이름'){btn.disabled=false;btn.textContent='영구 랭킹에 기록 등록';}
 }
 async function submitScore(){
+  if(isHardMode()){setRankSubmitStatus('error','하드 기록은 노말 랭킹과 분리됩니다.','<div>현재 하드 랭킹은 아직 열리지 않았습니다.</div>');return;}
   const btn=$('submitScoreBtn');
   const input=$('nickname');
   const nickname=input.value.trim()||'익명';
