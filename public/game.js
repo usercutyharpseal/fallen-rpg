@@ -7,7 +7,7 @@ const META_KEY = 'fallen_meta_v1';
 const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
 const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
 const PVP_NICK_KEY = 'fallen_pvp_nickname';
-const GAME_VERSION = 130;
+const GAME_VERSION = 131;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5 };
 function loadMeta(){
@@ -169,11 +169,14 @@ const ENEMIES = {
 const ENDINGS = {
   'BAD END': { icon:'†', kind:'BAD END', bonus:0, art:'grave', epilogue:'당신의 여정은 여기서 끝났다.\n하지만 실패조차 하나의 기록으로 남는다.' },
   '명예 회복': { icon:'⚜', kind:'NORMAL END', bonus:5000, art:'honorend', epilogue:'도적단의 깃발이 쓰러졌다.\n한때 쫓겨났던 당신의 이름은 다시 사람들의 입에 오르기 시작했다.' },
-  '반란': { icon:'⚔', kind:'HARD END', bonus:10000, art:'rebel', epilogue:'왕의 분노도 왕국의 성벽도 끝내 당신들을 막지 못했다.\n새로운 질서가 피와 함성 속에서 시작된다.' },
+  '반란': { icon:'⚔', kind:'NORMAL END · 반란', bonus:10000, art:'rebel', epilogue:'왕의 분노도 왕국의 성벽도 끝내 당신들을 막지 못했다.\n새로운 질서가 피와 함성 속에서 시작된다.' },
   '모두와 친구': { icon:'◇', kind:'SECRET END', bonus:25000, art:'honorend', epilogue:'칼을 뽑지 않고도 바뀌는 것이 있었다.\n왕국과 도적단, 상인들은 불편한 평화를 받아들였다. 그리고 그 중심에 당신이 있었다.' },
   '위선적인 영웅': { icon:'⚜', kind:'SPECIAL END · 위선', bonus:12000, art:'honor', epilogue:'사람들은 당신을 영웅이라 불렀다.\n당신이 쓰러뜨린 약자들의 이름은 승전 연설 어디에도 없었다. 칼로 만든 문제를 말로 덮었고, 왕국은 듣고 싶은 이야기만 들었다.\n명예는 돌아왔다. 진실만 돌아오지 못했다.' },
   '피 묻은 중재자': { icon:'◇', kind:'SPECIAL END · 불완전한 평화', bonus:20000, art:'bridge', epilogue:'왕국과 숲은 결국 같은 탁자에 앉았다.\n그러나 그 탁자를 닦아도 지워지지 않는 피가 있었다. 사람들은 당신의 중재를 받아들였지만, 살아남은 자들은 당신이 평화를 말하기 전에 무엇을 했는지 기억했다.\n평화는 이루어졌다. 결백은 아니었다.' },
   '두 개의 깃발': { icon:'⚔', kind:'SPECIAL END · 배신', bonus:18000, art:'bridge', epilogue:'당신은 한때 왕국의 깃발 아래 섰고, 마지막에는 그것을 향해 검을 들었다.\n왕국은 당신을 배신자라 불렀고 반란군은 영웅이라 불렀다. 둘 다 틀리지 않았다.\n되찾은 것은 명예가 아니라, 어느 편에서도 완전히 지워지지 않을 이름이었다.' },
+  '박쥐': { icon:'🦇', kind:'HIDDEN END · 변절', bonus:19000, art:'bridge', epilogue:'처음에는 왕국의 깃발이 당신의 뒤에 있었다. 다음에는 숲의 깃발이, 그 다음에는 다시 다른 색의 천이 머리 위에서 펄럭였다.\n\n사람들은 당신이 어느 편인지 묻는 일을 결국 포기했다. 어제의 동료가 오늘의 적이 되고, 오늘의 맹세가 내일의 통행증이 되었다.\n\n전쟁이 끝난 뒤에도 양쪽 진영에는 같은 소문이 남았다. “저 사람은 우리 편이었던 적이 있다.”\n그리고 그 말 뒤에는 언제나 한마디가 더 붙었다. “아마 지금은 아닐 거다.”' },
+  '신사': { icon:'♢', kind:'HIDDEN END · 무혈', bonus:4500, art:'honor', epilogue:'왕도, 세리아도 당신이 무기를 가지고 있다는 사실을 알고 있었다. 그러나 마지막 순간까지 그 무기로 사람을 쓰러뜨린 적은 없었다.\n\n당신은 설득했고, 필요하면 달아났다. 누군가는 비겁하다고 했고 누군가는 품위라고 불렀다. 중요한 것은 어느 쪽도 당신의 발밑에서 죽지 않았다는 사실이었다.\n\n모두와 친구가 된 것은 아니다. 세상은 그렇게 깔끔하게 화해하지 않았다. 다만 적어도 당신을 마지막까지 괴물이라 부를 사람은 없었다.' },
+  '억제자': { icon:'⊘', kind:'HIDDEN END · 억제', bonus:36000, art:'honorend', epilogue:'당신의 칼이 약해서 피를 보지 않은 것이 아니었다. 오히려 반대였다.\n\n한 번 제대로 휘두르면 끝낼 수 있다는 걸 당신도, 마지막에 마주선 사람도 알고 있었다. 그래서 더 어려운 선택은 공격하는 것이 아니라 멈추는 것이었다.\n\n전투가 끝난 뒤 사람들은 뒤늦게 당신의 힘을 이해했다. 수많은 싸움을 이길 힘을 가지고도 단 한 사람도 죽이지 않은 자.\n\n두려움은 사라지지 않았다. 다만 그 두려움 위에 신뢰와 경계가 동시에 세워졌다. 사람들은 당신을 영웅보다 조심스럽게 불렀다. 억제자.' },
   '지배자': { icon:'♛', kind:'LEGEND END', bonus:30000, art:'king', epilogue:'전설마저 쓰러졌다.\n왕좌를 지킬 자도, 당신에게 명령할 자도 더는 남지 않았다.' },
   '길을 잃은 자': { icon:'∅', kind:'BAD END · 방황', bonus:420, bad:true, art:'crossroad', epilogue:'다리의 한쪽에는 왕국이, 다른 한쪽에는 숲이 있었다.\n당신은 두 곳에서 모두 물러났고 어느 쪽에도 돌아갈 이유를 남기지 못했다.\n해가 질 때까지 다리 위에 서 있었지만 누구도 당신을 부르러 오지 않았다.\n결국 길을 잃은 것은 발이 아니라, 선택이었다.' },
   '빈 호칭': { icon:'♙', kind:'BAD END · 귀족', bonus:900, bad:true, art:'crossroad', epilogue:'당신은 다리 한가운데에서 끝까지 말을 골랐다.\n한때는 가문의 이름 하나로 문이 열렸고, 말 한마디로 싸움을 미룰 수 있었다. 하지만 굶주림과 죽음은 예법을 몰랐다.\n해가 기울자 왕국도 숲도 먼저 돌아섰다. 어느 쪽도 당신을 적으로 부르지는 않았다. 그렇다고 자기 사람이라 부르지도 않았다.\n끝내 남은 것은, 아무도 불러주지 않는 호칭뿐이었다.' },
@@ -642,7 +645,7 @@ function freshState() {
     stats: {
       progress:0, goldEarned:0, goldSpent:0, kills:0, eliteKills:0, riskyWins:0,
       talkSolved:0, socialSuccess:0, socialFail:0, runSuccess:0, secrets:0,
-      survivors:0, growths:0, comebackWins:0, talkInteractions:0, overTalks:0, itemsUsed:0, corpses:0, tyranny:0, merchantDeals:0, merchantIncome:0, socialIncome:0, riskySocial:0, gamblerFaces:[], gamblerFaceHits:0, gamblerDuplicates:0, ending:'', maxAttackChanceBeaten:100
+      survivors:0, growths:0, comebackWins:0, talkInteractions:0, overTalks:0, itemsUsed:0, corpses:0, tyranny:0, merchantDeals:0, merchantIncome:0, socialIncome:0, riskySocial:0, teamSwitches:0, gamblerFaces:[], gamblerFaceHits:0, gamblerDuplicates:0, ending:'', maxAttackChanceBeaten:100
     }
   };
 }
@@ -854,7 +857,7 @@ const SCENES = {
     chapter:'ROYAL AUDIENCE', location:'왕궁 · 알현실', art:'king',
     text:`왕 에드란은 텅 빈 알현실에서 당신을 내려다본다.\n\n“네가 무슨 짓을 했는지는 알고 있다.”\n“그래도 도적단을 무너뜨릴 힘이 있다면, 한 번은 쓸 수 있겠지.”`,
     choices:() => [
-      c('도적단 토벌을 받아들인다','명예를 되찾을 마지막 기회.',()=>{state.relation.kingdom+=1;go('royalSupply');}),
+      c('도적단 토벌을 받아들인다','명예를 되찾을 마지막 기회.',()=>{pledgeTeam('kingdom');state.relation.kingdom+=1;go('royalSupply');}),
       c('왕에게 칼을 겨눈다','왕은 즉시 격분한다.',()=>go('kingEnraged'))
     ]
   }),
@@ -863,7 +866,7 @@ const SCENES = {
     chapter:'ROYAL ROUTE', location:'친위대 모집소', art:'barracks',
     text:`모집소의 장교는 당신의 몰락한 신분을 오래 들여다본다.\n\n“과거가 어떻든 상관없다. 지금 필요한 건 도적단을 막을 칼이야.”`,
     choices:() => [
-      c('도적단 토벌에 지원한다','가장 정석적인 명예 회복 루트.',()=>{state.flags.enlisted=true;state.relation.kingdom+=3;go('barracksTraining');}),
+      c('도적단 토벌에 지원한다','가장 정석적인 명예 회복 루트.',()=>{pledgeTeam('kingdom');state.flags.enlisted=true;state.relation.kingdom+=3;go('barracksTraining');}),
       c('생각을 바꿔 중앙가로 돌아간다','아직 다른 선택을 할 수 있다.',()=>go('citySquare'))
     ]
   }),
@@ -929,8 +932,8 @@ const SCENES = {
     chapter:'CROSSROAD', location:'숲 · 숨겨진 야영지', art:'banditcamp',
     text:`도적들은 당신을 죽이지 않았다.\n대신 왕국이 외면한 사람들의 이야기를 들려준다.\n\n“명예를 되찾고 싶어서 저들의 칼이 될 거야?”\n“아니면 우리와 같이 판을 뒤집을래?”`,
     choices:() => [
-      c('왕국 편으로 돌아간다','도적단 두목을 처치한다.',()=>go('banditBossRoyal')),
-      c('도적단에 합류한다','왕국에 반란을 일으킨다.',()=>{state.relation.bandits+=3;state.flags.rebel=true;go('rebelMarch');})
+      c('왕국 편으로 돌아간다','도적단 두목을 처치한다.',()=>{pledgeTeam('kingdom');go('banditBossRoyal');}),
+      c('도적단에 합류한다','왕국에 반란을 일으킨다.',()=>{pledgeTeam('bandits');state.relation.bandits+=3;state.flags.rebel=true;go('rebelMarch');})
     ]
   }),
 
@@ -938,15 +941,16 @@ const SCENES = {
     chapter:'ROYAL ROUTE · BOSS', location:'도적단 본거지', art:'boss', enemy:'banditBoss',
     text:`붉은 천막 앞에 세리아가 서 있다.\n\n“왕국에서 명예를 되찾겠다고 여기까지 왔어?”\n“그럼 네 명예가 몇 명의 목숨 값인지 보여줘.”`,
     talk(){ state.flags.bossTalked=true;state.relation.bandits++;toast('세리아의 사정을 들었다. 반란에 합류할 선택이 열렸다.','good');render();save(); },
-    choices(){ return state.flags.bossTalked ? [c('세리아의 제안을 받아들인다','왕국을 공격한다.',()=>{state.flags.rebel=true;state.relation.bandits+=2;go('rebelMarch');})] : []; },
+    choices(){ return state.flags.bossTalked ? [c('세리아의 제안을 받아들인다','왕국을 공격한다.',()=>{pledgeTeam('bandits');state.flags.rebel=true;state.relation.bandits+=2;go('rebelMarch');})] : []; },
     socialSuccess(){
       state.relation.bandits+=2;
+      if(peacefulFinalSuccess('세리아','처세'))return;
       if(canFriendEnding()) finish('모두와 친구');
       else resolve('social','banditTruce','세리아는 당신과의 싸움을 미뤘다. 아직 왕국과의 관계를 정리해야 한다.');
     },
     socialFail(){ state.flags.bossAngry=true;go('banditBossAngry','처세 실패 · 세리아가 칼을 뽑았다. 다시 속일 기회는 없다.'); },
     attackWin(){state.flags.banditBossKilled=true;gainGold(110);resolve('attack',null,'세리아가 쓰러졌다.\n\n도적단의 깃발이 내려가고, 왕국으로 돌아갈 길만 남았다.', '명예 회복');},
-    runSuccess(){ handleEscapeSuccess(); }
+    runSuccess(){ if(!peacefulFinalSuccess('세리아','도망'))handleEscapeSuccess(); }
   }),
 
   banditBossAngry: scene('banditBossAngry', {
@@ -954,7 +958,7 @@ const SCENES = {
     text:`“말로 시간을 벌 생각은 버려.”\n세리아가 칼을 뽑는다.`,
     talk(){toast('세리아는 더 이상 대답하지 않는다.');},
     attackWin(){state.flags.banditBossKilled=true;gainGold(110);resolve('attack',null,'두목을 쓰러뜨렸다.\n\n남은 도적들은 무기를 버리거나 숲으로 흩어진다.', '명예 회복');},
-    runSuccess(){ handleEscapeSuccess(); }
+    runSuccess(){ if(!peacefulFinalSuccess('세리아','도망'))handleEscapeSuccess(); }
   }),
 
   banditTruce: scene('banditTruce', {
@@ -962,10 +966,11 @@ const SCENES = {
     text:`도적단과의 싸움은 피했지만 왕국과의 갈등은 남았다.\n양쪽을 모두 설득할 수 있다면, 피를 흘리지 않고 끝낼 가능성도 있다.`,
     choices:() => [
       c('왕국으로 돌아가 중재를 시도한다','왕국과 도적단 모두의 신뢰가 필요하다.',()=>{
+        pledgeTeam('kingdom');
         if(canFriendEnding()) finish('모두와 친구');
         else go('kingdomGate');
       }),
-      !state.flags.rebellionRetreated && c('도적단과 왕국을 공격한다','반란 루트로 전환.',()=>{state.flags.rebel=true;go('rebelMarch');})
+      !state.flags.rebellionRetreated && c('도적단과 왕국을 공격한다','반란 루트로 전환.',()=>{pledgeTeam('bandits');state.flags.rebel=true;go('rebelMarch');})
     ].filter(Boolean)
   }),
 
@@ -990,11 +995,14 @@ const SCENES = {
     chapter:'REBELLION · FINAL', location:'왕궁 앞', art:'kingrage', enemy:'king', socialPenalty:25,
     text:`왕 에드란이 피 묻은 망토를 끌며 계단을 내려온다.\n\n“내 병사와 백성을 죽이고도 말이 필요하다고 생각하느냐?”\n\n분노한 왕에게 남은 것은 결판뿐이다.`,
     talk(){state.flags.kingBuff=(state.flags.kingBuff||0)+2;toast('왕의 눈빛이 더 차가워졌다.','bad');render();save();},
-    socialSuccess(){state.flags.kingShaken=true;toast('처세 성공 · 왕의 판단이 흔들렸다. 공격력 -2','good');render();save();},
+    socialSuccess(){
+      if(peacefulFinalSuccess('왕 에드란','처세'))return;
+      state.flags.kingShaken=true;toast('처세 성공 · 왕의 판단이 흔들렸다. 공격력 -2','good');render();save();
+    },
     socialFail(){state.flags.kingBuff=(state.flags.kingBuff||0)+3;toast('말은 닿지 않았다. 왕이 검을 바로 세운다.','bad');render();save();},
     enemyMod(e){e.atk+=(state.flags.kingBuff||0);if(state.flags.kingShaken)e.atk=Math.max(1,e.atk-2);return e;},
     attackWin(){gainGold(180);resolve('attack',null,'왕이 쓰러졌다.\n\n성문 위의 깃발이 천천히 내려가고, 반란군의 함성이 왕궁을 덮는다.', '반란');},
-    runSuccess(){ handleEscapeSuccess(); }
+    runSuccess(){ if(!peacefulFinalSuccess('왕 에드란','도망'))handleEscapeSuccess(); }
   }),
 
 
@@ -1208,17 +1216,18 @@ const SCENES = {
     talk(){state.flags.bossTalked=true;state.relation.bandits++;toast('세리아는 왕국을 공격할 계획과 그 이유를 모두 털어놓는다.','good');render();save();},
     choices(){
       const arr=[];
-      if(state.flags.bossTalked) arr.push(c('세리아를 도와 왕국을 공격한다','반란 엔딩으로 향한다.',()=>{state.flags.rebel=true;state.relation.bandits+=2;go('rebelMarch');}));
+      if(state.flags.bossTalked) arr.push(c('세리아를 도와 왕국을 공격한다','반란 엔딩으로 향한다.',()=>{pledgeTeam('bandits');state.flags.rebel=true;state.relation.bandits+=2;go('rebelMarch');}));
       return arr;
     },
     socialSuccess(){
       state.relation.bandits+=3;
+      if(peacefulFinalSuccess('세리아','처세'))return;
       if(canFriendEnding()) finish('모두와 친구');
       else { state.flags.banditTruce=true; resolve('social','friendBridge','세리아와의 싸움을 피했다. 이제 왕국과의 관계까지 이어야 한다.'); }
     },
     socialFail(){go('banditBossAngryForest','처세 실패 · 세리아는 당신이 어느 편도 아니라고 판단했다.');},
     attackWin(){state.flags.banditBossKilled=true;state.relation.bandits-=5;gainGold(110);resolve('attack',null,'세리아를 쓰러뜨렸다.\n\n왕국은 당신의 공을 인정할 수밖에 없다.', '명예 회복');},
-    runSuccess(){ handleEscapeSuccess(); }
+    runSuccess(){ if(!peacefulFinalSuccess('세리아','도망'))handleEscapeSuccess(); }
   }),
 
   banditBossAngryForest: scene('banditBossAngryForest', {
@@ -1226,7 +1235,7 @@ const SCENES = {
     text:`“그만. 넌 네 입으로 네 편을 정했어.”\n세리아가 단검을 든다.`,
     talk(){toast('더 이상 대화는 통하지 않는다.');},
     attackWin(){state.flags.banditBossKilled=true;gainGold(110);resolve('attack',null,'세리아가 쓰러졌다.\n\n본거지의 소란이 잦아들고 살아남은 자들이 무기를 버린다.', '명예 회복');},
-    runSuccess(){ handleEscapeSuccess(); }
+    runSuccess(){ if(!peacefulFinalSuccess('세리아','도망'))handleEscapeSuccess(); }
   }),
 
   friendBridge: scene('friendBridge', {
@@ -1251,7 +1260,7 @@ const SCENES = {
           if(canFriendEnding(true)) finish('모두와 친구');
           else queueOutcome(`${friendEndingHint(true)}\n\n다리 양쪽의 사람들은 아직 무기를 내려놓지 않는다.`,null);
         }),
-        rebelAvailable && c('도적단에 돌아가 왕국을 공격한다','',()=>{state.flags.rebel=true;go('rebelMarch');})
+        rebelAvailable && c('도적단에 돌아가 왕국을 공격한다','',()=>{pledgeTeam('bandits');state.flags.rebel=true;go('rebelMarch');})
       ].filter(Boolean);
     }
   }),
@@ -3184,8 +3193,38 @@ function bloodyMediatorEligible(){
   const hardKill=state.flags.captainKilled||state.flags.eliteVarkKilled||state.flags.eliteIselKilled||state.flags.officer1Killed||state.flags.officer2Killed||state.flags.banditSlingerMarenKilled||state.flags.banditPorterTorKilled||state.flags.banditShieldEnochKilled||state.flags.assaultBramKilled||state.flags.assaultNeraKilled||state.flags.noviceKilled||state.flags.midKnightKilled||state.flags.banditBossKilled;
   return soft>=1 && soft<=3 && !hardKill && !!state.flags.merchantRescuedPeace && !!state.flags.merchantBalancedView && !!state.flags.friendTalkOpen && state.relation.kingdom>=3 && state.relation.bandits>=3 && state.relation.merchants>=3 && (state.stats.socialSuccess||0)>=4 && (state.stats.secrets||0)>=2 && !state.flags.rebel;
 }
+const SUPPRESSOR_ATTACK_REQUIREMENT=18;
+function zeroKillRun(){return Number(state.stats?.kills||0)===0;}
+function teamSwitchCount(){return Math.max(0,Number(state.stats?.teamSwitches||0));}
+function pledgeTeam(team){
+  if(!['kingdom','bandits'].includes(team))return;
+  const prev=String(state.flags.teamAffiliation||'');
+  state.flags.teamHistory=Array.isArray(state.flags.teamHistory)?state.flags.teamHistory:[];
+  if(prev && prev!==team){
+    state.stats.teamSwitches=teamSwitchCount()+1;
+    state.flags.teamHistory.push(`${prev}>${team}`);
+  }else if(!prev){
+    state.flags.teamHistory.push(team);
+  }
+  state.flags.teamAffiliation=team;
+}
+function suppressorEligible(){
+  return !isHardMode()&&!isPvpMode()&&zeroKillRun()&&Number(state.p?.atk||0)>=SUPPRESSOR_ATTACK_REQUIREMENT;
+}
+function gentlemanEligible(){
+  return !isHardMode()&&!isPvpMode()&&zeroKillRun()&&!canFriendEnding();
+}
+function peacefulFinalSuccess(source,method){
+  if(isHardMode()||isPvpMode()||!zeroKillRun())return false;
+  state.flags.pacifistFinalSource=source;
+  state.flags.pacifistFinalMethod=method;
+  if(suppressorEligible()){finish('억제자');return true;}
+  if(gentlemanEligible()){finish('신사');return true;}
+  return false;
+}
 function specialEndingFor(baseName){
   const s=state.stats||{};
+  if(!isHardMode()&&!isPvpMode() && ['명예 회복','반란'].includes(baseName) && teamSwitchCount()>=2) return '박쥐';
   if(baseName==='모두와 친구' && bloodyMediatorEligible()) return '피 묻은 중재자';
   if(baseName==='명예 회복' && softKillCount()>=1 && (s.socialSuccess||0)>=3 && (s.talkSolved||0)>=2) return '위선적인 영웅';
   if(baseName==='반란' && state.flags.enlisted && state.flags.rebel) return '두 개의 깃발';
@@ -3278,7 +3317,7 @@ function finish(name) {
   $('playStyle').textContent=`플레이 스타일 · ${playStyle()}`;
   $('endScore').textContent=clientScore().toLocaleString();
   const deathBlock=e.bad&&state.flags.deathReason?`<b>최후의 순간</b> · ${escapeHtml(state.flags.deathReason)}<br><b>사망 장소</b> · ${escapeHtml(SCENES[state.flags.deathScene]?.location||'알 수 없는 장소')}<br><br><br>`:'';
-  $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>협상 수익 <b>◆ ${state.stats.socialIncome||0}</b> · 고난도 협상 <b>${state.stats.riskySocial||0}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 과대화 <b>${state.stats.overTalks||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>${state.classId==='merchant'?`<br>장사 수익 <b>${state.stats.merchantIncome||0}</b> · 새 조우 <b>${state.stats.merchantDeals||0}</b>`:state.classId==='gambler'?`<br>강화한 눈 <b>${(state.stats.gamblerFaces||[]).length?(state.stats.gamblerFaces||[]).join(' · '):'없음'}</b> · 강화 역전 <b>${state.stats.gamblerFaceHits||0}</b> · 중복 꽝 <b>${state.stats.gamblerDuplicates||0}</b>`:''}`;
+  $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>협상 수익 <b>◆ ${state.stats.socialIncome||0}</b> · 고난도 협상 <b>${state.stats.riskySocial||0}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 과대화 <b>${state.stats.overTalks||0}</b> · 진영 전환 <b>${state.stats.teamSwitches||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>${state.classId==='merchant'?`<br>장사 수익 <b>${state.stats.merchantIncome||0}</b> · 새 조우 <b>${state.stats.merchantDeals||0}</b>`:state.classId==='gambler'?`<br>강화한 눈 <b>${(state.stats.gamblerFaces||[]).length?(state.stats.gamblerFaces||[]).join(' · '):'없음'}</b> · 강화 역전 <b>${state.stats.gamblerFaceHits||0}</b> · 중복 꽝 <b>${state.stats.gamblerDuplicates||0}</b>`:''}`;
   const meta=loadMeta();
   const pvpMode=isPvpMode();
   const hardMode=isHardMode();

@@ -23,7 +23,7 @@ const SUPABASE_PUBLIC_KEY=SUPABASE_KEY.startsWith('sb_publishable_')||SUPABASE_K
 const CLOUD_WRITABLE=CLOUD_CONFIGURED&&!SUPABASE_PUBLIC_KEY;
 const supabase = CLOUD_CONFIGURED ? createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { autoRefreshToken:false, persistSession:false, detectSessionInUrl:false },
-  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.30' } }
+  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.31' } }
 }) : null;
 
 function withTimeout(promise, ms = 6000, code = 'UPSTREAM_TIMEOUT') {
@@ -182,6 +182,13 @@ const ENDING_BONUS = {
   '아쉽네, 정말': 660,
   '초급이라는 착각': 430,
   '신호 이후': 470,
+  '감시역의 검': 520,
+  '봉쇄선의 마지막 사람': 760,
+  '돌이 먼저 닿았다': 300,
+  '보급선의 무게': 440,
+  '목책 앞의 방패': 700,
+  '숲의 첫 돌진': 390,
+  '두목에게 닿지 못한 보고': 820,
   '협회의 추격자는 멈추지 않는다': 1250,
   '세리아의 마지막 질문': 1150,
   '네 편은 네가 정했다': 1200,
@@ -192,6 +199,9 @@ const ENDING_BONUS = {
   '위선적인 영웅': 12000,
   '피 묻은 중재자': 20000,
   '두 개의 깃발': 18000,
+  '박쥐': 19000,
+  '신사': 4500,
+  '억제자': 36000,
   '지배자': 30000,
   '길을 잃은 자': 420,
   '빈 호칭': 900,
@@ -749,11 +759,11 @@ app.post('/api/score', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.30' });
+  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.31' });
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n몰락자 v0.9.30`);
+  console.log(`\n몰락자 v0.9.31`);
   console.log(`http://localhost:${PORT}`);
   console.log(`랭킹 설정: ${CLOUD_CONFIGURED ? 'Supabase 환경변수 있음 (실연결은 /api/storage에서 검증)' : '로컬 파일'}\n`);
 });
