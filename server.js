@@ -23,7 +23,7 @@ const SUPABASE_PUBLIC_KEY=SUPABASE_KEY.startsWith('sb_publishable_')||SUPABASE_K
 const CLOUD_WRITABLE=CLOUD_CONFIGURED&&!SUPABASE_PUBLIC_KEY;
 const supabase = CLOUD_CONFIGURED ? createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { autoRefreshToken:false, persistSession:false, detectSessionInUrl:false },
-  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.19' } }
+  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.30' } }
 }) : null;
 
 function withTimeout(promise, ms = 6000, code = 'UPSTREAM_TIMEOUT') {
@@ -40,6 +40,122 @@ app.use((req,res,next)=>{
   next();
 });
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ---------- v0.9.30 one-time 4-digit device transfer ----------
+const DEVICE_TRANSFER_TTL_MS=10*60*1000;
+const DEVICE_TRANSFER_MAX_BYTES=192*1024;
+const DEVICE_TRANSFER_LOAD_FAIL_LIMIT=12;
+const DEVICE_TRANSFER_CREATE_LIMIT=8;
+const deviceTransferCodes=new Map();
+const deviceTransferAttempts=new Map();
+const deviceTransferCreates=new Map();
+
+function deviceTransferIp(req){
+  const forwarded=String(req.headers['x-forwarded-for']||'').split(',')[0].trim();
+  return forwarded||String(req.socket?.remoteAddress||'unknown');
+}
+function pruneDeviceTransfers(){
+  const now=Date.now();
+  for(const [code,row] of deviceTransferCodes){
+    if(!row||row.expiresAt<=now)deviceTransferCodes.delete(code);
+  }
+  for(const store of [deviceTransferAttempts,deviceTransferCreates]){
+    for(const [ip,row] of store){
+      if(!row||row.resetAt<=now)store.delete(ip);
+    }
+  }
+}
+function transferWindowRow(store,ip){
+  const now=Date.now();
+  let row=store.get(ip);
+  if(!row||row.resetAt<=now)row={count:0,resetAt:now+10*60*1000};
+  return row;
+}
+function deviceTransferCreateBlocked(req){
+  pruneDeviceTransfers();
+  const ip=deviceTransferIp(req);
+  const row=transferWindowRow(deviceTransferCreates,ip);
+  return row.count>=DEVICE_TRANSFER_CREATE_LIMIT;
+}
+function deviceTransferMarkCreate(req){
+  const ip=deviceTransferIp(req);
+  const row=transferWindowRow(deviceTransferCreates,ip);
+  row.count++;
+  deviceTransferCreates.set(ip,row);
+}
+function deviceTransferFail(req){
+  pruneDeviceTransfers();
+  const ip=deviceTransferIp(req);
+  const row=transferWindowRow(deviceTransferAttempts,ip);
+  row.count++;
+  deviceTransferAttempts.set(ip,row);
+}
+function deviceTransferBlocked(req){
+  pruneDeviceTransfers();
+  const row=deviceTransferAttempts.get(deviceTransferIp(req));
+  return !!row&&row.count>=DEVICE_TRANSFER_LOAD_FAIL_LIMIT&&row.resetAt>Date.now();
+}
+function normalizeDeviceTransferData(input){
+  if(!input||typeof input!=='object'||Array.isArray(input))throw new Error('TRANSFER_DATA_REQUIRED');
+  const playerId=String(input.playerId||'').trim();
+  if(!/^p_[a-zA-Z0-9_-]{4,78}$/.test(playerId))throw new Error('TRANSFER_PLAYER_INVALID');
+  const str=(v,max)=>typeof v==='string'?v.slice(0,max):'';
+  const data={
+    playerId,
+    save:str(input.save,150000),
+    meta:str(input.meta,30000),
+    pvpSave:str(input.pvpSave,30000),
+    pvpNickname:str(input.pvpNickname,100),
+    gameVersion:n(input.gameVersion,999999)
+  };
+  if(Buffer.byteLength(JSON.stringify(data),'utf8')>DEVICE_TRANSFER_MAX_BYTES)throw new Error('TRANSFER_TOO_LARGE');
+  return data;
+}
+function newDeviceTransferCode(){
+  pruneDeviceTransfers();
+  for(let i=0;i<80;i++){
+    const code=String(crypto.randomInt(0,10000)).padStart(4,'0');
+    if(!deviceTransferCodes.has(code))return code;
+  }
+  return null;
+}
+
+app.post('/api/device-transfer/create',(req,res)=>{
+  res.set('Cache-Control','no-store');
+  if(deviceTransferCreateBlocked(req))return res.status(429).json({ok:false,error:'TRANSFER_CREATE_RATE_LIMIT'});
+  try{
+    const data=normalizeDeviceTransferData(req.body?.data);
+    const code=newDeviceTransferCode();
+    if(!code)return res.status(503).json({ok:false,error:'TRANSFER_CODE_BUSY'});
+    const now=Date.now();
+    deviceTransferCodes.set(code,{data,createdAt:now,expiresAt:now+DEVICE_TRANSFER_TTL_MS});
+    deviceTransferMarkCreate(req);
+    return res.json({ok:true,code,expiresIn:Math.floor(DEVICE_TRANSFER_TTL_MS/1000)});
+  }catch(e){
+    const error=String(e?.message||'TRANSFER_CREATE_FAILED');
+    return res.status(error==='TRANSFER_TOO_LARGE'?413:400).json({ok:false,error});
+  }
+});
+
+app.post('/api/device-transfer/load',(req,res)=>{
+  res.set('Cache-Control','no-store');
+  if(deviceTransferBlocked(req))return res.status(429).json({ok:false,error:'TRANSFER_RATE_LIMIT'});
+  const code=String(req.body?.code||'').replace(/\D/g,'').slice(0,4);
+  if(!/^\d{4}$/.test(code)){
+    deviceTransferFail(req);
+    return res.status(400).json({ok:false,error:'TRANSFER_CODE_INVALID'});
+  }
+  pruneDeviceTransfers();
+  const row=deviceTransferCodes.get(code);
+  if(!row){
+    deviceTransferFail(req);
+    return res.status(404).json({ok:false,error:'TRANSFER_CODE_EXPIRED'});
+  }
+  deviceTransferCodes.delete(code);
+  deviceTransferAttempts.delete(deviceTransferIp(req));
+  return res.json({ok:true,data:row.data});
+});
+
 
 const ENDING_BONUS = {
   'BAD END': 0,
@@ -633,11 +749,11 @@ app.post('/api/score', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.28' });
+  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.30' });
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n몰락자 v0.9.28`);
+  console.log(`\n몰락자 v0.9.30`);
   console.log(`http://localhost:${PORT}`);
   console.log(`랭킹 설정: ${CLOUD_CONFIGURED ? 'Supabase 환경변수 있음 (실연결은 /api/storage에서 검증)' : '로컬 파일'}\n`);
 });

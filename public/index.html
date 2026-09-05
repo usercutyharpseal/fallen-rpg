@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <meta name="theme-color" content="#090a0d" />
   <title>몰락자</title>
-  <link rel="stylesheet" href="/style.css?v=0928" />
+  <link rel="stylesheet" href="/style.css?v=0930" />
 </head>
 <body>
   <main id="app">
@@ -22,8 +22,20 @@
         <button class="btn" data-action="leaderboard">통합 랭킹</button>
         <button class="btn" data-action="pvp-leaderboard">PVP 레이팅</button>
       </div>
-      <div class="version">THE FALLEN · v0.9.28</div>
+      <div class="version">THE FALLEN · v0.9.30</div>
       <div id="storageInfo" class="storage-info">랭킹 저장 상태 확인 중…</div>
+      <div class="device-transfer">
+        <div class="device-transfer-head">
+          <span>기기 데이터 로드 키</span>
+          <b id="transferKeyValue">----</b>
+        </div>
+        <button class="device-transfer-create" data-action="transfer-create">4자리 키 만들기</button>
+        <div class="device-transfer-load">
+          <input id="transferCodeInput" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="4자리 입력" autocomplete="one-time-code" />
+          <button data-action="transfer-load">불러오기</button>
+        </div>
+        <div id="transferStatus" class="transfer-status"></div>
+      </div>
     </section>
 
     <section id="classScreen" class="screen">
@@ -222,6 +234,6 @@
     });
   </script>
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/game.js?v=0928"></script>
+  <script src="/game.js?v=0930"></script>
 </body>
 </html>

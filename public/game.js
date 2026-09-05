@@ -7,16 +7,80 @@ const META_KEY = 'fallen_meta_v1';
 const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
 const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
 const PVP_NICK_KEY = 'fallen_pvp_nickname';
-const GAME_VERSION = 126;
+const GAME_VERSION = 130;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5 };
 function loadMeta(){
   try{
     const raw=JSON.parse(localStorage.getItem(META_KEY)||'{}');
-    return {normalClears:Number(raw.normalClears||0), endings:Array.isArray(raw.endings)?raw.endings:[], awardedRuns:Array.isArray(raw.awardedRuns)?raw.awardedRuns:[]};
-  }catch{return {normalClears:0,endings:[],awardedRuns:[]};}
+    const classGrowth=(raw.classGrowth&&typeof raw.classGrowth==='object'&&!Array.isArray(raw.classGrowth))?raw.classGrowth:{};
+    return {
+      normalClears:Number(raw.normalClears||0),
+      endings:Array.isArray(raw.endings)?raw.endings:[],
+      awardedRuns:Array.isArray(raw.awardedRuns)?raw.awardedRuns:[],
+      classGrowth,
+      growthAwardedRuns:Array.isArray(raw.growthAwardedRuns)?raw.growthAwardedRuns:[]
+    };
+  }catch{return {normalClears:0,endings:[],awardedRuns:[],classGrowth:{},growthAwardedRuns:[]};}
 }
 function saveMeta(meta){localStorage.setItem(META_KEY,JSON.stringify(meta));}
+
+function classGrowthEntry(id,meta=loadMeta()){
+  const row=(meta.classGrowth&&meta.classGrowth[id]&&typeof meta.classGrowth[id]==='object')?meta.classGrowth[id]:{};
+  return {
+    normalGoodClears:Math.max(0,Number(row.normalGoodClears||0)),
+    hardGoodClears:Math.max(0,Number(row.hardGoodClears||0))
+  };
+}
+function classGrowthLevel(id,meta=loadMeta()){
+  const row=classGrowthEntry(id,meta);
+  const normalLevel=Math.min(2,Math.floor(row.normalGoodClears/3));
+  const hardLevel=Math.min(3,row.hardGoodClears);
+  return Math.min(3,normalLevel+hardLevel);
+}
+function classGrowthStats(id,cl=CLASSES[id],meta=loadMeta()){
+  const bonus=classGrowthLevel(id,meta);
+  return {
+    bonus,
+    hp:Number(cl?.hp||0)+bonus,
+    atk:Number(cl?.atk||0)+bonus,
+    social:Number(cl?.social||0)+bonus,
+    speed:Number(cl?.speed||0)+bonus
+  };
+}
+function classGrowthProgressText(id,meta=loadMeta()){
+  const row=classGrowthEntry(id,meta);
+  const bonus=classGrowthLevel(id,meta);
+  const normalLevel=Math.min(2,Math.floor(row.normalGoodClears/3));
+  const nextNormal=normalLevel>=2?'MAX':`${row.normalGoodClears%3}/3`;
+  const hardText=`${Math.min(row.hardGoodClears,3)}/3`;
+  return `성장 +${bonus} · 노말 ${nextNormal} · 하드 ${hardText}`;
+}
+function recordClassGrowth(e){
+  if(!state?.classId||e?.bad||String(e?.kind||'').startsWith('BAD END'))return {eligible:false,leveled:false};
+  const meta=loadMeta();
+  const runId=String(state.runId||'');
+  if(runId&&meta.growthAwardedRuns.includes(runId))return {eligible:true,duplicate:true,leveled:false,level:classGrowthLevel(state.classId,meta)};
+  meta.classGrowth ||= {};
+  const row=classGrowthEntry(state.classId,meta);
+  const before=classGrowthLevel(state.classId,meta);
+  if(isHardMode())row.hardGoodClears+=1;
+  else row.normalGoodClears+=1;
+  meta.classGrowth[state.classId]=row;
+  if(runId)meta.growthAwardedRuns.push(runId);
+  meta.growthAwardedRuns=meta.growthAwardedRuns.slice(-300);
+  const after=classGrowthLevel(state.classId,meta);
+  saveMeta(meta);
+  return {
+    eligible:true,
+    leveled:after>before,
+    before,
+    level:after,
+    normalGoodClears:row.normalGoodClears,
+    hardGoodClears:row.hardGoodClears,
+    mode:isHardMode()?'hard':'normal'
+  };
+}
 function isClassUnlocked(id){
   if(!CLASS_UNLOCK_CLEAR_REQUIREMENTS[id])return true;
   return loadMeta().normalClears>=CLASS_UNLOCK_CLEAR_REQUIREMENTS[id];
@@ -2335,8 +2399,10 @@ function algonSealCount(){return ['algonSealName','algonSealForge','algonSealCom
 function hardEvidenceCount(){return ['algonEvidence1','algonEvidence2','algonEvidenceLeorn','algonEvidenceArven','algonEvidencePrison','algonEvidenceLedger'].filter(k=>state?.flags?.[k]).length;}
 function beginHardMode(){
   const id=pendingClassId,cl=selectedClass();if(!id||!cl||!isClassUnlocked(id)){renderClasses();showScreen('classScreen');return;}
+  const grown=classGrowthStats(id,cl);
   state=freshState();state.classId=id;
-  state.p={className:cl.name,maxHp:cl.hp,hp:cl.hp,atk:cl.atk,social:cl.social,speed:cl.speed,gold:30};
+  state.p={className:cl.name,maxHp:grown.hp,hp:grown.hp,atk:grown.atk,social:grown.social,speed:grown.speed,gold:30};
+  state.flags.classGrowthBonus=grown.bonus;
   state.flags.gameMode='hard';state.flags.gameVariant='solo';state.flags.hardRoute='';state.sceneId='hardPrologue';
   save();showScreen('gameScreen');enter('hardPrologue');
 }
@@ -2396,8 +2462,9 @@ function renderHardVariants(){
 }
 function renderModeSelection(){
   const cl=selectedClass(); if(!cl)return;
+  const grown=classGrowthStats(pendingClassId,cl);
   $('modeClassLabel').textContent=`${cl.name}로 시작`;
-  $('modeClassSummary').innerHTML=`<div><span>선택한 직업</span><b>${escapeHtml(cl.name)}</b></div><div class="selected-stats"><span>체력 ${cl.hp}</span><span>공격 ${cl.atk}</span><span>처세 ${cl.social}</span><span>속도 ${cl.speed}</span></div>`;
+  $('modeClassSummary').innerHTML=`<div><span>선택한 직업</span><b>${escapeHtml(cl.name)}${grown.bonus?` · 성장 +${grown.bonus}`:''}</b></div><div class="selected-stats"><span>체력 ${grown.hp}</span><span>공격 ${grown.atk}</span><span>처세 ${grown.social}</span><span>속도 ${grown.speed}</span></div>`;
   renderModeCards();
 }
 function openModeSelection(){
@@ -2424,8 +2491,10 @@ function openHardSelection(){
 }
 function beginNormalMode(variant='solo'){
   const id=pendingClassId,cl=selectedClass();if(!id||!cl||!isClassUnlocked(id)){renderClasses();showScreen('classScreen');return;}
+  const grown=classGrowthStats(id,cl);
   state=freshState(); state.classId=id;
-  state.p={className:cl.name,maxHp:cl.hp,hp:cl.hp,atk:cl.atk,social:cl.social,speed:cl.speed,gold:10};
+  state.p={className:cl.name,maxHp:grown.hp,hp:grown.hp,atk:grown.atk,social:grown.social,speed:grown.speed,gold:10};
+  state.flags.classGrowthBonus=grown.bonus;
   state.flags.gameMode='normal'; state.flags.gameVariant=variant==='pvp'?'pvp':'solo';
   state.sceneId='intro'; save(); showScreen('gameScreen'); enter('intro');
 }
@@ -2528,15 +2597,16 @@ function renderClasses() {
   $('classGrid').innerHTML = Object.entries(CLASSES).map(([id,cl]) => {
     const unlocked=isClassUnlocked(id);
     const unlockText=classUnlockText(id);
+    const grown=classGrowthStats(id,cl);
     return `
     <article class="class-card ${unlocked?'':'locked'}">
       <div class="class-portrait-wrap"><img class="class-portrait" src="${classArtUrl(id)}?v=0926" alt="${cl.name} 삽화" loading="lazy" decoding="async"></div>
       <div class="class-info">
-        <div class="class-head"><div class="class-name">${unlocked?'':'🔒 '}${cl.name}</div><span class="tag">${unlocked?'선택 가능':unlockText}</span></div>
+        <div class="class-head"><div class="class-name">${unlocked?'':'🔒 '}${cl.name}</div><span class="tag">${unlocked?(grown.bonus?`성장 +${grown.bonus}`:'선택 가능'):unlockText}</span></div>
         <div class="stats-row">
-          ${statBox('체력',cl.hp)}${statBox('공격',cl.atk)}${statBox('처세',cl.social)}${statBox('속도',cl.speed)}
+          ${statBox('체력',grown.hp)}${statBox('공격',grown.atk)}${statBox('처세',grown.social)}${statBox('속도',grown.speed)}
         </div>
-        <div class="passive"><strong>${unlocked?cl.passive:'???'}</strong><br><span>${unlocked?cl.desc:`노말 엔딩을 더 보면 기억이 열린다.`}</span></div>
+        <div class="passive"><strong>${unlocked?cl.passive:'???'}</strong><br><span>${unlocked?`${cl.desc}${grown.bonus?` · ${classGrowthProgressText(id)}`:''}`:`노말 엔딩을 더 보면 기억이 열린다.`}</span></div>
       </div>
       <button class="btn ${unlocked?'primary':''}" ${unlocked?'':'disabled'} onclick="selectClass('${id}')">${unlocked?'이 직업으로 시작':'잠김'}</button>
     </article>`;
@@ -3198,7 +3268,9 @@ function finish(name) {
   state.stats.prideKept=!!state.flags.prideKept;
   state.stats.endingBonus=Math.floor(Number(e.bonus||0)*(state.flags.prideKept?1.5:1));
   const newlyUnlocked=recordClearForUnlock(name,e);
+  const classGrowthResult=recordClassGrowth(e);
   state.flags.newClassUnlocks=newlyUnlocked;
+  state.flags.classGrowthResult=classGrowthResult;
   save();
   $('endingArt').classList.toggle('bad-ending-art', !!e.bad);
   $('endingArt').innerHTML=e.art ? art(e.art) : `<span class="ending-glyph">${escapeHtml(e.icon||'†')}</span>`;
@@ -3213,6 +3285,16 @@ function finish(name) {
   if(!e.bad&&!hardMode){
     const unlockLine=state.flags.newClassUnlocks?.length?`<br><br><b>새 직업 해금 · ${state.flags.newClassUnlocks.map(escapeHtml).join(' / ')}</b>`:`<br><br>노말 엔딩 <b>${meta.normalClears}회</b>`;
     $('endStats').innerHTML+=unlockLine;
+  }
+  const growthResult=state.flags.classGrowthResult;
+  if(growthResult?.eligible&&!e.bad){
+    const growthMeta=loadMeta();
+    const row=classGrowthEntry(state.classId,growthMeta);
+    const level=classGrowthLevel(state.classId,growthMeta);
+    const progress=isHardMode()?`하드 정상엔딩 ${Math.min(row.hardGoodClears,3)}/3`:`노말 정상엔딩 ${row.normalGoodClears}회`;
+    $('endStats').innerHTML+=growthResult.leveled
+      ? `<br><br><b>직업 성장 · 전 능력치 +1</b><br>${escapeHtml(state.p.className)} 영구 성장 <b>+${level}</b> · ${progress}`
+      : `<br><br>직업 성장 · ${escapeHtml(state.p.className)} <b>+${level}</b> · ${progress}`;
   }
   resetRankSubmitUI();
   if($('nickname'))$('nickname').classList.toggle('hidden',pvpMode);
@@ -3382,6 +3464,96 @@ function updateMenuSaveInfo(){
 }
 function finishLoaded(){state.ended=false;finish(state.stats.ending||'BAD END');}
 function getPlayerId(){let id=localStorage.getItem(PLAYER_ID_KEY);if(!id){id=`p_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,10)}`;localStorage.setItem(PLAYER_ID_KEY,id);}return id;}
+
+function transferSetStatus(msg,type=''){
+  const el=$('transferStatus');if(!el)return;
+  el.textContent=msg||'';
+  el.className=`transfer-status ${type}`.trim();
+}
+function collectDeviceTransferData(){
+  return {
+    playerId:getPlayerId(),
+    save:localStorage.getItem(SAVE_KEY)||'',
+    meta:localStorage.getItem(META_KEY)||'',
+    pvpSave:localStorage.getItem(PVP_SAVE_KEY)||'',
+    pvpNickname:localStorage.getItem(PVP_NICK_KEY)||'',
+    gameVersion:GAME_VERSION
+  };
+}
+function applyDeviceTransferData(data){
+  if(!data||typeof data!=='object')throw new Error('TRANSFER_DATA_INVALID');
+  const playerId=String(data.playerId||'');
+  if(!/^p_[a-zA-Z0-9_-]{4,78}$/.test(playerId))throw new Error('TRANSFER_PLAYER_INVALID');
+  localStorage.setItem(PLAYER_ID_KEY,playerId);
+  const apply=(key,value)=>{
+    if(typeof value==='string'&&value.length)localStorage.setItem(key,value);
+    else localStorage.removeItem(key);
+  };
+  apply(SAVE_KEY,data.save);
+  apply(META_KEY,data.meta);
+  apply(PVP_SAVE_KEY,data.pvpSave);
+  apply(PVP_NICK_KEY,data.pvpNickname);
+  localStorage.removeItem(PVP_SESSION_KEY);
+  localStorage.removeItem(PENDING_KEY);
+}
+async function createDeviceTransferKey(){
+  const btn=document.querySelector('[data-action="transfer-create"]');
+  if(btn?.disabled)return;
+  if(btn){btn.disabled=true;btn.textContent='키 만드는 중…';}
+  transferSetStatus('','');
+  try{
+    const r=await fetchTimed('/api/device-transfer/create',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({data:collectDeviceTransferData()}),
+      cache:'no-store'
+    },7000);
+    let d={};try{d=await r.json();}catch{}
+    if(!r.ok||!d.ok||!/^\d{4}$/.test(String(d.code||'')))throw new Error(d.error||'TRANSFER_CREATE_FAILED');
+    const key=$('transferKeyValue');if(key)key.textContent=String(d.code);
+    transferSetStatus('10분 동안 1회 사용 가능','good');
+  }catch(err){
+    transferSetStatus('키 생성 실패','bad');
+    console.warn('[device transfer create]',err?.message||err);
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='4자리 키 만들기';}
+  }
+}
+async function loadDeviceTransferKey(){
+  const input=$('transferCodeInput');
+  const btn=document.querySelector('[data-action="transfer-load"]');
+  const code=String(input?.value||'').replace(/\D/g,'').slice(0,4);
+  if(input)input.value=code;
+  if(code.length!==4){transferSetStatus('4자리를 입력해 주세요','bad');return;}
+  const hasLocal=!!(localStorage.getItem(SAVE_KEY)||localStorage.getItem(META_KEY));
+  if(hasLocal&&!window.confirm('현재 기기의 진행 데이터를 불러온 데이터로 바꿉니다. 계속할까요?'))return;
+  if(btn?.disabled)return;
+  if(btn){btn.disabled=true;btn.textContent='불러오는 중…';}
+  transferSetStatus('데이터 확인 중…','wait');
+  try{
+    const r=await fetchTimed('/api/device-transfer/load',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({code}),
+      cache:'no-store'
+    },7000);
+    let d={};try{d=await r.json();}catch{}
+    if(!r.ok||!d.ok||!d.data)throw new Error(d.error||'TRANSFER_LOAD_FAILED');
+    applyDeviceTransferData(d.data);
+    transferSetStatus('이전 완료','good');
+    updateMenuSaveInfo();
+    setTimeout(()=>location.reload(),650);
+  }catch(err){
+    const msg=String(err?.message||'');
+    if(msg.includes('RATE_LIMIT'))transferSetStatus('잠시 후 다시 시도해 주세요','bad');
+    else if(msg.includes('EXPIRED'))transferSetStatus('만료된 키입니다','bad');
+    else transferSetStatus('키가 없거나 만료됐습니다','bad');
+    console.warn('[device transfer load]',msg);
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='불러오기';}
+  }
+}
+
 function resetRankSubmitUI(){
   const box=$('rankSubmitStatus');const btn=$('submitScoreBtn');
   if(box){box.className='rank-submit-status hidden';box.innerHTML='';}
@@ -3607,6 +3779,8 @@ document.addEventListener('click',e=>{
   if(act==='continue')continueGame();
   if(act==='leaderboard')showLeaderboard();
   if(act==='pvp-leaderboard')showPvpLeaderboard();
+  if(act==='transfer-create')createDeviceTransferKey();
+  if(act==='transfer-load')loadDeviceTransferKey();
   if(act==='pvp-queue'){pvpClient.queueing?cancelPvpQueue():startPvpQueue();}
   if(act==='back-menu'){closeModal();pendingHardType=null;showScreen('menuScreen');updateMenuSaveInfo();}
   if(act==='back-classes'){renderClasses();showScreen('classScreen');}
@@ -3628,6 +3802,7 @@ document.addEventListener('click',e=>{
 window.openHardFrontierShop=openHardFrontierShop;window.selectClass=selectClass;window.confirmPvpForfeit=confirmPvpForfeit;window.recoverFromAnomaly=recoverFromAnomaly;window.summonWraith=summonWraith;window.openShop=openShop;window.openBag=openBag;window.openEncounterItems=openEncounterItems;window.closeModal=closeModal;window.continueOutcome=continueOutcome;window.saveAndExit=saveAndExit;
 const nicknameInput=$('nickname');if(nicknameInput)nicknameInput.addEventListener('input',refreshNicknameValidation);
 const pvpNicknameInput=$('pvpNickname');if(pvpNicknameInput)pvpNicknameInput.addEventListener('input',()=>pvpNicknameInput.classList.toggle('nickname-invalid',!nicknameAllowed(pvpNicknameInput.value)));
+const transferCodeInput=$('transferCodeInput');if(transferCodeInput)transferCodeInput.addEventListener('input',()=>{transferCodeInput.value=transferCodeInput.value.replace(/\D/g,'').slice(0,4);});
 
 updateMenuSaveInfo();
 updateStorageStatus();
