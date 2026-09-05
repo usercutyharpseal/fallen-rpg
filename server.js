@@ -315,21 +315,24 @@ function mapCloudRow(x) {
   const recordType=String(meta.recordType||'legacy');
   const ownerPlayerId=String(meta.ownerPlayerId||'');
   const hardEndings=new Set(['검은 왕관의 몰락','이름을 돌려준 자','닫힌 성채의 새 주인','폐쇄령의 마지막 이름']);
-  const gameMode=String(meta.gameMode||'').toLowerCase()==='hard'||hardEndings.has(String(x.ending||''))?'hard':'normal';
+  const rawMode=String(meta.gameMode||'').trim().toLowerCase();
+  const rawRoute=String(meta.hardRoute||'').trim();
+  const ending=String(x.ending||'').trim();
+  const gameMode=(rawMode==='hard'||rawRoute.length>0||hardEndings.has(ending))?'hard':'normal';
   return {
-    rowId: x.player_id,
-    playerId: ownerPlayerId || x.player_id,
+    rowId:x.player_id,
+    playerId:ownerPlayerId||x.player_id,
     recordType,
     gameMode,
-    hardRoute: gameMode==='hard'?String(meta.hardRoute||'algon').slice(0,40):'',
-    nickname: safeNickname(x.nickname),
-    className: x.class_name,
-    ending: x.ending,
-    score: Number(x.score || 0),
-    kills: Number(x.kills || 0),
-    gold: Number(x.gold || 0),
-    progress: Number(x.progress || 0),
-    time: x.updated_at ? Date.parse(x.updated_at) : Date.now(),
+    hardRoute:gameMode==='hard'?String(rawRoute||'algon').slice(0,40):'',
+    nickname:safeNickname(x.nickname),
+    className:x.class_name,
+    ending:x.ending,
+    score:Number(x.score||0),
+    kills:Number(x.kills||0),
+    gold:Number(x.gold||0),
+    progress:Number(x.progress||0),
+    time:x.updated_at?Date.parse(x.updated_at):Date.now(),
   };
 }
 
@@ -607,11 +610,11 @@ app.post('/api/score', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.26' });
+  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.27' });
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n몰락자 v0.9.26`);
+  console.log(`\n몰락자 v0.9.27`);
   console.log(`http://localhost:${PORT}`);
   console.log(`랭킹 설정: ${CLOUD_CONFIGURED ? 'Supabase 환경변수 있음 (실연결은 /api/storage에서 검증)' : '로컬 파일'}\n`);
 });

@@ -3379,8 +3379,17 @@ async function submitScore(){
   }
 }
 async function showLeaderboard(){
-  $('modal').innerHTML='<h2>통합 랭킹</h2><div class="modal-sub">노말 + 하드 영구 기록을 불러오는 중...</div>';showModal();
+  $('modal').innerHTML='<h2>통합 랭킹</h2>';showModal();
   const playerId=getPlayerId();
+  const HARD_ENDINGS=new Set(['검은 왕관의 몰락','이름을 돌려준 자','닫힌 성채의 새 주인','폐쇄령의 마지막 이름']);
+  const rankModeInfo=(row)=>{
+    const rawMode=String(row?.gameMode||'').trim().toLowerCase();
+    const rawRoute=String(row?.hardRoute||'').trim();
+    const ending=String(row?.ending||'').trim();
+    const isHard=rawMode==='hard'||rawRoute.length>0||HARD_ENDINGS.has(ending);
+    const routeName=rawRoute==='algon'?'로드 알곤':rawRoute;
+    return {isHard,mode:isHard?'하드':'노말',route:isHard&&routeName?` · ${escapeHtml(routeName)}`:''};
+  };
   try{
     const [lr,mr]=await Promise.all([
       fetchTimed(`/api/leaderboard?t=${Date.now()}`,{cache:'no-store'},7000),
@@ -3389,16 +3398,14 @@ async function showLeaderboard(){
     if(!lr.ok)throw new Error('LEADERBOARD_HTTP');
     const rows=await lr.json();if(!Array.isArray(rows))throw new Error('LEADERBOARD_FORMAT');
     let me=null;if(mr&&mr.ok){try{const md=await mr.json();if(md.ok&&md.found&&md.storage==='cloud')me=md;}catch{}}
-    // Personal permanent record is always visible in this screen, even if a TOP50 response is temporarily inconsistent.
-    if(me?.record && !rows.some(x=>x.playerId===playerId)) rows.push({...me.record,_personalFallback:true,_actualRank:me.rank});
-    rows.sort((a,b)=>Number(b.score||0)-Number(a.score||0) || Number(a.time||0)-Number(b.time||0));
-    const myMode=me?.record?.gameMode==='hard'?'HARD':'NORMAL';
-    const myRoute=me?.record?.gameMode==='hard'&&me?.record?.hardRoute?` · ${escapeHtml(me.record.hardRoute)}`:'';
-    const myCard=me?`<div class="my-rank-card"><b>내 영구 최고기록 · ${myMode}${myRoute}</b><div class="rank-status-grid"><span>점수</span><b>${Number(me.record.score).toLocaleString()}</b><span>현재 순위</span><b>${me.rank?me.rank+'위':'확인됨'}</b><span>직업</span><b>${escapeHtml(me.record.className)}</b><span>엔딩</span><b>${escapeHtml(me.record.ending)}</b></div></div>`:'<div class="modal-sub">이 기기로 등록한 영구 기록은 아직 없습니다.</div>';
-    const listHtml=rows.length?rows.slice(0,50).map((x,i)=>{const mode=x.gameMode==='hard'?'HARD':'NORMAL';const route=x.gameMode==='hard'&&x.hardRoute?` · ${escapeHtml(x.hardRoute)}`:'';return `<div class="rank-row ${x.playerId===playerId?'mine':''}"><div class="rank-num">${x._actualRank||i+1}</div><div><b>${escapeHtml(x.nickname)}${x.playerId===playerId?' · 나':''}</b><div class="rank-meta">${mode}${route} · ${escapeHtml(x.className)} · ${escapeHtml(x.ending)} · ${x.recordType==='run'?'플레이 기록':'기존 기록'}${x._personalFallback?' · 개인기록 재조회':''}</div></div><div class="rank-score">${Number(x.score).toLocaleString()}</div></div>`;}).join(''):(me?'<p class="modal-sub">내 영구 기록은 위에서 확인되었습니다. TOP50 목록을 다시 불러오는 중 문제가 있었습니다.</p>':'<p class="modal-sub">서버에 아직 등록된 노말/하드 기록이 없습니다.</p>');
-    $('modal').innerHTML=`<h2>통합 랭킹</h2><div class="modal-sub">Supabase 영구 DB · NORMAL + HARD 모든 플레이 기록 TOP 50 · PVP는 별도</div>${myCard}${listHtml}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;
+    if(me?.record&&!rows.some(x=>x.playerId===playerId))rows.push({...me.record,_personalFallback:true,_actualRank:me.rank});
+    rows.sort((a,b)=>Number(b.score||0)-Number(a.score||0)||Number(a.time||0)-Number(b.time||0));
+    const myInfo=rankModeInfo(me?.record||{});
+    const myCard=me?`<div class="my-rank-card"><b>내 최고 기록 · ${myInfo.mode}${myInfo.route}</b><div class="rank-status-grid"><span>점수</span><b>${Number(me.record.score).toLocaleString()}</b><span>현재 순위</span><b>${me.rank?me.rank+'위':'확인됨'}</b><span>직업</span><b>${escapeHtml(me.record.className)}</b><span>엔딩</span><b>${escapeHtml(me.record.ending)}</b></div></div>`:'';
+    const listHtml=rows.length?rows.slice(0,50).map((x,i)=>{const info=rankModeInfo(x);return `<div class="rank-row ${x.playerId===playerId?'mine':''}"><div class="rank-num">${x._actualRank||i+1}</div><div><b>${escapeHtml(x.nickname)}${x.playerId===playerId?' · 나':''}</b><div class="rank-meta">${info.mode}${info.route} · ${escapeHtml(x.className)} · ${escapeHtml(x.ending)}</div></div><div class="rank-score">${Number(x.score).toLocaleString()}</div></div>`;}).join(''):'<p class="modal-sub">아직 등록된 기록이 없습니다.</p>';
+    $('modal').innerHTML=`<h2>통합 랭킹</h2>${myCard}${listHtml}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;
   }catch(err){
-    $('modal').innerHTML='<h2>통합 랭킹</h2><p class="modal-sub">영구 랭킹 DB에서 기록을 읽지 못했습니다. 잠시 후 다시 시도해 주세요.</p><button class="btn modal-close" onclick="closeModal()">닫기</button>';
+    $('modal').innerHTML='<h2>통합 랭킹</h2><p class="modal-sub">랭킹을 불러오지 못했습니다.</p><button class="btn modal-close" onclick="closeModal()">닫기</button>';
     console.warn('[leaderboard]',err?.message||err);
   }
 }

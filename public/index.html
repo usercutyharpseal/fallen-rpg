@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <meta name="theme-color" content="#090a0d" />
   <title>몰락자</title>
-  <link rel="stylesheet" href="/style.css?v=0926" />
+  <link rel="stylesheet" href="/style.css?v=0927" />
 </head>
 <body>
   <main id="app">
@@ -19,10 +19,10 @@
         <button class="btn primary" data-action="new-game">새 게임</button>
         <button id="continueGameBtn" class="btn" data-action="continue">이어하기</button>
         <div id="continueInfo" class="continue-info">저장된 여정 없음</div>
-        <button class="btn" data-action="leaderboard">노말 모드 기록</button>
+        <button class="btn" data-action="leaderboard">통합 랭킹</button>
         <button class="btn" data-action="pvp-leaderboard">PVP 레이팅</button>
       </div>
-      <div class="version">THE FALLEN · v0.9.26</div>
+      <div class="version">THE FALLEN · v0.9.27</div>
       <div id="storageInfo" class="storage-info">랭킹 저장 상태 확인 중…</div>
     </section>
 
@@ -176,7 +176,7 @@
       <input id="nickname" maxlength="12" placeholder="랭킹에 표시할 이름" autocomplete="off" spellcheck="false" aria-invalid="false" />
       <button id="submitScoreBtn" class="btn primary full" data-action="submit-score">영구 랭킹에 기록 등록</button>
       <div id="rankSubmitStatus" class="rank-submit-status hidden" aria-live="polite"></div>
-      <button id="endNormalLeaderboardBtn" class="btn full" data-action="leaderboard">노말 랭킹 보기</button>
+      <button id="endNormalLeaderboardBtn" class="btn full" data-action="leaderboard">통합 랭킹 보기</button>
       <button id="endPvpLeaderboardBtn" class="btn full hidden" data-action="pvp-leaderboard">PVP 레이팅 보기</button>
       <button class="btn full" data-action="back-menu">메인으로</button>
     </section>
@@ -222,6 +222,6 @@
     });
   </script>
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/game.js?v=0926"></script>
+  <script src="/game.js?v=0927"></script>
 </body>
 </html>
