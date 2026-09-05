@@ -21,7 +21,7 @@
         <div id="continueInfo" class="continue-info">저장된 여정 없음</div>
         <button class="btn" data-action="leaderboard">노말 모드 기록</button>
       </div>
-      <div class="version">NORMAL MODE · v0.9.16</div>
+      <div class="version">THE FALLEN · v0.9.17</div>
       <div id="storageInfo" class="storage-info">랭킹 저장 상태 확인 중…</div>
     </section>
 
@@ -32,6 +32,50 @@
         <span></span>
       </header>
       <div id="classGrid" class="class-grid"></div>
+    </section>
+
+    <section id="modeScreen" class="screen setup-screen">
+      <header class="topbar">
+        <button class="icon-btn" data-action="back-classes">‹</button>
+        <div><b>게임 모드</b><small id="modeClassLabel">선택한 직업</small></div>
+        <span></span>
+      </header>
+      <div id="modeClassSummary" class="selected-class-strip"></div>
+      <div class="mode-hero">
+        <span class="mode-kicker">CHOOSE YOUR RECORD</span>
+        <h2>어떤 기록을 남길 것인가</h2>
+        <p>같은 몰락이라도, 살아남는 법은 하나가 아니다.</p>
+      </div>
+      <div id="modeGrid" class="mode-grid"></div>
+    </section>
+
+    <section id="hardModeScreen" class="screen setup-screen hard-setup">
+      <header class="topbar">
+        <button class="icon-btn" data-action="back-mode">‹</button>
+        <div><b>하드 모드</b><small id="hardClassLabel">선택한 직업</small></div>
+        <span></span>
+      </header>
+      <div class="hard-banner">
+        <span>HARD MODE</span>
+        <h2>혼자 버틸 것인가,<br>다른 몰락자와 맞설 것인가</h2>
+        <p>하드 모드의 본편은 제작 중입니다.</p>
+      </div>
+      <div id="hardChoiceGrid" class="hard-choice-grid"></div>
+    </section>
+
+    <section id="developmentScreen" class="screen dev-screen">
+      <div class="dev-frame">
+        <div class="dev-glow"></div>
+        <div class="dev-mark">✦</div>
+        <div class="dev-kicker">HARD MODE</div>
+        <h2 id="devTitle">개발 중</h2>
+        <p id="devPath" class="dev-path"></p>
+        <div class="dev-rule"></div>
+        <p class="dev-copy">문은 열렸지만, 그 너머의 기록은 아직 쓰이지 않았다.</p>
+        <span class="dev-status">UNDER DEVELOPMENT</span>
+      </div>
+      <button class="btn primary full" data-action="back-hard">다른 방식 선택</button>
+      <button class="btn full" data-action="back-menu">메인으로</button>
     </section>
 
     <section id="gameScreen" class="screen game-screen">
@@ -125,6 +169,6 @@
       console.error('[BOOT]', e.error||e.message);
     });
   </script>
-  <script src="/game.js?v=0914"></script>
+  <script src="/game.js?v=0917"></script>
 </body>
 </html>

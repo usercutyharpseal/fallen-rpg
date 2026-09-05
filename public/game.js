@@ -4,7 +4,7 @@ const SAVE_KEY = 'fallen_normal_v08';
 const PLAYER_ID_KEY = 'fallen_player_id';
 const PENDING_KEY = 'fallen_pending_scores';
 const META_KEY = 'fallen_meta_v1';
-const GAME_VERSION = 105;
+const GAME_VERSION = 106;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, necromancer:3, dictator:5 };
 function loadMeta(){
@@ -1578,11 +1578,81 @@ function encounterStatusHtml(){ return ''; }
 
 // ---------- Rendering / UI ----------
 const $ = (id) => document.getElementById(id);
-const screens = ['menuScreen','classScreen','gameScreen','endScreen'];
+const screens = ['menuScreen','classScreen','modeScreen','hardModeScreen','developmentScreen','gameScreen','endScreen'];
 
 function showScreen(id) {
   for (const s of screens) $(s).classList.toggle('active', s === id);
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ---------- Extensible game-mode registry ----------
+// Add a new top-level mode by appending one object here. No event-listener edits are needed.
+const GAME_MODES = {
+  normal: {
+    id:'normal', name:'노말 모드', state:'PLAYABLE', stateClass:'playable', symbol:'♜', cardClass:'normal',
+    desc:'이야기를 따라 끝까지 살아남는다.', foot:'현재 기록 · 엔딩 · 랭킹 지원',
+    enter:()=>beginNormalMode()
+  },
+  hard: {
+    id:'hard', name:'하드 모드', state:'PREVIEW', stateClass:'preview', symbol:'✦', cardClass:'hard',
+    desc:'더 가혹한 규칙 아래에서 다시 시작한다.', foot:'솔로 / PVP 선택 가능',
+    enter:()=>openHardSelection()
+  }
+};
+// Hard variants are likewise data-driven. Replace developmentOnly:false and provide enter() when implemented.
+const HARD_VARIANTS = {
+  solo: {id:'solo', name:'솔로', subtitle:'한 사람의 기록', icon:'◇', developmentOnly:true},
+  pvp:  {id:'pvp',  name:'PVP',  subtitle:'두 몰락자의 결투', icon:'⚔', cardClass:'pvp', developmentOnly:true}
+};
+
+let pendingClassId = null;
+let pendingHardType = null;
+
+function selectedClass(){ return pendingClassId ? CLASSES[pendingClassId] : null; }
+function renderModeCards(){
+  $('modeGrid').innerHTML=Object.values(GAME_MODES).map(m=>`<button class="mode-card ${m.cardClass||''}" data-mode-id="${escapeAttr(m.id)}"><span class="mode-state ${m.stateClass||''}">${escapeHtml(m.state)}</span><span class="mode-symbol">${m.symbol}</span><b>${escapeHtml(m.name)}</b><small>${escapeHtml(m.desc)}</small><span class="mode-foot">${escapeHtml(m.foot)} <i>›</i></span></button>`).join('');
+}
+function renderHardVariants(){
+  $('hardChoiceGrid').innerHTML=Object.values(HARD_VARIANTS).map(v=>`<button class="hard-choice ${v.cardClass||''}" data-hard-id="${escapeAttr(v.id)}"><span class="hard-choice-icon">${v.icon}</span><span><b>${escapeHtml(v.name)}</b><small>${escapeHtml(v.subtitle)}</small></span><i>›</i></button>`).join('');
+}
+function renderModeSelection(){
+  const cl=selectedClass(); if(!cl)return;
+  $('modeClassLabel').textContent=`${cl.name}로 시작`;
+  $('modeClassSummary').innerHTML=`<div><span>선택한 직업</span><b>${escapeHtml(cl.name)}</b></div><div class="selected-stats"><span>체력 ${cl.hp}</span><span>공격 ${cl.atk}</span><span>처세 ${cl.social}</span><span>속도 ${cl.speed}</span></div>`;
+  renderModeCards();
+}
+function openModeSelection(){
+  if(!selectedClass()){renderClasses();showScreen('classScreen');return;}
+  renderModeSelection();showScreen('modeScreen');
+}
+function openHardSelection(){
+  const cl=selectedClass();if(!cl){openModeSelection();return;}
+  $('hardClassLabel').textContent=`${cl.name} · HARD`;
+  pendingHardType=null;renderHardVariants();showScreen('hardModeScreen');
+}
+function beginNormalMode(){
+  const id=pendingClassId,cl=selectedClass();if(!id||!cl||!isClassUnlocked(id)){renderClasses();showScreen('classScreen');return;}
+  state=freshState(); state.classId=id;
+  state.p={className:cl.name,maxHp:cl.hp,hp:cl.hp,atk:cl.atk,social:cl.social,speed:cl.speed,gold:10};
+  state.flags.gameMode='normal'; state.flags.gameVariant='story';
+  state.sceneId='intro'; save(); showScreen('gameScreen'); enter('intro');
+}
+function enterGameMode(modeId){
+  const mode=GAME_MODES[modeId]; if(!mode)return;
+  mode.enter?.();
+}
+function enterHardVariant(variantId){
+  const variant=HARD_VARIANTS[variantId]; if(!variant)return;
+  if(typeof variant.enter==='function' && !variant.developmentOnly){variant.enter();return;}
+  showHardDevelopment(variantId);
+}
+function showHardDevelopment(type){
+  const cl=selectedClass(),variant=HARD_VARIANTS[type];if(!cl||!variant){openHardSelection();return;}
+  pendingHardType=variant.id;
+  const label=variant.name.toUpperCase();
+  $('devTitle').textContent=`${variant.name} · 개발 중`;
+  $('devPath').textContent=`${cl.name} · HARD / ${label}`;
+  showScreen('developmentScreen');
 }
 
 function renderClasses() {
@@ -1702,9 +1772,9 @@ function art(kind) {
 // ---------- Gameplay ----------
 function selectClass(id) {
   const cl=CLASSES[id]; if(!cl || !isClassUnlocked(id)) return;
-  state=freshState(); state.classId=id;
-  state.p={className:cl.name,maxHp:cl.hp,hp:cl.hp,atk:cl.atk,social:cl.social,speed:cl.speed,gold:10};
-  state.sceneId='intro'; save(); showScreen('gameScreen'); enter('intro');
+  pendingClassId=id; pendingHardType=null;
+  renderModeSelection();
+  showScreen('modeScreen');
 }
 
 function c(label,note,fn){return {label,note,fn};}
@@ -2334,20 +2404,30 @@ async function verifySubmittedRun(runId,expectedScore){
 
 const NICK_BLOCK_CONTAINS = [
   '섹스','야동','자위','질싸','노콘','딜도','오나홀','정액','강간','윤간','성폭행','성추행','야설','야짤','음란','포르노',
-  '좆','씹새','씨발','시발','개새끼','병신','창녀','매춘','후장','ㅅㅂ','ㅆㅂ','ㅂㅅ',
-  'porn','hentai','blowjob','handjob','fuck','pussy','penis','vagina','gangbang','creampie','masturbat','dildo','cumshot'
+  '펠라','오럴섹스','구강성교','애널섹스','딸딸이','딸감','딸치','보빨','자빨','좆물','발기왕','꼴려','꼴림',
+  '좆','씹새','씨발','시발','개씨발','개새끼','씹년','병신','창녀','매춘','후장','ㅅㅂ','ㅆㅂ','ㅂㅅ',
+  'sex','porn','hentai','blowjob','handjob','fuck','pussy','penis','vagina','gangbang','creampie','masturbat','dildo','cumshot',
+  'nsfw','horny','orgasm','semen','ejaculat','jerkoff','fapping','deepthroat','suckmydick','onlyfans','bdsm'
 ];
-const NICK_BLOCK_EXACT = new Set(['보지','자지','성기','항문','꼬추','유두','ㅂㅈ','ㅈㅈ','sex','anal','cum','dick','cock','tits','boobs','nude','nudes','rape','slut','whore','bitch']);
-const NICK_JAMO_CONTAINS = ['ㅅㅔㄱㅅㅡ','ㅈㅏㅇㅟ','ㅇㅑㄷㅗㅇ','ㅆㅣㅂㅏㄹ','ㅅㅣㅂㅏㄹ','ㅂㅕㅇㅅㅣㄴ','ㅈㅗㅈ'];
-function nicknameAllowed(value){
+const NICK_BLOCK_EXACT = new Set(['보지','자지','성기','항문','꼬추','유두','ㅂㅈ','ㅈㅈ','sex','anal','cum','dick','cock','tits','boobs','nude','nudes','rape','slut','whore','bitch','fap','milf','xxx']);
+const NICK_JAMO_CONTAINS = ['ㅅㅔㄱㅅㅡ','ㅈㅏㅇㅟ','ㅇㅑㄷㅗㅇ','ㅍㅔㄹㄹㅏ','ㅆㅣㅂㅏㄹ','ㅅㅣㅂㅏㄹ','ㅂㅕㅇㅅㅣㄴ','ㅈㅗㅈ'];
+const NICK_BLOCK_CONTEXT = [
+  /(?:보지|자지|꼬추|성기)(?:왕|맨|녀|남|맛|빨|박|킬러|헌터|마스터|짱|좋아)/u,
+  /(?:왕|대물|큰|맛있는)(?:보지|자지|꼬추)/u
+];
+function nicknameForms(value){
   const raw=String(value??'').trim();
-  if(!raw)return true;
-  const lower=raw.toLowerCase();
-  const rawCompact=lower.replace(/[\s._\-~`'"·•:;,+*()[\]{}\\/]+/g,'');
-  const compact=raw.normalize('NFKC').toLowerCase().replace(/[\u200B-\u200D\uFEFF\s._\-~`'"·•:;,+*()[\]{}\\/]+/g,'');
+  const compact=raw.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}\u3131-\u318E\u1100-\u11FF]+/gu,'');
   const leet=compact.replace(/[@4]/g,'a').replace(/3/g,'e').replace(/[1!|]/g,'i').replace(/0/g,'o').replace(/[5$]/g,'s').replace(/7/g,'t');
-  const forms=[rawCompact,compact,leet];
-  return !(NICK_BLOCK_CONTAINS.some(w=>forms.some(f=>f.includes(w))) || forms.some(f=>NICK_BLOCK_EXACT.has(f)) || NICK_JAMO_CONTAINS.some(w=>rawCompact.includes(w)));
+  const dedup=leet.replace(/(.)\1+/gu,'$1');
+  const jamo=compact.normalize('NFD').replace(/[^\u1100-\u11FF\u3131-\u318E]/g,'');
+  return {raw,compact,leet,dedup,jamo};
+}
+function nicknameAllowed(value){
+  const {raw,compact,leet,dedup,jamo}=nicknameForms(value);
+  if(!raw)return true;
+  const forms=[compact,leet,dedup];
+  return !(NICK_BLOCK_CONTAINS.some(w=>forms.some(f=>f.includes(w))) || forms.some(f=>NICK_BLOCK_EXACT.has(f)) || NICK_JAMO_CONTAINS.some(w=>compact.includes(w)||jamo.includes(w.normalize('NFD'))) || NICK_BLOCK_CONTEXT.some(re=>forms.some(f=>re.test(f))));
 }
 function refreshNicknameValidation(){
   const input=$('nickname'),btn=$('submitScoreBtn');if(!input||!btn)return;
@@ -2477,16 +2557,21 @@ function escapeAttr(v){return escapeHtml(v);}
 // ---------- Events ----------
 document.addEventListener('click',e=>{
   const act=e.target.closest('[data-action]')?.dataset.action;
-  if(act==='new-game'){renderClasses();showScreen('classScreen');}
+  if(act==='new-game'){pendingClassId=null;pendingHardType=null;renderClasses();showScreen('classScreen');}
   if(act==='continue')continueGame();
   if(act==='leaderboard')showLeaderboard();
-  if(act==='back-menu'){closeModal();showScreen('menuScreen');updateMenuSaveInfo();}
+  if(act==='back-menu'){closeModal();pendingHardType=null;showScreen('menuScreen');updateMenuSaveInfo();}
+  if(act==='back-classes'){renderClasses();showScreen('classScreen');}
+  if(act==='back-mode')openModeSelection();
+  if(act==='back-hard')openHardSelection();
   if(act==='bag')openBag();
   if(act==='encounter-items')openEncounterItems();
   if(act==='summon-wraith')summonWraith();
   if(act==='save-exit')saveAndExit();
   if(act==='submit-score')submitScore();
   if(act==='continue-result')continueOutcome();
+  const modeId=e.target.closest('[data-mode-id]')?.dataset.modeId;if(modeId)enterGameMode(modeId);
+  const hardId=e.target.closest('[data-hard-id]')?.dataset.hardId;if(hardId)enterHardVariant(hardId);
   const ga=e.target.closest('[data-game-action]')?.dataset.gameAction;
   if(ga)gameAction(ga);
 });
