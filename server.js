@@ -81,6 +81,7 @@ const ENDING_BONUS = {
   '빈 호칭': 900,
   '팬텀': 1800,
   '끝없는 악몽': 2400,
+  '노예': 6500,
 };
 
 function n(v, max = 100000) {
@@ -164,7 +165,7 @@ function scoreRun(s = {}) {
   score += growths * 140;
   score -= socialFail * 25;
   score -= overTalks * 90;
-  score += ENDING_BONUS[ending] || 0;
+  score += Math.floor((ENDING_BONUS[ending] || 0) * (s.prideKept ? 1.5 : 1));
   return Math.max(0, Math.floor(score));
 }
 
@@ -600,7 +601,7 @@ app.get('/api/health', (_req, res) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n몰락자 v0.9.20`);
+  console.log(`\n몰락자 v0.9.21`);
   console.log(`http://localhost:${PORT}`);
   console.log(`랭킹 설정: ${CLOUD_CONFIGURED ? 'Supabase 환경변수 있음 (실연결은 /api/storage에서 검증)' : '로컬 파일'}\n`);
 });

@@ -7,7 +7,7 @@ const META_KEY = 'fallen_meta_v1';
 const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
 const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
 const PVP_NICK_KEY = 'fallen_pvp_nickname';
-const GAME_VERSION = 120;
+const GAME_VERSION = 121;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5 };
 function loadMeta(){
@@ -93,18 +93,19 @@ const ENEMIES = {
 };
 
 const ENDINGS = {
-  'BAD END': { icon:'†', kind:'BAD END', bonus:0, epilogue:'당신의 여정은 여기서 끝났다.\n하지만 실패조차 하나의 기록으로 남는다.' },
-  '명예 회복': { icon:'⚜', kind:'NORMAL END', bonus:5000, epilogue:'도적단의 깃발이 쓰러졌다.\n한때 쫓겨났던 당신의 이름은 다시 사람들의 입에 오르기 시작했다.' },
-  '반란': { icon:'⚔', kind:'HARD END', bonus:10000, epilogue:'왕의 분노도 왕국의 성벽도 끝내 당신들을 막지 못했다.\n새로운 질서가 피와 함성 속에서 시작된다.' },
-  '모두와 친구': { icon:'◇', kind:'SECRET END', bonus:25000, epilogue:'칼을 뽑지 않고도 바뀌는 것이 있었다.\n왕국과 도적단, 상인들은 불편한 평화를 받아들였다. 그리고 그 중심에 당신이 있었다.' },
-  '위선적인 영웅': { icon:'⚜', kind:'SPECIAL END · 위선', bonus:12000, epilogue:'사람들은 당신을 영웅이라 불렀다.\n당신이 쓰러뜨린 약자들의 이름은 승전 연설 어디에도 없었다. 칼로 만든 문제를 말로 덮었고, 왕국은 듣고 싶은 이야기만 들었다.\n명예는 돌아왔다. 진실만 돌아오지 못했다.' },
-  '피 묻은 중재자': { icon:'◇', kind:'SPECIAL END · 불완전한 평화', bonus:20000, epilogue:'왕국과 숲은 결국 같은 탁자에 앉았다.\n그러나 그 탁자를 닦아도 지워지지 않는 피가 있었다. 사람들은 당신의 중재를 받아들였지만, 살아남은 자들은 당신이 평화를 말하기 전에 무엇을 했는지 기억했다.\n평화는 이루어졌다. 결백은 아니었다.' },
-  '두 개의 깃발': { icon:'⚔', kind:'SPECIAL END · 배신', bonus:18000, epilogue:'당신은 한때 왕국의 깃발 아래 섰고, 마지막에는 그것을 향해 검을 들었다.\n왕국은 당신을 배신자라 불렀고 반란군은 영웅이라 불렀다. 둘 다 틀리지 않았다.\n되찾은 것은 명예가 아니라, 어느 편에서도 완전히 지워지지 않을 이름이었다.' },
-  '지배자': { icon:'♛', kind:'LEGEND END', bonus:30000, epilogue:'전설마저 쓰러졌다.\n왕좌를 지킬 자도, 당신에게 명령할 자도 더는 남지 않았다.' },
+  'BAD END': { icon:'†', kind:'BAD END', bonus:0, art:'grave', epilogue:'당신의 여정은 여기서 끝났다.\n하지만 실패조차 하나의 기록으로 남는다.' },
+  '명예 회복': { icon:'⚜', kind:'NORMAL END', bonus:5000, art:'honorend', epilogue:'도적단의 깃발이 쓰러졌다.\n한때 쫓겨났던 당신의 이름은 다시 사람들의 입에 오르기 시작했다.' },
+  '반란': { icon:'⚔', kind:'HARD END', bonus:10000, art:'rebel', epilogue:'왕의 분노도 왕국의 성벽도 끝내 당신들을 막지 못했다.\n새로운 질서가 피와 함성 속에서 시작된다.' },
+  '모두와 친구': { icon:'◇', kind:'SECRET END', bonus:25000, art:'honorend', epilogue:'칼을 뽑지 않고도 바뀌는 것이 있었다.\n왕국과 도적단, 상인들은 불편한 평화를 받아들였다. 그리고 그 중심에 당신이 있었다.' },
+  '위선적인 영웅': { icon:'⚜', kind:'SPECIAL END · 위선', bonus:12000, art:'honor', epilogue:'사람들은 당신을 영웅이라 불렀다.\n당신이 쓰러뜨린 약자들의 이름은 승전 연설 어디에도 없었다. 칼로 만든 문제를 말로 덮었고, 왕국은 듣고 싶은 이야기만 들었다.\n명예는 돌아왔다. 진실만 돌아오지 못했다.' },
+  '피 묻은 중재자': { icon:'◇', kind:'SPECIAL END · 불완전한 평화', bonus:20000, art:'bridge', epilogue:'왕국과 숲은 결국 같은 탁자에 앉았다.\n그러나 그 탁자를 닦아도 지워지지 않는 피가 있었다. 사람들은 당신의 중재를 받아들였지만, 살아남은 자들은 당신이 평화를 말하기 전에 무엇을 했는지 기억했다.\n평화는 이루어졌다. 결백은 아니었다.' },
+  '두 개의 깃발': { icon:'⚔', kind:'SPECIAL END · 배신', bonus:18000, art:'bridge', epilogue:'당신은 한때 왕국의 깃발 아래 섰고, 마지막에는 그것을 향해 검을 들었다.\n왕국은 당신을 배신자라 불렀고 반란군은 영웅이라 불렀다. 둘 다 틀리지 않았다.\n되찾은 것은 명예가 아니라, 어느 편에서도 완전히 지워지지 않을 이름이었다.' },
+  '지배자': { icon:'♛', kind:'LEGEND END', bonus:30000, art:'king', epilogue:'전설마저 쓰러졌다.\n왕좌를 지킬 자도, 당신에게 명령할 자도 더는 남지 않았다.' },
   '길을 잃은 자': { icon:'∅', kind:'BAD END · 방황', bonus:420, bad:true, art:'crossroad', epilogue:'다리의 한쪽에는 왕국이, 다른 한쪽에는 숲이 있었다.\n당신은 두 곳에서 모두 물러났고 어느 쪽에도 돌아갈 이유를 남기지 못했다.\n해가 질 때까지 다리 위에 서 있었지만 누구도 당신을 부르러 오지 않았다.\n결국 길을 잃은 것은 발이 아니라, 선택이었다.' },
   '빈 호칭': { icon:'♙', kind:'BAD END · 귀족', bonus:900, bad:true, art:'crossroad', epilogue:'당신은 다리 한가운데에서 끝까지 말을 골랐다.\n한때는 가문의 이름 하나로 문이 열렸고, 말 한마디로 싸움을 미룰 수 있었다. 하지만 굶주림과 죽음은 예법을 몰랐다.\n해가 기울자 왕국도 숲도 먼저 돌아섰다. 어느 쪽도 당신을 적으로 부르지는 않았다. 그렇다고 자기 사람이라 부르지도 않았다.\n끝내 남은 것은, 아무도 불러주지 않는 호칭뿐이었다.' },
   '팬텀': { icon:'◐', kind:'BAD END · 밤의 괴수', bonus:1800, bad:true, art:'phantom', epilogue:'몇 번이나 지나온 길 끝에서, 이번에는 길이 먼저 당신을 알아보았다.\n검은 형체는 발소리도 숨소리도 없이 거리를 지웠다. 칼이 닿았는지조차 알 수 없었다.\n다음 날 그 길에는 발자국 하나만 남았다. 시작은 있었지만 끝은 없었다.' },
-  '끝없는 악몽': { icon:'∞', kind:'BAD END · 반복', bonus:2400, bad:true, art:'phantom', epilogue:'당신은 싸우지 않았다. 멈추지도 않았다. 익숙한 길을 고르고 또 골랐다.\n숲은 같은 나무를 내놓았고 성벽은 같은 종을 울렸다. 리안의 표식도, 모르텐의 흰 실도 어느 순간부터 매번 처음 보는 것처럼 느껴졌다.\n마지막에는 팬텀조차 보이지 않았다. 악몽에는 괴물조차 필요 없었다.' }
+  '끝없는 악몽': { icon:'∞', kind:'BAD END · 반복', bonus:2400, bad:true, art:'phantom', epilogue:'당신은 싸우지 않았다. 멈추지도 않았다. 익숙한 길을 고르고 또 골랐다.\n숲은 같은 나무를 내놓았고 성벽은 같은 종을 울렸다. 리안의 표식도, 모르텐의 흰 실도 어느 순간부터 매번 처음 보는 것처럼 느껴졌다.\n마지막에는 팬텀조차 보이지 않았다. 악몽에는 괴물조차 필요 없었다.' },
+  '노예': { icon:'⛓', kind:'HIDDEN END · 계약', bonus:6500, bad:true, art:'slave', epilogue:'마지막 선택이 끝났다고 생각한 순간, 오래전 받아들인 계약이 이름을 되찾았다.\n당신이 얻은 힘은 선물이 아니었다. 빚이었다.\n왕국도 숲도 당신을 붙잡지 못했지만, 보이지 않는 사슬은 처음부터 당신의 그림자에 묶여 있었다.\n당신의 여정은 끝났고, 이제부터는 다른 존재의 여정이 시작된다. 당신을 데리고.' }
 };
 
 
@@ -1310,6 +1311,23 @@ ${state.flags.officer2Allied?'당신을 적으로 보지는 않지만 아직 완
       !state.flags.banditCampGrowth && c('부상한 도적의 이야기를 듣는다','처세 +1 / 도적 관계 +1',()=>{state.relation.bandits++;takeGrowth('banditCampGrowth','social','그가 도적이 된 이유를 듣고, 당신의 이야기도 조금 들려준다. 말의 거리가 전보다 가까워졌다.\n\n처세 +1','banditPorterTor');}),
       c('야영지를 지나간다','두목의 본거지 방향으로 이동한다.',()=>go('banditPorterTor'))
     ].filter(Boolean)
+  }),
+
+  demonOffer: scene('demonOffer', {
+    chapter:'A WHISPER BELOW', location:'어디에도 없는 방', art:'demon',
+    text:()=>`길이 한순간 너무 조용해진다.
+
+불빛도 바람도 사라지고, 검은 탁자 건너편에 뿔 달린 형체가 앉아 있다.
+그것은 당신이 가장 집요하게 키워 온 힘을 정확히 짚어낸다.
+
+“${demonStatLabel(state.flags.demonStat)}. 꽤 마음에 드는 모양이군. 조금 더 갖고 싶지 않나?”
+
+계약서는 짧다. 대가에 관한 문장만 이상할 만큼 흐릿하다.`,
+    choices:() => [
+      c('거래를 받아들인다',`${demonStatLabel(state.flags.demonStat)} +5 / 대가는 훗날 치른다`,()=>acceptDemonDeal()),
+      c('긍지를 지킨다','공격·처세·속도 -4 / 엔딩 보너스 ×1.5',()=>keepDemonPride()),
+      c('아무 말 없이 지나친다','아무것도 얻지 않는다.',()=>ignoreDemonOffer())
+    ]
   })
 
 
@@ -1846,12 +1864,20 @@ function maybeRestorePvp(){
   const sess=loadPvpSession();if(!sess?.matchId)return;try{const raw=localStorage.getItem(PVP_SAVE_KEY);if(!raw)return;state=normalizeLoadedState(JSON.parse(raw));if(!state?.p||state.ended)return;pvpClient.matchId=sess.matchId;pvpClient.nickname=sess.nickname||'';pendingClassId=state.classId;showScreen('gameScreen');enter(state.sceneId);pvpSocket();}catch{}
 }
 
+const CLASS_ART_FILES = {
+  knight:'/assets/classes/knight.webp', noble:'/assets/classes/noble.webp', thief:'/assets/classes/thief.webp',
+  merchant:'/assets/classes/merchant.webp', gambler:'/assets/classes/gambler.webp', spellsword:'/assets/classes/spellsword.webp',
+  necromancer:'/assets/classes/necromancer.webp', dictator:'/assets/classes/dictator.webp'
+};
+function classArtUrl(id){return CLASS_ART_FILES[id]||'';}
+
 function renderClasses() {
   $('classGrid').innerHTML = Object.entries(CLASSES).map(([id,cl]) => {
     const unlocked=isClassUnlocked(id);
     const unlockText=classUnlockText(id);
     return `
     <article class="class-card ${unlocked?'':'locked'}">
+      <div class="class-portrait-wrap"><img class="class-portrait" src="${classArtUrl(id)}?v=0921" alt="" loading="lazy"></div>
       <div class="class-head"><div class="class-name">${unlocked?'':'🔒 '}${cl.name}</div><span class="tag">${unlocked?'선택 가능':unlockText}</span></div>
       <div class="stats-row">
         ${statBox('체력',cl.hp)}${statBox('공격',cl.atk)}${statBox('처세',cl.social)}${statBox('속도',cl.speed)}
@@ -1934,32 +1960,22 @@ function render() {
   });
 }
 
+const ART_FILES = {
+  exile:'exile', beggars:'market', gangster:'tavern', shop:'merchant',
+  gate:'city', city:'city', citizen:'market', alarm:'city', captain:'tavern', oldguard:'king', king:'king',
+  barracks:'city', bandits:'bandit_battle', camp:'merchant', banditcamp:'bandit_battle', boss:'bandit_battle',
+  rebel:'bridge', bridge:'bridge', kingrage:'king', merchant:'merchant', forest:'forest', capture:'bridge', officer:'tavern',
+  guild:'city', midknight:'city', crossroad:'bridge', undertaker:'undertaker', tracker:'phantom',
+  grave:'cathedral', trail:'forest', phantom:'phantom', demon:'demon', slave:'slave', honor:'honor_sword', honorend:'honor_end'
+};
 function art(kind) {
-  const palettes = {
-    exile:['#1c2028','#3e3a42','#9b835f'], beggars:['#28231f','#514536','#a58c63'], gangster:['#1b2028','#49332e','#b05d42'],
-    shop:['#2c241a','#6b4c28','#d3a35d'], gate:['#1a2028','#47505c','#9ca7b5'], city:['#27303a','#6a6258','#c0aa85'], citizen:['#2b3034','#675b4f','#c7ad7e'],
-    alarm:['#26171a','#5d252b','#b64b4f'], captain:['#1b202a','#4d5668','#c9d0dc'], oldguard:['#17191d','#47443c','#c1ae7d'], king:['#251d1d','#6f3434','#d1aa55'],
-    barracks:['#1e2429','#515c62','#a89a78'], bandits:['#1c251f','#40543f','#a35a44'], camp:['#24241e','#615a3d','#d0a55b'], banditcamp:['#182018','#3f5233','#b06d44'],
-    boss:['#241b21','#613343','#c65e72'], rebel:['#281619','#6d262e','#d16b56'], kingrage:['#2b1516','#761f25','#dc9b4d'], merchant:['#24251e','#626142','#cfb06a'],
-    forest:['#111d18','#284b36','#78975d'], capture:['#151e19','#3b4939','#a65a3b'], officer:['#231b1d','#5a3037','#bd614e'], guild:['#1d2327','#45535d','#a9b9c2'], midknight:['#171b20','#36424f','#bdc8d4'],crossroad:['#1b1e20','#45413d','#b49663'],undertaker:['#17191d','#3a3c40','#b8b1a4'],tracker:['#151c1d','#31484a','#8eb3ad'],grave:['#151719','#34363a','#8b8f92'],trail:['#121918','#2d403b','#789b8c'],phantom:['#070810','#171324','#66577f']
-  };
-  const p = palettes[kind] || palettes.exile;
-  const moon = ['forest','bandits','banditcamp','capture','officer','boss','crossroad','phantom'].includes(kind);
-  const castle = ['gate','city','alarm','captain','oldguard','king','kingrage','barracks','rebel'].includes(kind);
-  const figures = ['beggars','gangster','citizen','captain','oldguard','boss','merchant','officer','guild','midknight','king','kingrage','undertaker','tracker','phantom'].includes(kind);
-  return `<svg viewBox="0 0 600 280" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-    <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop stop-color="${p[1]}"/><stop offset="1" stop-color="${p[0]}"/></linearGradient><filter id="blur"><feGaussianBlur stdDeviation="9"/></filter></defs>
-    <rect width="600" height="280" fill="url(#g)"/>
-    <circle cx="${moon?470:110}" cy="60" r="34" fill="${p[2]}" opacity=".35" filter="url(#blur)"/><circle cx="${moon?470:110}" cy="60" r="22" fill="${p[2]}" opacity=".45"/>
-    ${castle?`<path d="M40 210V110h60V80h45v42h55V65h58v57h50V92h48v30h52V72h58v138z" fill="#0b0d11" opacity=".78"/><path d="M0 210h600v70H0z" fill="#0a0c0f"/>`:`<path d="M0 208 Q90 160 180 205T360 196T600 205V280H0Z" fill="#0a0c0e" opacity=".88"/>`}
-    ${!castle?`<path d="M55 210l22-115 18 115M145 210l30-150 22 150M510 210l-24-135-19 135M430 210l-20-105-18 105" stroke="#0b0e0d" stroke-width="18" stroke-linecap="round" opacity=".76"/>`:''}
-    ${figures?`<g transform="translate(300 86)" fill="#090a0d"><circle cx="0" cy="25" r="20"/><path d="M-31 126Q-26 52 0 48Q26 52 31 126z"/><path d="M-15 123l-18 72h22L0 140l12 55h22l-20-72z"/></g>`:''}
-    ${kind==='beggars'?`<g fill="#101113" opacity=".9"><circle cx="210" cy="155" r="12"/><path d="M195 210q4-42 15-43t16 43z"/><circle cx="390" cy="165" r="11"/><path d="M376 214q4-37 14-38t15 38z"/></g>`:''}
-    ${kind==='shop'?`<rect x="170" y="105" width="260" height="130" rx="4" fill="#11100d"/><path d="M150 115h300l-35-48H185z" fill="#4c3824"/><rect x="275" y="160" width="55" height="75" fill="#241b12"/><circle cx="315" cy="125" r="18" fill="${p[2]}" opacity=".8"/>`:''}
-    ${kind==='rebel'?`<path d="M120 70v155M120 75l90 30-90 32z" stroke="#171012" stroke-width="8" fill="#7d2630"/><path d="M480 70v155M480 75l-90 30 90 32z" stroke="#171012" stroke-width="8" fill="#7d2630"/>`:''}
-    ${kind==='phantom'?`<ellipse cx="300" cy="145" rx="92" ry="112" fill="#05050a" opacity=".72" filter="url(#blur)"/><path d="M258 204Q255 86 300 74Q345 86 342 204Q320 180 300 218Q280 180 258 204z" fill="#050509"/><circle cx="282" cy="126" r="3" fill="#b9add7" opacity=".75"/><circle cx="318" cy="126" r="3" fill="#b9add7" opacity=".75"/>`:''}
-    <rect y="220" width="600" height="60" fill="#08090c" opacity=".45"/>
-  </svg>`;
+  const file=ART_FILES[kind]||ART_FILES.exile;
+  const classFile=state?.classId?classArtUrl(state.classId):'';
+  const cameo=classFile?`<div class="scene-class-cameo"><img src="${classFile}?v=0921" alt=""></div>`:'';
+  return `<div class="scene-illustration art-${escapeHtml(kind||'exile')}">
+    <img class="scene-illustration-bg" src="/assets/art/${file}.webp?v=0921" alt="" decoding="async">
+    <div class="scene-illustration-vignette"></div>${cameo}
+  </div>`;
 }
 
 // ---------- Gameplay ----------
@@ -2367,7 +2383,38 @@ function continueOutcome(){
   if(p.next){ go(p.next); return; }
   render();
 }
-function go(id, msg='') { if(!SCENES[id])return; state.pending=null; if(maybeReplaceResolvedEncounter(id))return; const changed=id!==state.sceneId; if(changed&&state.encounterMods)delete state.encounterMods[state.sceneId]; if(changed){state.escapeAttempted=false;state.escapeSerial=(state.escapeSerial||0)+1;} state.sceneId=id; state.lastToast=msg; state.stats.progress++; if(recordLoopTransition(id))return; save(); enter(id); }
+const DEMON_THRESHOLD=15;
+function demonStatLabel(key){return ({maxHp:'체력',atk:'공격',social:'처세',speed:'속도'})[key]||'힘';}
+function strongestDemonStat(){
+  if(!state?.p)return null;
+  const rows=[['maxHp',Number(state.p.maxHp||0)],['atk',Number(state.p.atk||0)],['social',Number(state.p.social||0)],['speed',Number(state.p.speed||0)]];
+  rows.sort((a,b)=>b[1]-a[1]);
+  return rows[0][1]>=DEMON_THRESHOLD?rows[0]:null;
+}
+function maybeTriggerDemonOffer(returnTarget,carryMessage=''){
+  if(!state?.p||state.ended||state.flags.demonOfferSeen||returnTarget==='demonOffer')return false;
+  const hit=strongestDemonStat();if(!hit)return false;
+  state.flags.demonOfferSeen=true;state.flags.demonStat=hit[0];state.flags.demonReturn=returnTarget;state.flags.demonCarryMessage=carryMessage||'';
+  state.sceneId='demonOffer';state.pending=null;state.lastToast='';save();showScreen('gameScreen');render();fx('bad');return true;
+}
+function returnFromDemon(message=''){
+  const target=SCENES[state.flags.demonReturn]?state.flags.demonReturn:'roadsideAftermath';
+  state.sceneId=target;state.pending=null;state.lastToast=message||state.flags.demonCarryMessage||'';save();enter(target);
+}
+function acceptDemonDeal(){
+  const key=state.flags.demonStat;
+  if(key==='maxHp'){state.p.maxHp+=5;state.p.hp+=5;}else if(['atk','social','speed'].includes(key))state.p[key]+=5;
+  state.stats.growths=Number(state.stats.growths||0)+5;state.flags.soulSold=true;state.flags.demonChoice='deal';
+  returnFromDemon(`${demonStatLabel(key)} +5. 손끝에 힘이 차오른다. 계약서의 마지막 줄은 끝내 읽히지 않았다.`);
+}
+function keepDemonPride(){
+  state.p.atk=Math.max(0,Number(state.p.atk||0)-4);state.p.social=Math.max(0,Number(state.p.social||0)-4);state.p.speed=Math.max(0,Number(state.p.speed||0)-4);
+  state.flags.prideKept=true;state.stats.prideKept=true;state.flags.demonChoice='pride';
+  returnFromDemon('힘이 빠져나간다. 하지만 검은 탁자 앞에서 고개를 숙이지 않았다.');
+}
+function ignoreDemonOffer(){state.flags.demonChoice='ignored';returnFromDemon('뒤를 돌아보지 않았다. 다시 바람이 불기 시작한다.');}
+
+function go(id, msg='') { if(!SCENES[id])return; state.pending=null; if(maybeReplaceResolvedEncounter(id))return; const changed=id!==state.sceneId; if(changed&&state.encounterMods)delete state.encounterMods[state.sceneId]; if(changed){state.escapeAttempted=false;state.escapeSerial=(state.escapeSerial||0)+1;} state.stats.progress++; if(maybeTriggerDemonOffer(id,msg))return; state.sceneId=id; state.lastToast=msg; if(recordLoopTransition(id))return; save(); enter(id); }
 function enter(id) {
   showScreen('gameScreen');
   if(maybeReplaceResolvedEncounter(id))return;
@@ -2452,11 +2499,12 @@ function recordClearForUnlock(name,e){
 
 function finish(name) {
   if(state.ended)return;
-  name=specialEndingFor(name);
+  if(state.flags.soulSold)name='노예';else name=specialEndingFor(name);
   state.ended=true; state.stats.ending=name;
   state.stats.survivors = ['merchantAlive','gangsterPeace'].filter(f=>state.flags[f]).length + (!state.flags.citizenKilled?1:0) + (!state.flags.captainKilled?1:0);
   const e=endingProfile(name);
-  state.stats.endingBonus=Number(e.bonus||0);
+  state.stats.prideKept=!!state.flags.prideKept;
+  state.stats.endingBonus=Math.floor(Number(e.bonus||0)*(state.flags.prideKept?1.5:1));
   const newlyUnlocked=recordClearForUnlock(name,e);
   state.flags.newClassUnlocks=newlyUnlocked;
   save();
@@ -2498,7 +2546,7 @@ function playStyle(){
   const pairs=[['전투광',s.kills*3+s.riskyWins*2],['협상가',s.socialSuccess*3+s.talkSolved],['생존가',s.runSuccess*4],['탐색가',s.secrets*5+s.talkSolved],['장사꾼',(s.merchantDeals||0)*4+Math.floor((s.merchantIncome||0)/5)],['파괴자',s.eliteKills*5+s.kills]];
   pairs.sort((a,b)=>b[1]-a[1]);return pairs[0][1]===0?'방랑자':pairs[0][0];
 }
-function clientScore(){const s=state.stats,b=Number(endingProfile(s.ending)?.bonus||s.endingBonus||0);return Math.max(0,Math.floor(s.progress*115+s.goldEarned*3+state.p.gold*1.2+s.kills*170+s.eliteKills*950+s.riskyWins*650+(s.comebackWins||0)*900+s.talkSolved*210+s.socialSuccess*300+(s.riskySocial||0)*500+s.runSuccess*85+s.secrets*500+(s.growths||0)*140+s.survivors*220-s.socialFail*25-(s.overTalks||0)*90+b));}
+function clientScore(){const s=state.stats,b=Number.isFinite(Number(s.endingBonus))?Number(s.endingBonus):Math.floor(Number(endingProfile(s.ending)?.bonus||0)*(s.prideKept?1.5:1));return Math.max(0,Math.floor(s.progress*115+s.goldEarned*3+state.p.gold*1.2+s.kills*170+s.eliteKills*950+s.riskyWins*650+(s.comebackWins||0)*900+s.talkSolved*210+s.socialSuccess*300+(s.riskySocial||0)*500+s.runSuccess*85+s.secrets*500+(s.growths||0)*140+s.survivors*220-s.socialFail*25-(s.overTalks||0)*90+b));}
 
 // ---------- Merchant class economy ----------
 function merchantEncounterProfit(id=state.sceneId){
