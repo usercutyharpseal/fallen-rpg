@@ -7,7 +7,7 @@ const META_KEY = 'fallen_meta_v1';
 const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
 const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
 const PVP_NICK_KEY = 'fallen_pvp_nickname';
-const GAME_VERSION = 131;
+const GAME_VERSION = 132;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5 };
 function loadMeta(){
@@ -180,7 +180,7 @@ const ENDINGS = {
   '지배자': { icon:'♛', kind:'LEGEND END', bonus:30000, art:'king', epilogue:'전설마저 쓰러졌다.\n왕좌를 지킬 자도, 당신에게 명령할 자도 더는 남지 않았다.' },
   '길을 잃은 자': { icon:'∅', kind:'BAD END · 방황', bonus:420, bad:true, art:'crossroad', epilogue:'다리의 한쪽에는 왕국이, 다른 한쪽에는 숲이 있었다.\n당신은 두 곳에서 모두 물러났고 어느 쪽에도 돌아갈 이유를 남기지 못했다.\n해가 질 때까지 다리 위에 서 있었지만 누구도 당신을 부르러 오지 않았다.\n결국 길을 잃은 것은 발이 아니라, 선택이었다.' },
   '빈 호칭': { icon:'♙', kind:'BAD END · 귀족', bonus:900, bad:true, art:'crossroad', epilogue:'당신은 다리 한가운데에서 끝까지 말을 골랐다.\n한때는 가문의 이름 하나로 문이 열렸고, 말 한마디로 싸움을 미룰 수 있었다. 하지만 굶주림과 죽음은 예법을 몰랐다.\n해가 기울자 왕국도 숲도 먼저 돌아섰다. 어느 쪽도 당신을 적으로 부르지는 않았다. 그렇다고 자기 사람이라 부르지도 않았다.\n끝내 남은 것은, 아무도 불러주지 않는 호칭뿐이었다.' },
-  '팬텀': { icon:'◐', kind:'BAD END · 밤의 괴수', bonus:1800, bad:true, art:'phantom', epilogue:'몇 번이나 지나온 길 끝에서, 이번에는 길이 먼저 당신을 알아보았다.\n검은 형체는 발소리도 숨소리도 없이 거리를 지웠다. 칼이 닿았는지조차 알 수 없었다.\n다음 날 그 길에는 발자국 하나만 남았다. 시작은 있었지만 끝은 없었다.' },
+  '팬텀': { icon:'◐', kind:'HIDDEN END · 팬텀 생환', bonus:30000, art:'phantom', epilogue:'그날 밤 당신은 길이 사람을 기억한다는 사실을 알았다.\n\n팬텀에게서 달아난 뒤에도 여행은 끝나지 않았다. 왕국도 숲도 평소처럼 당신 앞에 나타났고, 사람들은 당신이 무엇을 피해 살아왔는지 알지 못했다.\n\n마지막 선택까지 끝낸 뒤에야 오래전 그 밤이 다시 떠올랐다. 돌아보면 팬텀은 당신을 놓친 것이 아니었다. 당신이 끝까지 살아남는지 지켜보고 있었던 것인지도 모른다.\n\n반복되던 길에서 빠져나와 자신의 결말까지 도달한 사람. 기록에는 원래의 결말 대신 짧은 이름 하나만 남았다. 팬텀.' },
   '끝없는 악몽': { icon:'∞', kind:'BAD END · 반복', bonus:2400, bad:true, art:'phantom', epilogue:'당신은 싸우지 않았다. 멈추지도 않았다. 익숙한 길을 고르고 또 골랐다.\n숲은 같은 나무를 내놓았고 성벽은 같은 종을 울렸다. 리안의 표식도, 모르텐의 흰 실도 어느 순간부터 매번 처음 보는 것처럼 느껴졌다.\n마지막에는 팬텀조차 보이지 않았다. 악몽에는 괴물조차 필요 없었다.' },
   '검은 왕관의 몰락': { icon:'♜', kind:'HARD END · LORD ALGON', bonus:45000, art:'hard_algon', epilogue:'폐쇄성의 종이 멎었다.\n검은 장부가 불길 속에서 뒤틀리고, 살아 있는 자와 죽은 자의 이름을 가르던 선도 함께 사라졌다.\n당신은 왕좌를 차지하지 않았다. 대신 누구도 다시 그 문을 닫지 못하게 만들었다.' },
   '이름을 돌려준 자': { icon:'◇', kind:'HARD SECRET END · LORD ALGON', bonus:56000, art:'hard_throne', epilogue:'세 개의 봉인이 동시에 깨지자 성채 아래에서 수천 개의 이름이 되돌아왔다.\n죽었다고 기록된 자, 추방되었다고 지워진 자, 명령 한 줄로 사람이 아니게 된 자들의 기록이 다시 세상 위로 올라왔다.\n아르벤이 없애려 했던 장부와 레오른이 거부했던 명령은 결국 당신의 손에서 끝났다.' },
@@ -194,7 +194,7 @@ const BAD_ENDINGS = {
   hardAlgonBoss: { title:'폐쇄령의 마지막 이름', kind:'BAD END · LORD ALGON', art:'hard_algon', bonus:5200, epilogue:'도망칠 문은 먼저 닫혔다. 알곤은 쓰러진 당신을 보지 않고 장부만 펼쳤다.\n\n펜끝이 종이를 긁는 짧은 소리 뒤에, 당신의 이름은 사람의 이름이 아니라 처리된 항목이 되었다.' },
   hardGraveCaptain: { title:'무명군의 새 병사', kind:'BAD END · HARD', art:'hard_lastbattle', bonus:3400, epilogue:'카르센의 창이 멈춘 뒤 무명군은 잠시 길을 열었다. 살아서 지나가라는 뜻은 아니었다.\n다음 밤, 성채를 도는 유령의 대열에는 낯선 그림자 하나가 더 섞여 있었다.' },
   hardChainKnight: { title:'사슬문 아래', kind:'BAD END · HARD', art:'hard_throne', bonus:2800, epilogue:'사슬문은 한 번도 완전히 열린 적이 없었다. 로드릭은 쓰러진 당신을 문 안쪽으로 끌어들였고, 쇠사슬은 다시 제자리로 돌아갔다.' },
-  phantomEncounter: { title:'팬텀', kind:'BAD END · 밤의 괴수', art:'phantom', bonus:1800, epilogue:'몇 번이나 지나온 길 끝에서, 이번에는 길이 먼저 당신을 알아보았다.\n검은 형체는 발소리도 숨소리도 없이 거리를 지웠다. 칼이 닿았는지조차 알 수 없었다.\n다음 날 그 길에는 발자국 하나만 남았다. 시작은 있었지만 끝은 없었다.' },
+  phantomEncounter: { title:'팬텀에게 삼켜진 자', kind:'BAD END · 밤의 괴수', art:'phantom', bonus:1800, epilogue:'몇 번이나 지나온 길 끝에서, 이번에는 길이 먼저 당신을 알아보았다.\n검은 형체는 발소리도 숨소리도 없이 거리를 지웠다. 칼이 닿았는지조차 알 수 없었다.\n다음 날 그 길에는 발자국 하나만 남았다. 시작은 있었지만 끝은 없었다.' },
   gangster: {
     title:'첫 칼날', kind:'BAD END · 빈민가', art:'gangster', bonus:0,
     epilogue:'몰락한 뒤 처음 맞닥뜨린 싸움은 생각보다 짧았다.\n거지들의 변명도, 깡패의 분노도 이제 당신과는 상관없는 이야기가 되었다.\n이름을 되찾기도 전에 당신의 여정은 뒷골목의 젖은 돌바닥에서 멈췄다.'
@@ -1312,7 +1312,7 @@ const SCENES = {
     text:`경고를 들은 뒤에도 길은 다시 겹쳤다.\n\n이번에는 달빛이 먼저 꺼진다. 나무 사이의 어둠 한 조각이 천천히 사람의 높이까지 일어난다. 얼굴도 눈도 없다. 다만 당신이 돌아섰던 횟수만큼 검은 흔적이 겹쳐 있다.\n\n리안이 말한 기억하는 길. 모르텐이 묻겠다고 한 길.\n\n그 끝에서 밤의 괴수 팬텀이 당신을 기다린다.`,
     talk(){queueOutcome('대답은 없다. 대신 조금 전 당신이 했던 발소리가 어둠 속에서 한 번 더 들린다.',null);},
     attackWin(){const l=loopState();l.phantomDefeated=true;l.phantomSeen=true;l.cooldown=8;l.history=[];l.stagnant=0;state.flags.phantomDefeated=true;state.stats.secrets=(state.stats.secrets||0)+1;gainGold(120);queueOutcome('칼끝이 검은 형체를 가른 순간, 밤이 종이처럼 찢어진다.\n\n팬텀은 피 대신 차가운 안개를 흘리며 사라졌다. 겹쳐 있던 길 하나만 남고 나머지는 어둠 속으로 접혀 들어간다.\n\n◆ 120','phantomAfterVictory');},
-    runSuccess(){const l=loopState();l.phantomEscapes=(l.phantomEscapes||0)+1;go('phantomAfterEscape','팬텀의 그림자가 뒤에서 길게 늘어난다.');}
+    runSuccess(){const l=loopState();l.phantomEscapes=(l.phantomEscapes||0)+1;state.flags.phantomEscaped=true;state.flags.phantomEscapeAt=Number(state.stats?.progress||0);save();go('phantomAfterEscape','팬텀에게서 살아서 벗어났다. 그림자가 뒤에서 길게 늘어난다.');}
   }),
 
   phantomAfterEscape: scene('phantomAfterEscape', {
@@ -3301,6 +3301,11 @@ function recordClearForUnlock(name,e){
 function finish(name) {
   if(state.ended)return;
   if(state.flags.soulSold)name='노예';else name=specialEndingFor(name);
+  const resolvedBeforePhantom=endingProfile(name);
+  if(!isHardMode()&&!isPvpMode()&&state.flags.phantomEscaped&&!resolvedBeforePhantom.bad){
+    state.flags.phantomOriginalEnding=name;
+    name='팬텀';
+  }
   state.ended=true; state.stats.ending=name;
   state.stats.survivors = ['merchantAlive','gangsterPeace'].filter(f=>state.flags[f]).length + (!state.flags.citizenKilled?1:0) + (!state.flags.captainKilled?1:0);
   const e=endingProfile(name);
@@ -3318,6 +3323,9 @@ function finish(name) {
   $('endScore').textContent=clientScore().toLocaleString();
   const deathBlock=e.bad&&state.flags.deathReason?`<b>최후의 순간</b> · ${escapeHtml(state.flags.deathReason)}<br><b>사망 장소</b> · ${escapeHtml(SCENES[state.flags.deathScene]?.location||'알 수 없는 장소')}<br><br><br>`:'';
   $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>협상 수익 <b>◆ ${state.stats.socialIncome||0}</b> · 고난도 협상 <b>${state.stats.riskySocial||0}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 과대화 <b>${state.stats.overTalks||0}</b> · 진영 전환 <b>${state.stats.teamSwitches||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>${state.classId==='merchant'?`<br>장사 수익 <b>${state.stats.merchantIncome||0}</b> · 새 조우 <b>${state.stats.merchantDeals||0}</b>`:state.classId==='gambler'?`<br>강화한 눈 <b>${(state.stats.gamblerFaces||[]).length?(state.stats.gamblerFaces||[]).join(' · '):'없음'}</b> · 강화 역전 <b>${state.stats.gamblerFaceHits||0}</b> · 중복 꽝 <b>${state.stats.gamblerDuplicates||0}</b>`:''}`;
+  if(name==='팬텀'&&state.flags.phantomOriginalEnding){
+    $('endStats').innerHTML+=`<br><br><b>팬텀 생환</b> · 원래 도달한 결말 <b>${escapeHtml(state.flags.phantomOriginalEnding)}</b>`;
+  }
   const meta=loadMeta();
   const pvpMode=isPvpMode();
   const hardMode=isHardMode();
