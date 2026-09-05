@@ -87,7 +87,7 @@ button,input{font:inherit}button{color:inherit}button:disabled{opacity:.36}
 /* v0.9.19 normal PVP */
 .normal-banner,.pvp-lobby-card{position:relative;overflow:hidden;border:1px solid #3d443f;border-radius:18px;padding:24px 20px;margin:8px 0 14px;background:radial-gradient(circle at 84% 0,#8f7d4b24,transparent 38%),linear-gradient(145deg,#171914,#0b0d11 72%);box-shadow:0 22px 55px #0008}.normal-banner:after{content:"♜";position:absolute;right:18px;bottom:-22px;font-size:100px;color:#b29a5d12}.normal-banner>span,.pvp-kicker{font-size:8px;letter-spacing:.32em;color:#a99162}.normal-banner h2,.pvp-lobby-card h2{position:relative;font-family:Georgia,"Noto Serif KR",serif;font-size:25px;line-height:1.45;margin:9px 0}.normal-banner p,.pvp-lobby-card p{margin:0;color:#8f9295;font-size:11px;line-height:1.7}.pvp-lobby-card{border-color:#4b3b42;background:radial-gradient(circle at 82% 2%,#9d3d4c24,transparent 36%),linear-gradient(145deg,#181419,#0a0c10 72%)}.pvp-lobby-card input{width:100%;margin-top:15px;border:1px solid #3a3d45;border-radius:11px;background:#090b0f;color:#eee9df;padding:13px 12px;outline:none}.pvp-profile-line{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding:11px 12px;border:1px solid #343944;border-radius:11px;background:#0d1015}.pvp-profile-line span{font-size:10px;color:#92969d}.pvp-profile-line b{font-family:Georgia,serif;font-size:22px;color:#d2bb80}.pvp-queue-status{text-align:center;margin-top:11px;min-height:32px;font-size:10px;line-height:1.55;color:#898d94}.pvp-queue-status.searching{color:#d0b77c}.pvp-queue-status.matched{color:#9fc8a5}.pvp-opponent-panel{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid #51353c;background:linear-gradient(100deg,#1a1115,#0d0f13);border-radius:12px;padding:10px 12px;margin:0 0 9px;box-shadow:0 10px 26px #0006}.pvp-opponent-panel.hidden{display:none}.pvp-opponent-panel>div:first-child span{display:block;font-size:7px;letter-spacing:.16em;color:#a66770}.pvp-opponent-panel>div:first-child b{display:block;font-family:Georgia,serif;font-size:17px;margin-top:2px}.pvp-opponent-panel small{display:block;color:#7f838a;font-size:9px;margin-top:2px}.pvp-live-stats{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;font-size:9px;color:#8f9298}.pvp-live-stats b{color:#e7ddcb}.pvp-live-stats #pvpOpponentStatus{border:1px solid #3c4149;border-radius:999px;padding:4px 7px}.pvp-end-panel{margin:12px 0;padding:15px;border:1px solid #4b3940;border-radius:13px;background:linear-gradient(135deg,#171116,#0c0e12);text-align:left}.pvp-end-panel.hidden{display:none}.pvp-end-kicker{font-size:8px;letter-spacing:.2em;color:#ad6973}.pvp-end-panel h3{font-family:Georgia,"Noto Serif KR",serif;font-size:22px;margin:5px 0 8px}.pvp-end-panel #pvpEndBody{font-size:11px;line-height:1.7;color:#aba9a6}.pvp-result-win{color:#d9c481}.pvp-result-loss{color:#cb8d92}.pvp-result-draw{color:#a8adb5}
 
-/* v0.9.21 painted illustration system */
+/* v0.9.22 painted illustration system */
 .class-portrait-wrap{height:150px;margin:-15px -15px 13px;overflow:hidden;position:relative;background:#0a0b0e;border-bottom:1px solid #2d2b28}
 .class-portrait-wrap:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 52%,#111319 100%);pointer-events:none}
 .class-portrait{width:100%;height:100%;display:block;object-fit:cover;object-position:center 32%;filter:saturate(.82) contrast(1.04);transition:transform .24s ease,filter .24s ease}
@@ -103,3 +103,36 @@ button,input{font:inherit}button{color:inherit}button:disabled{opacity:.36}
 .ending-art .scene-illustration{position:absolute;inset:0}
 .ending-art .scene-class-cameo{width:50px;height:66px;bottom:10px}
 @media (max-width:480px){.class-portrait-wrap{height:132px}.scene-class-cameo{width:46px;height:62px;left:8px;bottom:10px}}
+
+
+/* v0.9.22 class-select portrait layout — preserve full 2:3 artwork */
+#classScreen{max-width:620px;margin:0 auto}
+#classScreen .class-grid{gap:14px}
+#classScreen .class-card{padding:12px;border-radius:18px;background:linear-gradient(145deg,#17191e,#0b0d11);box-shadow:0 16px 38px #0008}
+.class-card-main{display:grid;grid-template-columns:minmax(126px,38%) minmax(0,1fr);gap:13px;align-items:stretch}
+#classScreen .class-portrait-wrap{height:auto;min-height:226px;aspect-ratio:2/3;margin:0;border:1px solid #3a3731;border-radius:11px;overflow:hidden;background:radial-gradient(circle at 50% 35%,#2a241c,#090a0d 72%);box-shadow:inset 0 0 28px #0009,0 8px 22px #0008}
+#classScreen .class-portrait-wrap:after{background:linear-gradient(180deg,transparent 68%,#090b0f66 100%);box-shadow:inset 0 0 18px #0006}
+#classScreen .class-portrait{width:100%;height:100%;object-fit:contain;object-position:center center;filter:saturate(.84) contrast(1.04) brightness(.96);transform:none!important}
+.class-info{min-width:0;display:flex;flex-direction:column;padding:3px 0}
+#classScreen .class-head{gap:7px;align-items:flex-start}
+#classScreen .class-name{font-size:25px;line-height:1.12;min-width:0}
+#classScreen .tag{flex:0 0 auto;font-size:9px;padding:4px 7px;margin-top:1px}
+#classScreen .stats-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:11px 0}
+#classScreen .stat-box{padding:7px 2px;font-size:9px;border-radius:9px}
+#classScreen .stat-box b{font-size:18px}
+#classScreen .passive{font-size:12px;line-height:1.52;margin-top:auto}
+#classScreen .class-card>.btn{margin-top:12px;padding:13px;font-size:15px}
+@media(max-width:380px){
+  .class-card-main{grid-template-columns:116px minmax(0,1fr);gap:10px}
+  #classScreen .class-portrait-wrap{min-height:174px}
+  #classScreen .class-name{font-size:22px}
+  #classScreen .passive{font-size:11px;line-height:1.45}
+  #classScreen .stat-box b{font-size:16px}
+}
+@media(min-width:520px){
+  .class-card-main{grid-template-columns:190px minmax(0,1fr);gap:18px}
+  #classScreen .class-portrait-wrap{min-height:285px}
+  #classScreen .stats-row{grid-template-columns:repeat(4,1fr);margin:14px 0}
+  #classScreen .class-name{font-size:29px}
+  #classScreen .passive{font-size:13px;line-height:1.62}
+}

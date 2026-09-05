@@ -1877,12 +1877,16 @@ function renderClasses() {
     const unlockText=classUnlockText(id);
     return `
     <article class="class-card ${unlocked?'':'locked'}">
-      <div class="class-portrait-wrap"><img class="class-portrait" src="${classArtUrl(id)}?v=0921" alt="" loading="lazy"></div>
-      <div class="class-head"><div class="class-name">${unlocked?'':'🔒 '}${cl.name}</div><span class="tag">${unlocked?'선택 가능':unlockText}</span></div>
-      <div class="stats-row">
-        ${statBox('체력',cl.hp)}${statBox('공격',cl.atk)}${statBox('처세',cl.social)}${statBox('속도',cl.speed)}
+      <div class="class-card-main">
+        <div class="class-portrait-wrap"><img class="class-portrait" src="${classArtUrl(id)}?v=0922" alt="" loading="lazy"></div>
+        <div class="class-info">
+          <div class="class-head"><div class="class-name">${unlocked?'':'🔒 '}${cl.name}</div><span class="tag">${unlocked?'선택 가능':unlockText}</span></div>
+          <div class="stats-row">
+            ${statBox('체력',cl.hp)}${statBox('공격',cl.atk)}${statBox('처세',cl.social)}${statBox('속도',cl.speed)}
+          </div>
+          <div class="passive"><strong>${unlocked?cl.passive:'???'}</strong><br>${unlocked?cl.desc:`노말 엔딩을 더 보면 기억이 열린다.`}</div>
+        </div>
       </div>
-      <div class="passive"><strong>${unlocked?cl.passive:'???'}</strong><br>${unlocked?cl.desc:`노말 엔딩을 더 보면 기억이 열린다.`}</div>
       <button class="btn ${unlocked?'primary':''}" ${unlocked?'':'disabled'} onclick="selectClass('${id}')">${unlocked?'이 직업으로 시작':'잠김'}</button>
     </article>`;
   }).join('');
@@ -1971,9 +1975,9 @@ const ART_FILES = {
 function art(kind) {
   const file=ART_FILES[kind]||ART_FILES.exile;
   const classFile=state?.classId?classArtUrl(state.classId):'';
-  const cameo=classFile?`<div class="scene-class-cameo"><img src="${classFile}?v=0921" alt=""></div>`:'';
+  const cameo=classFile?`<div class="scene-class-cameo"><img src="${classFile}?v=0922" alt=""></div>`:'';
   return `<div class="scene-illustration art-${escapeHtml(kind||'exile')}">
-    <img class="scene-illustration-bg" src="/assets/art/${file}.webp?v=0921" alt="" decoding="async">
+    <img class="scene-illustration-bg" src="/assets/art/${file}.webp?v=0922" alt="" decoding="async">
     <div class="scene-illustration-vignette"></div>${cameo}
   </div>`;
 }
