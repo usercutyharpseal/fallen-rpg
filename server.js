@@ -597,11 +597,11 @@ app.post('/api/score', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.19' });
+  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.24' });
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n몰락자 v0.9.22`);
+  console.log(`\n몰락자 v0.9.24`);
   console.log(`http://localhost:${PORT}`);
   console.log(`랭킹 설정: ${CLOUD_CONFIGURED ? 'Supabase 환경변수 있음 (실연결은 /api/storage에서 검증)' : '로컬 파일'}\n`);
 });
