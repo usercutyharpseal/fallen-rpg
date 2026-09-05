@@ -82,6 +82,10 @@ const ENDING_BONUS = {
   '팬텀': 1800,
   '끝없는 악몽': 2400,
   '노예': 6500,
+  '검은 왕관의 몰락': 45000,
+  '이름을 돌려준 자': 56000,
+  '닫힌 성채의 새 주인': 50000,
+  '폐쇄령의 마지막 이름': 5200,
 };
 
 function n(v, max = 100000) {
@@ -310,10 +314,14 @@ function mapCloudRow(x) {
   const meta=(x && typeof x.stats==='object' && x.stats) ? x.stats : {};
   const recordType=String(meta.recordType||'legacy');
   const ownerPlayerId=String(meta.ownerPlayerId||'');
+  const hardEndings=new Set(['검은 왕관의 몰락','이름을 돌려준 자','닫힌 성채의 새 주인','폐쇄령의 마지막 이름']);
+  const gameMode=String(meta.gameMode||'').toLowerCase()==='hard'||hardEndings.has(String(x.ending||''))?'hard':'normal';
   return {
     rowId: x.player_id,
     playerId: ownerPlayerId || x.player_id,
     recordType,
+    gameMode,
+    hardRoute: gameMode==='hard'?String(meta.hardRoute||'algon').slice(0,40):'',
     nickname: safeNickname(x.nickname),
     className: x.class_name,
     ending: x.ending,
@@ -505,6 +513,8 @@ app.post('/api/score', async (req, res) => {
   const score = scoreRun(stats);
   const entry = {
     playerId, nickname, className, ending, score,
+    gameMode:String(stats.gameMode||'').toLowerCase()==='hard'?'hard':'normal',
+    hardRoute:String(stats.hardRoute||'').slice(0,40),
     kills:n(stats.kills,200), gold:n(stats.goldHeld,100000), progress:n(stats.progress,500)
   };
 
@@ -597,11 +607,11 @@ app.post('/api/score', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.25' });
+  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.26' });
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n몰락자 v0.9.25`);
+  console.log(`\n몰락자 v0.9.26`);
   console.log(`http://localhost:${PORT}`);
   console.log(`랭킹 설정: ${CLOUD_CONFIGURED ? 'Supabase 환경변수 있음 (실연결은 /api/storage에서 검증)' : '로컬 파일'}\n`);
 });
