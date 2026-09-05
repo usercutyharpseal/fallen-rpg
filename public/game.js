@@ -7,9 +7,9 @@ const META_KEY = 'fallen_meta_v1';
 const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
 const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
 const PVP_NICK_KEY = 'fallen_pvp_nickname';
-const GAME_VERSION = 119;
+const GAME_VERSION = 120;
 
-const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, necromancer:3, dictator:5 };
+const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5 };
 function loadMeta(){
   try{
     const raw=JSON.parse(localStorage.getItem(META_KEY)||'{}');
@@ -48,6 +48,11 @@ const CLASSES = {
     name: '상인', hp: 5, atk: 5, social: 5, speed: 5, unlocked: true,
     passive: '장사꾼의 재능',
     desc: '새로운 조우마다 최대 체력만큼 골드를 얻고, 상점 가격이 25% 저렴해진다.'
+  },
+  gambler: {
+    name: '도박꾼', hp: 5, atk: 4, social: 4, speed: 2, unlocked: false,
+    passive: '운세가 좋군',
+    desc: '처세에 성공할 때마다 1~6 중 무작위 눈 하나를 강화한다. 이미 강화한 눈이 다시 나오면 아무 효과도 없다. 역전 주사위가 강화한 눈에 멈추면 즉시 역전한다.'
   },
   spellsword: {
     name: '마검사', hp: 6, atk: 13, social: 0, speed: 8, unlocked: false,
@@ -429,7 +434,7 @@ function freshState() {
     stats: {
       progress:0, goldEarned:0, goldSpent:0, kills:0, eliteKills:0, riskyWins:0,
       talkSolved:0, socialSuccess:0, socialFail:0, runSuccess:0, secrets:0,
-      survivors:0, growths:0, comebackWins:0, talkInteractions:0, overTalks:0, itemsUsed:0, corpses:0, tyranny:0, merchantDeals:0, merchantIncome:0, socialIncome:0, riskySocial:0, ending:'', maxAttackChanceBeaten:100
+      survivors:0, growths:0, comebackWins:0, talkInteractions:0, overTalks:0, itemsUsed:0, corpses:0, tyranny:0, merchantDeals:0, merchantIncome:0, socialIncome:0, riskySocial:0, gamblerFaces:[], gamblerFaceHits:0, gamblerDuplicates:0, ending:'', maxAttackChanceBeaten:100
     }
   };
 }
@@ -1332,6 +1337,11 @@ const EARLY_CLASS_FLAVOR = {
     beggars:'세 사람의 사정을 듣는 동안 필요한 비용부터 머릿속에 잡힌다. 배고픔도 원한도 결국 누군가는 값을 치른다. 문제는 그 값이 누구 몫이냐는 것이다.',
     gangster:'남자의 낡은 외투와 굳은손을 보고 하루 벌이가 어느 정도인지부터 짐작한다. 싸움보다 거래가 싸게 먹힐 가능성이 있다.'
   },
+  gambler:{
+    intro:'주머니는 가볍지만 손끝에는 아직 주사위를 굴리던 감각이 남아 있다. 가진 게 적을수록 한 번의 운이 더 크게 느껴지는 법이다.',
+    beggars:'세 사람의 말이 모두 맞을 확률은 낮아 보인다. 당신은 진실보다 먼저, 어느 쪽에 걸어야 손해가 적을지를 생각한다.',
+    gangster:'남자의 눈과 주먹을 번갈아 본다. 정면승부는 불리하다. 그래도 세상엔 불리한 판을 뒤집는 눈이 가끔 나온다.'
+  },
   spellsword:{
     intro:'손이 먼저 검을 찾는다. 몰락도 추방도 설명할 말은 많지만, 머릿속에 남은 답은 이상하리만큼 단순하다. 부술 수 있으면 지나갈 수 있다.',
     beggars:'세 사람의 하소연은 길다. 누가 옳은지보다 이 이야기가 결국 싸움으로 끝날지부터 생각하게 된다.',
@@ -1356,6 +1366,7 @@ const CLASS_REACTIONS = {
     noble:'경비병이 말투를 듣고 눈을 가늘게 뜬다. “그 말씨… 평민 골목에서 배운 건 아니군.”',
     thief:'경비병이 당신의 손부터 본다. “손은 보이게 둬. 요즘 문 앞에서 지갑 사라지는 일이 많아서.”',
     merchant:'경비병이 짐보다 허리의 돈주머니를 먼저 본다. “장사꾼이면 통행세부터 준비해. 안에서 값 깎는 건 네 자유고.”',
+    gambler:'경비병이 손가락 사이의 작은 주사위를 보고 인상을 찌푸린다. “성문 앞에서 판 벌일 생각은 접어. 운보다 통행증이 먼저다.”',
     spellsword:'경비병의 시선이 검에 오래 머문다. “그 물건, 칼집에서 꺼낼 생각은 하지 마.”',
     necromancer:'경비병이 이유도 모른 채 반걸음 물러난다. “이상하군. 네 주변만 유난히 찬 것 같은데.”',
     dictator:'당신의 첫마디가 명령처럼 떨어지자 경비병의 턱이 굳는다. “여긴 네 부하가 지키는 문이 아니다.”'
@@ -1365,6 +1376,7 @@ const CLASS_REACTIONS = {
     noble:'로벤은 옷보다 말투를 보고 값을 다시 생각한다. “좋은 집 출신은 흥정을 못하거나, 너무 잘하지. 어느 쪽인지 보자고.”',
     thief:'로벤이 수레 덮개를 슬쩍 당겨 닫는다. “눈으로 재는 건 공짜지만, 손대는 순간부터 가격이 붙어.”',
     merchant:'로벤의 눈빛이 처음으로 조금 즐거워진다. “동업자였나? 그럼 거짓말은 절반만 하자. 서로 시간 아깝잖아.”',
+    gambler:'로벤이 당신 손의 주사위를 힐끗 본다. “내 물건값을 운에 맡길 생각이면 관둬. 대신 네 목숨이라면 네 자유고.”',
     spellsword:'로벤은 검과 수레 사이 거리를 잰다. “물건은 부숴도 돈이 안 나와. 그 정도는 알지?”',
     necromancer:'로벤은 당신 뒤 빈 공간을 한 번 본다. “혼자 온 거 맞지? …됐다. 묻지 않는 것도 장사 수완이야.”',
     dictator:'로벤은 명령조를 듣고도 웃는다. “왕도 외상은 안 돼. 돈 내는 사람만 손님이야.”'
@@ -1374,6 +1386,7 @@ const CLASS_REACTIONS = {
     noble:'“신분이 죄를 가려주던 시절은 네게 끝났다.” 레오른은 예전 호칭을 일부러 입에 올리지 않는다.',
     thief:'“빠른 발로 여기까지 왔군.” 레오른의 시선이 골목 출구를 훑는다. “이번엔 도망갈 길부터 막았다.”',
     merchant:'“사람 목숨에도 값을 매길 셈인가?” 레오른은 당신의 돈주머니 쪽을 보지도 않는다.',
+    gambler:'레오른이 손안의 주사위를 본다. “전장을 도박판으로 본다면 오래 못 산다. 다만 오늘은 네 운이 얼마나 남았는지 보겠군.”',
     spellsword:'레오른은 당신의 검에서 눈을 떼지 않는다. “말보다 파괴가 편한 인간은 결국 파괴될 곳을 찾더군.”',
     necromancer:'“죽은 자를 데리고 다닌다는 소문이 있더군.” 레오른의 목소리가 더 낮아진다. “오늘은 더 늘리지 마라.”',
     dictator:'“명령할 사람을 찾는 눈이군.” 레오른이 검을 뽑는다. “여기엔 네 명령을 받을 사람이 없다.”'
@@ -1383,6 +1396,7 @@ const CLASS_REACTIONS = {
     noble:'“가문은 검을 대신 들어주지 않아.” 아르벤은 당신의 옛 신분을 이미 아는 듯 말한다.',
     thief:'아르벤은 당신이 빠져나갈 길을 보는 순간을 놓치지 않는다. “도망칠 곳을 먼저 찾는 건 좋은 습관이지. 상대가 나만 아니면.”',
     merchant:'“세상 모든 것에 값이 있다고 믿나?” 아르벤이 묻는다. “그럼 네가 여기까지 온 값도 생각해둬.”',
+    gambler:'아르벤은 주사위를 보지도 않고 말한다. “운은 실력 없는 사람만 믿는 게 아니야. 실력 있는 사람도 마지막 한 번은 운에 빚지지.”',
     spellsword:'아르벤의 시선이 마검에 닿는다. “힘이 검에서 오는지, 네가 검에 빌려주는 건지부터 알아야 오래 산다.”',
     necromancer:'“죽은 사람에게 기대는 건 쉽다.” 노인이 말한다. “살아 있는 사람의 책임을 지는 게 더 어렵지.”',
     dictator:'아르벤은 웃음기 없이 당신을 본다. “사람 위에 서고 싶다면 먼저 혼자 서는 법부터 보여라.”'
@@ -1392,6 +1406,7 @@ const CLASS_REACTIONS = {
     noble:'“말투가 비싸네.” 세리아가 웃는다. “숲에선 혈통보다 오늘 누가 배고픈지가 더 중요해.”',
     thief:'세리아는 당신의 발끝을 보고 웃는다. “도망칠 길부터 찾았지? 좋아. 적어도 솔직한 몸이네.”',
     merchant:'세리아가 지도 위 교역로를 손가락으로 두드린다. “장사꾼이면 알겠네. 우리가 원하는 건 왕관보다 길이야.”',
+    gambler:'세리아가 웃으며 손을 내민다. “주사위 굴리는 사람인가? 좋아. 다만 여기선 네 목숨까지 판돈에 올라가.”',
     spellsword:'“칼로 다 해결하는 사람은 협상하기 편해.” 세리아가 단검을 든다. “원하는 게 뻔하거든.”',
     necromancer:'세리아가 당신 뒤를 바라본다. “죽은 놈들이 네 편이면, 산 놈들한테는 뭘 줄 건데?”',
     dictator:'“왕 하나도 벅찬데 또 왕 노릇 할 사람이 왔네.” 세리아의 미소가 얇아진다.'
@@ -1401,6 +1416,7 @@ const CLASS_REACTIONS = {
     noble:'왕은 당신의 옛 신분을 비웃듯 부른다. “가문이 무너져도 귀족의 버릇은 남는군.”',
     thief:'“도망칠 길을 찾는 눈이군.” 왕이 옆문을 잠그라는 손짓을 한다. “이번 알현은 짧게 끝내지.”',
     merchant:'“왕국까지 흥정거리로 보이나?” 에드란이 차갑게 웃는다. “그럼 네 목숨의 가격부터 매겨봐라.”',
+    gambler:'왕이 주사위를 내려다본다. “왕좌 앞에서 운을 시험하러 왔나? 실패한 판돈은 목으로 받겠다.”',
     spellsword:'왕은 마검을 보며 자리에서 일어난다. “말보다 저게 편하겠지. 나도 오늘은 그렇다.”',
     necromancer:'“내 병사들의 죽음까지 네 병력으로 셀 셈인가?” 왕의 분노가 한층 깊어진다.',
     dictator:'에드란의 표정에서 모욕감이 번진다. “왕좌가 비어 보였나? 앉기 전에 무릎부터 꿇게 해주지.”'
@@ -1856,7 +1872,7 @@ function render() {
   $('hudGold').textContent = `◆ ${state.p.gold}`;
   $('hpText').textContent = `${state.p.hp} / ${state.p.maxHp}`;
   $('hpBar').style.width = `${Math.max(0, Math.min(100, state.p.hp/state.p.maxHp*100))}%`;
-  const classExtra=state.classId==='necromancer'?` · 시체 ${state.stats.corpses||0}`:state.classId==='dictator'?` · 독재 ${state.stats.tyranny||0}`:state.classId==='merchant'?` · 장사 ${state.stats.merchantIncome||0}`:'';
+  const classExtra=state.classId==='necromancer'?` · 시체 ${state.stats.corpses||0}`:state.classId==='dictator'?` · 독재 ${state.stats.tyranny||0}`:state.classId==='merchant'?` · 장사 ${state.stats.merchantIncome||0}`:state.classId==='gambler'?` · 강화 눈 ${(state.stats.gamblerFaces||[]).length?(state.stats.gamblerFaces||[]).join('·'):'없음'}`:'';
   $('hudStats').textContent = `처세 ${state.p.social} · 속도 ${state.p.speed} · 진행 ${state.stats.progress}${classExtra}`;
 
   $('chapter').textContent = sc.chapter || '';
@@ -2084,6 +2100,34 @@ function grantSocialReward(enemy,chance){
   floatText(`◆ +${amount}`);
 }
 
+function gamblerFortuneOnSocialSuccess(){
+  if(state.classId!=='gambler')return;
+  state.stats.gamblerFaces=Array.isArray(state.stats.gamblerFaces)?state.stats.gamblerFaces:[];
+  const face=1+Math.floor(Math.random()*6);
+  if(state.stats.gamblerFaces.includes(face)){
+    state.stats.gamblerDuplicates=Number(state.stats.gamblerDuplicates||0)+1;
+    state.flags.gamblerFortuneNote=`운세가 좋군… 주사위 ${face}이 다시 나왔다. 이미 강화된 눈이라 아무 일도 일어나지 않았다.`;
+    floatText(`${face} · 꽝`);
+    return;
+  }
+  state.stats.gamblerFaces.push(face);
+  state.stats.gamblerFaces.sort((a,b)=>a-b);
+  state.flags.gamblerFortuneNote=`운세가 좋군. 주사위 ${face}의 눈이 강화됐다.`;
+  floatText(`${face} 강화`);
+}
+function gamblerComebackFaces(){
+  return state.classId==='gambler'&&Array.isArray(state.stats?.gamblerFaces)?state.stats.gamblerFaces:[];
+}
+function comebackSucceeds(roll){
+  return roll>=(encMod().comebackMin||6)||gamblerComebackFaces().includes(Number(roll));
+}
+function comebackRuleText(){
+  const min=encMod().comebackMin||6;
+  const base=min===6?'6':`${min}~6`;
+  const faces=gamblerComebackFaces();
+  return faces.length?`${base} 또는 강화 눈 ${faces.join('·')}`:base;
+}
+
 function gameAction(type) {
   const sc=SCENES[state.sceneId], enemy=getEnemy(sc); if(!sc||!enemy||state.ended)return;
   if(type==='talk') { handleTalk(sc); return; }
@@ -2093,7 +2137,21 @@ function gameAction(type) {
     if(sc.socialDisabled || state.socialUsed[socialKey]) return;
     state.socialUsed[socialKey]=true;
     const chance=socialChance(enemy,sc);
-    if(Math.random()*100<chance){state.stats.socialSuccess++;grantSocialReward(enemy,chance);if(state.classId==='dictator')gainTyranny('social');fx('good');floatText('처세 성공');if(sc.socialSuccess)sc.socialSuccess();else resolve('social',null,'처세에 성공했다.');}
+    if(Math.random()*100<chance){
+      state.stats.socialSuccess++;
+      grantSocialReward(enemy,chance);
+      if(state.classId==='gambler')gamblerFortuneOnSocialSuccess();
+      if(state.classId==='dictator')gainTyranny('social');
+      fx('good');
+      if(state.classId!=='gambler')floatText('처세 성공');
+      if(sc.socialSuccess)sc.socialSuccess();else resolve('social',null,'처세에 성공했다.');
+      if(state.flags?.gamblerFortuneNote){
+        const note=state.flags.gamblerFortuneNote;
+        delete state.flags.gamblerFortuneNote;
+        state.lastToast=state.lastToast?`${state.lastToast}\n\n${note}`:note;
+        save();render();
+      }
+    }
     else {state.stats.socialFail++;fx('bad');floatText('처세 실패');if(sc.socialFail)sc.socialFail();else {toast('처세에 실패했다. 같은 방법은 다시 통하지 않는다.','bad');render();save();}}
     return;
   }
@@ -2152,7 +2210,7 @@ function hideBattleOverlay(){
 }
 async function rollComebackDie(){
   $('battleDiceWrap').classList.remove('hidden');
-  const min=encMod().comebackMin||6; const cap=document.querySelector('.dice-caption'); if(cap)cap.textContent=`역전 판정 · ${min===6?'6':min+'~6'}이 나오면 뒤집는다`;
+  const min=encMod().comebackMin||6; const cap=document.querySelector('.dice-caption'); if(cap)cap.textContent=`역전 판정 · ${comebackRuleText()}이면 뒤집는다`;
   const die=$('battleDie'); die.classList.add('rolling');
   const finalRoll=1+Math.floor(Math.random()*6);
   for(let i=0;i<10;i++){
@@ -2238,9 +2296,12 @@ async function startBattleSequence(sc, enemy){
     setBattleText('밀리고 있다.\n한 번만 더 버티면 기회가 온다.','danger');
     await sleep(850);
     const comebackMin=encMod().comebackMin||6;
-    setBattleText(`역전 주사위를 굴린다.\n${comebackMin===6?'6':comebackMin+'~6'}이 나오면 전세를 뒤집는다.`,'danger');
+    setBattleText(`역전 주사위를 굴린다.\n${comebackRuleText()}이면 전세를 뒤집는다.`,'danger');
     const roll=await rollComebackDie();
-    if(roll>=(encMod().comebackMin||6)){
+    if(comebackSucceeds(roll)){
+      if(state.classId==='gambler'&&gamblerComebackFaces().includes(Number(roll))&&roll<comebackMin){
+        state.stats.gamblerFaceHits=Number(state.stats.gamblerFaceHits||0)+1;
+      }
       $('battleOverlay').classList.add('comeback-bg');
       $('battleEnemyHp').style.width='0%';
       setBattleText(`${roll} · 역전!`,'comeback');
@@ -2288,6 +2349,10 @@ function resolve(method,next,msg,ending=null) {
 }
 function queueOutcome(msg,next=null,ending=null) {
   if(next||ending)markEncounterResolution('talk',next,ending,true);
+  if(state.flags?.gamblerFortuneNote){
+    msg=`${msg||''}\n\n${state.flags.gamblerFortuneNote}`.trim();
+    delete state.flags.gamblerFortuneNote;
+  }
   state.lastToast=msg||'';
   state.pending={next,ending};
   save(); render();
@@ -2401,7 +2466,7 @@ function finish(name) {
   $('playStyle').textContent=`플레이 스타일 · ${playStyle()}`;
   $('endScore').textContent=clientScore().toLocaleString();
   const deathBlock=e.bad&&state.flags.deathReason?`<b>최후의 순간</b> · ${escapeHtml(state.flags.deathReason)}<br><b>사망 장소</b> · ${escapeHtml(SCENES[state.flags.deathScene]?.location||'알 수 없는 장소')}<br><br><br>`:'';
-  $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>협상 수익 <b>◆ ${state.stats.socialIncome||0}</b> · 고난도 협상 <b>${state.stats.riskySocial||0}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 과대화 <b>${state.stats.overTalks||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>${state.classId==='merchant'?`<br>장사 수익 <b>${state.stats.merchantIncome||0}</b> · 새 조우 <b>${state.stats.merchantDeals||0}</b>`:''}`;
+  $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>협상 수익 <b>◆ ${state.stats.socialIncome||0}</b> · 고난도 협상 <b>${state.stats.riskySocial||0}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 과대화 <b>${state.stats.overTalks||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>${state.classId==='merchant'?`<br>장사 수익 <b>${state.stats.merchantIncome||0}</b> · 새 조우 <b>${state.stats.merchantDeals||0}</b>`:state.classId==='gambler'?`<br>강화한 눈 <b>${(state.stats.gamblerFaces||[]).length?(state.stats.gamblerFaces||[]).join(' · '):'없음'}</b> · 강화 역전 <b>${state.stats.gamblerFaceHits||0}</b> · 중복 꽝 <b>${state.stats.gamblerDuplicates||0}</b>`:''}`;
   const meta=loadMeta();
   if(!e.bad){
     const unlockLine=state.flags.newClassUnlocks?.length?`<br><br><b>새 직업 해금 · ${state.flags.newClassUnlocks.map(escapeHtml).join(' / ')}</b>`:`<br><br>노말 엔딩 <b>${meta.normalClears}회</b>`;
@@ -2540,6 +2605,9 @@ function normalizeLoadedState(data){
   merged.stats.merchantIncome=Number(data.stats?.merchantIncome||0);
   merged.stats.socialIncome=Number(data.stats?.socialIncome||0);
   merged.stats.riskySocial=Number(data.stats?.riskySocial||0);
+  merged.stats.gamblerFaces=Array.isArray(data.stats?.gamblerFaces)?[...new Set(data.stats.gamblerFaces.map(Number).filter(x=>x>=1&&x<=6))]:[];
+  merged.stats.gamblerFaceHits=Number(data.stats?.gamblerFaceHits||0);
+  merged.stats.gamblerDuplicates=Number(data.stats?.gamblerDuplicates||0);
   merged.runId=String(data.runId||base.runId);
   merged.version=GAME_VERSION;
   return migrateLegacyWorld(merged,data);
