@@ -86,6 +86,29 @@ const ENDING_BONUS = {
   '이름을 돌려준 자': 56000,
   '닫힌 성채의 새 주인': 50000,
   '폐쇄령의 마지막 이름': 5200,
+  "검은 밀랍의 첫 번째 이름": 2100,
+  "이름으로 낸 통행세": 2400,
+  "도둑에게 없는 퇴로": 2600,
+  "까마귀가 울린 뒤": 2800,
+  "빌린 이름의 끝": 3000,
+  "초대받지 못한 이름": 3000,
+  "거짓 허가의 종착지": 3200,
+  "손바닥에 남은 이름": 3500,
+  "732번": 3500,
+  "빈 감방의 대체자": 3900,
+  "화로 앞의 검은 재": 3900,
+  "하르트가 기억한 마지막 사람": 4300,
+  "봉인과 함께 꺼진 이름": 4500,
+  "검은 못의 성례": 4200,
+  "너무 늦은 고해": 4600,
+  "사슬문 아래": 4000,
+  "명령보다 늦은 의심": 4700,
+  "무명군의 새 병사": 4600,
+  "카르센이 기억한 마지막 이름": 5000,
+  "완벽한 폐쇄령": 5300,
+  "왕좌가 기억한 이름": 6000,
+  "말이 끝난 왕좌": 5700,
+  "세 봉인은 주인을 살리지 못했다": 6400,
 };
 
 function n(v, max = 100000) {
@@ -314,7 +337,7 @@ function mapCloudRow(x) {
   const meta=(x && typeof x.stats==='object' && x.stats) ? x.stats : {};
   const recordType=String(meta.recordType||'legacy');
   const ownerPlayerId=String(meta.ownerPlayerId||'');
-  const hardEndings=new Set(['검은 왕관의 몰락','이름을 돌려준 자','닫힌 성채의 새 주인','폐쇄령의 마지막 이름']);
+  const hardEndings=new Set(['검은 왕관의 몰락','이름을 돌려준 자','닫힌 성채의 새 주인','폐쇄령의 마지막 이름','검은 밀랍의 첫 번째 이름','이름으로 낸 통행세','도둑에게 없는 퇴로','까마귀가 울린 뒤','빌린 이름의 끝','초대받지 못한 이름','거짓 허가의 종착지','손바닥에 남은 이름','732번','빈 감방의 대체자','화로 앞의 검은 재','하르트가 기억한 마지막 사람','봉인과 함께 꺼진 이름','검은 못의 성례','너무 늦은 고해','사슬문 아래','명령보다 늦은 의심','무명군의 새 병사','카르센이 기억한 마지막 이름','완벽한 폐쇄령','왕좌가 기억한 이름','말이 끝난 왕좌','세 봉인은 주인을 살리지 못했다']);
   const rawMode=String(meta.gameMode||'').trim().toLowerCase();
   const rawRoute=String(meta.hardRoute||'').trim();
   const ending=String(x.ending||'').trim();
@@ -610,11 +633,11 @@ app.post('/api/score', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.27' });
+  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.28' });
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n몰락자 v0.9.27`);
+  console.log(`\n몰락자 v0.9.28`);
   console.log(`http://localhost:${PORT}`);
   console.log(`랭킹 설정: ${CLOUD_CONFIGURED ? 'Supabase 환경변수 있음 (실연결은 /api/storage에서 검증)' : '로컬 파일'}\n`);
 });

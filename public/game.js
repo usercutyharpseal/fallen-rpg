@@ -262,7 +262,133 @@ const BAD_ENDINGS = {
   }
 };
 
+const HARD_ALGON_BAD_VARIANTS = {
+  roadMarauder: {
+    title:'검은 밀랍의 첫 번째 이름', kind:'BAD END · LORD ALGON · 폐도', art:'hard_march', bonus:2100,
+    epilogue:'북부에 들어온 뒤 처음 만난 칼은 알곤의 기사도, 무명군도 아니었다. 가족의 이름을 빼앗기고 탈영한 병사의 검이었다.\n\n그는 쓰러진 당신의 주머니를 뒤지다 검은 밀랍을 발견하고 한참 손을 멈췄다. “성까지 갈 생각이었나.”\n\n그날 저녁, 뒤집힌 수레 옆에 시체 하나가 더 생겼다. 폐쇄성의 장부에는 아직 이름조차 올라가지 못한 채였다.'
+  },
+  toll: {
+    title:'이름으로 낸 통행세', kind:'BAD END · LORD ALGON · 검은 관문', art:'hard_march', bonus:2400,
+    epilogue:'관문병은 끝까지 돈을 요구하지 않았다. 북부에서 가장 비싼 것은 금화가 아니라 이름이었다.\n\n당신이 쓰러진 뒤 그는 피 묻은 기록지의 빈칸을 하나씩 채웠다. 출신, 특징, 입경 시각. 마지막 칸에는 퇴경 시각 대신 검은 선 하나를 그었다.\n\n당신은 결국 관문을 넘었다. 살아 있는 사람으로서가 아니라, 폐쇄령이 처리해야 할 기록으로.'
+  },
+  tollWanted: {
+    title:'도둑에게 없는 퇴로', kind:'BAD END · LORD ALGON · 검은 관문', art:'hard_march', bonus:2600,
+    epilogue:'경계 장터에서 놓친 전령은 당신보다 빨랐다. 검은 관문에는 이미 훔친 물자의 목록과 대강의 인상착의가 도착해 있었다.\n\n관문병은 이름을 묻는 척했지만 대답을 기다리지 않았다. 창끝이 내려오고, 뒤쪽 문이 먼저 잠겼다.\n\n공짜로 챙긴 붕대와 약은 피 묻은 압수품 상자에 돌아갔다. 북부에서 약탈의 값은 골드가 아니라 퇴로였다.'
+  },
+  scout: {
+    title:'까마귀가 울린 뒤', kind:'BAD END · LORD ALGON · 감시탑', art:'hard_march', bonus:2800,
+    epilogue:'정찰병이 잡았던 작은 종은 싸움이 끝나기 전에 한 번 울렸다. 큰 소리도 아니었다. 그러나 북부에서는 그 한 번이면 충분했다.\n\n멀리 있는 감시탑들이 차례로 같은 소리를 돌려보냈다. 당신이 쓰러질 때쯤에는 성채까지 이미 소식이 닿아 있었다.\n\n시체보다 먼저 도착한 것은 보고서였다. “외부인 한 명. 기록 불일치. 처리 완료.”'
+  },
+  scoutFalseName: {
+    title:'빌린 이름의 끝', kind:'BAD END · LORD ALGON · 감시탑', art:'hard_march', bonus:3000,
+    epilogue:'검은 관문에서 빌린 조사관의 이름은 잠깐 문을 열어줬지만, 까마귀 감시탑까지 속이지는 못했다.\n\n정찰병은 당신이 쓰러진 뒤 가짜 이름을 한 번, 시체의 얼굴을 한 번 확인했다. 그리고 장부 가장자리에서 진짜 주인의 기록까지 찾아냈다.\n\n그날 폐쇄성에서는 한 이름에 두 사람의 흔적이 생겼고, 알곤의 기록관은 둘 중 하나를 지우는 대신 둘 다 봉인했다.'
+  },
+  outerGate: {
+    title:'초대받지 못한 이름', kind:'BAD END · LORD ALGON · 외성문', art:'hard_throne', bonus:3000,
+    epilogue:'폐쇄성 외성문은 바깥의 적을 막기 위해 세워진 문이 아니었다. 안으로 들어온 것을 다시 내보내지 않기 위한 문이었다.\n\n당신은 그 의미를 문턱 바로 앞에서 알았다. 기사는 쓰러진 몸을 성 안쪽으로 끌어들였고, 문은 아무 일도 없었다는 듯 닫혔다.\n\n초대 기록은 끝내 생기지 않았다. 대신 사후 이관 기록 한 줄이 그 자리를 대신했다.'
+  },
+  outerGateLie: {
+    title:'거짓 허가의 종착지', kind:'BAD END · LORD ALGON · 외성문', art:'hard_throne', bonus:3200,
+    epilogue:'정찰탑에서 밀어붙인 거짓 허가는 외성문까지 따라왔다. 기사는 기록 담당관에게 확인하겠다고 말했지만, 실제로 확인한 것은 당신의 도망칠 방향이었다.\n\n서류의 모순을 설명하는 동안 문이 닫혔고 방패가 길을 막았다.\n\n나중에 기록관은 허가서 옆에 짧게 덧붙였다. “문서 위조 의심. 본인 확인 불필요.” 죽은 사람에게는 허가가 필요 없었으니까.'
+  },
+  nameVault: {
+    title:'손바닥에 남은 이름', kind:'BAD END · LORD ALGON · 이름 금고', art:'hard_throne', bonus:3500,
+    epilogue:'첫 번째 봉인은 뽑히기 직전까지 수천 개의 이름을 한데 묶고 있었다. 당신은 그것을 맨손으로 잡아당겼다.\n\n검은 인장이 살을 태우고, 금속판들이 한꺼번에 떨렸다. 어느 순간 수천 개의 글자가 겹쳐 들리는 듯했고 자신의 이름이 무엇이었는지조차 흐려졌다.\n\n금고지기가 나중에 발견한 것은 시체와 반쯤 뽑힌 봉인뿐이었다. 손바닥에는 검은 글자 하나가 끝까지 지워지지 않았다.'
+  },
+  warden: {
+    title:'732번', kind:'BAD END · LORD ALGON · 번호 감옥', art:'hard_throne', bonus:3500,
+    epilogue:'바르몬은 당신의 이름을 묻지 않았다. 감옥장에게 이름은 오래전에 불필요한 정보가 되어 있었다.\n\n싸움이 끝난 뒤 그는 빈 감방 하나를 열고 문에 새 숫자를 적었다. 732. 열쇠 꾸러미가 한 번 울리고 장부 한 줄이 늘었다.\n\n다음 날 죄수들은 731 다음 숫자를 처음 듣게 됐다. 아무도 그 번호가 누구였는지는 알지 못했다.'
+  },
+  wardenFreed: {
+    title:'빈 감방의 대체자', kind:'BAD END · LORD ALGON · 번호 감옥', art:'hard_throne', bonus:3900,
+    epilogue:'731번을 풀어준 순간 감옥의 숫자는 하나 비었다. 바르몬은 빈칸을 싫어하는 사람이었다.\n\n당신이 계단에서 쓰러지자 그는 화를 내지도 않았다. 그저 731의 문패를 떼고, 피가 마르기도 전에 다른 감방으로 걸어갔다.\n\n“하나는 나갔고 하나는 들어왔군.”\n\n그날 밤 장부의 총수는 다시 정확해졌다. 당신이 구한 사람의 자유는 남았지만, 빈자리는 당신의 번호로 메워졌다.'
+  },
+  forgeKnight: {
+    title:'화로 앞의 검은 재', kind:'BAD END · LORD ALGON · 서약로', art:'hard_throne', bonus:3900,
+    epilogue:'하르트의 갑옷 안에는 피가 없었다. 검이 움직일 때마다 틈새에서 검은 재만 흘렀다.\n\n당신이 쓰러진 뒤 그는 한동안 아무 말도 하지 않았다. 이름을 반납한 기사에게 승리의 함성도 복수도 필요하지 않았다.\n\n심장 화로의 푸른 불이 한 번 커졌고, 바닥의 피와 검은 재를 똑같이 태웠다. 서약로는 다시 아무 일도 없었다는 듯 조용해졌다.'
+  },
+  forgeKnightTalked: {
+    title:'하르트가 기억한 마지막 사람', kind:'BAD END · LORD ALGON · 서약로', art:'hard_throne', bonus:4300,
+    epilogue:'당신은 하르트에게 이름을 반납했다면 왜 아직 그 이름에 반응하느냐고 물었다. 질문은 분명 닿았다. 검끝이 아주 잠깐 흔들렸으니까.\n\n하지만 기억은 늦었고 검은 빨랐다. 당신이 쓰러진 뒤 하르트는 처음으로 자기 이름을 입 밖에 내보려 했다. 소리는 끝내 완성되지 않았다.\n\n그가 되찾은 첫 기억은 자신의 과거가 아니라, 자신에게 이름을 물어본 마지막 사람의 얼굴이었다.'
+  },
+  forgeCore: {
+    title:'봉인과 함께 꺼진 이름', kind:'BAD END · LORD ALGON · 심장 화로', art:'hard_throne', bonus:4500,
+    epilogue:'두 번째 봉인은 검보다 단단했고 불보다 뜨거웠다. 이미 상처 입은 몸으로 인장을 부수려 한 순간, 푸른 화로가 안쪽에서 폭발하듯 숨을 토했다.\n\n주변 갑옷 몇 벌이 동시에 무릎을 꿇었다. 봉인은 흔들렸지만 끝내 완전히 깨지지 않았다.\n\n당신은 알곤의 군대를 약하게 만들기 직전까지 갔다. 다만 그 대가로 자신의 이름이 새겨질 마지막 사람까지 잃었다.'
+  },
+  confessor: {
+    title:'검은 못의 성례', kind:'BAD END · LORD ALGON · 검은 예배당', art:'hard_throne', bonus:4200,
+    epilogue:'모르가는 무기를 들지 않았다. 그래서 마지막 순간까지도 싸움이 아니라 의식처럼 보였다.\n\n당신이 무릎을 꿇자 그는 검은 못을 들어 이름을 한 번 물었다. 대답이 없자 “침묵도 동의다”라고 속삭였다.\n\n못이 빈 명패에 박히는 순간 예배당의 종이 작게 울렸다. 다음 날부터 바닥의 수많은 긁힌 이름 사이에 당신의 흔적은 없었다. 너무 깨끗하게 지워졌기 때문이다.'
+  },
+  confessorHint: {
+    title:'너무 늦은 고해', kind:'BAD END · LORD ALGON · 검은 예배당', art:'hard_throne', bonus:4600,
+    epilogue:'당신은 모르가에게 아래쪽의 악마와 알곤의 모순을 말하게 만들었다. 사제는 처음으로 자신이 믿어온 교리를 의심했다.\n\n하지만 의심이 사람을 즉시 선하게 만들지는 않았다. 당신이 쓰러진 뒤 모르가는 검은 못을 쥔 손을 오래 떨었다.\n\n결국 그는 의식을 끝냈다. 다만 그날 밤부터 고해실 안에서는 같은 문장이 반복됐다. “우리가 막으려던 것과 우리가 된 것은 정말 다른가.” 당신의 죽음은 성을 멈추지 못했지만 한 사람의 믿음에는 금을 냈다.'
+  },
+  chain: {
+    title:'사슬문 아래', kind:'BAD END · LORD ALGON · 내성', art:'hard_throne', bonus:4000,
+    epilogue:'로드릭은 쓰러진 당신의 몸을 문 안쪽으로 끌어들였다. 사슬문은 한 번도 완전히 열린 적이 없었던 것처럼 천천히 닫혔다.\n\n아래로 떨어졌던 사슬이 다시 당겨지고, 다리의 틈이 맞물렸다. 성 밖에서는 누구도 안에서 무슨 일이 있었는지 볼 수 없었다.\n\n로드릭은 검의 피를 닦은 뒤 같은 자리에 섰다. 충성은 살아 있는 사람보다 오래 남았다.'
+  },
+  chainSeal: {
+    title:'명령보다 늦은 의심', kind:'BAD END · LORD ALGON · 내성', art:'hard_throne', bonus:4700,
+    epilogue:'깨진 명령의 봉인을 본 순간 로드릭은 분명 망설였다. 자신이 지키는 명령이 이미 효력을 잃었다는 가능성이 처음으로 그의 얼굴에 나타났다.\n\n그러나 수십 년의 충성은 한 번의 의심보다 빨랐다. 검이 먼저 움직였고 당신은 사슬 아래에서 쓰러졌다.\n\n문이 닫힌 뒤에도 로드릭은 한참 검을 거두지 못했다. 그날 이후 그는 알곤의 명령을 수행할 때마다 봉인이 깨진 손자국을 먼저 확인했다. 의심은 살아남았지만, 그것을 심은 사람은 살아남지 못했다.'
+  },
+  grave: {
+    title:'무명군의 새 병사', kind:'BAD END · LORD ALGON · 무명군', art:'hard_lastbattle', bonus:4600,
+    epilogue:'카르센의 창이 멈춘 뒤 무명군은 잠시 길을 열었다. 살아서 지나가라는 뜻은 아니었다.\n\n병사들은 당신을 왕좌 계단 아래로 옮겼고, 누군가 갑옷 한 벌을 가져왔다. 이름표가 있어야 할 자리에는 아무것도 없었다.\n\n다음 밤, 성채를 도는 유령의 대열에는 낯선 그림자 하나가 더 섞였다. 누구도 새 병사의 이름을 묻지 않았다. 무명군에게 필요한 것은 이름이 아니라 마지막 명령뿐이었다.'
+  },
+  graveName: {
+    title:'카르센이 기억한 마지막 이름', kind:'BAD END · LORD ALGON · 무명군', art:'hard_lastbattle', bonus:5000,
+    epilogue:'이름의 봉인을 보여주자 카르센은 분명 흔들렸다. 당신이 그의 이름을 부를 때마다 푸른 불빛이 사람의 눈처럼 잠깐 돌아왔다.\n\n하지만 마지막 명령은 기억보다 깊었다. 창이 갑옷 틈을 찌르고 당신이 계단에 쓰러진 뒤에야 카르센은 무기를 놓았다.\n\n그는 한참 뒤 자신의 이름을 완전히 떠올렸다. 그리고 되찾은 기억으로 가장 먼저 한 일은, 자신에게 이름을 돌려주려 했던 사람의 시체 앞에 무릎을 꿇는 것이었다.'
+  },
+  algonDefault: {
+    title:'폐쇄령의 마지막 이름', kind:'BAD END · LORD ALGON · 대왕좌', art:'hard_algon', bonus:5200,
+    epilogue:'도망칠 문은 먼저 닫혔다. 알곤은 쓰러진 당신을 오래 바라보지 않았다. 왕좌 옆 검은 장부를 펼치는 데 더 많은 시간을 썼다.\n\n펜끝이 종이를 긁었다. 당신이 살린 사람과 죽인 사람, 훔친 이름과 모은 증거가 몇 줄로 정리됐다. 마지막에는 이름 옆에 작은 검은 점 하나가 찍혔다.\n\n“여기 들어온 이름은 내 허락 없이 나가지 않는다.”\n\n당신은 그 말이 협박이 아니라 행정 절차였다는 것을 너무 늦게 이해했다.'
+  },
+  algonNoSeals: {
+    title:'완벽한 폐쇄령', kind:'BAD END · LORD ALGON · 대왕좌', art:'hard_algon', bonus:5300,
+    epilogue:'봉인은 하나도 깨지지 않았다. 이름 금고도, 심장 화로도, 명령의 사슬도 제 기능을 유지한 채였다.\n\n알곤이 검을 들자 성 전체가 한 몸처럼 반응했다. 문이 닫히고 무명군이 무릎을 세우며 장부의 검은 글자가 번졌다. 당신은 군주 하나와 싸운 것이 아니라 완성된 제도 전체와 싸우고 있었다.\n\n패배 뒤에도 성은 흔들리지 않았다. 다음 날 종은 정확한 시간에 울렸고 감옥의 숫자는 맞았으며 왕좌에는 같은 사람이 앉아 있었다. 당신이 왔다는 사실만 장부 한 줄로 남았다.'
+  },
+  algonNamed: {
+    title:'왕좌가 기억한 이름', kind:'BAD END · LORD ALGON · 대왕좌', art:'hard_algon', bonus:6000,
+    epilogue:'마지막 문 앞에서 당신은 자기 이름을 직접 말했다. 알곤의 규칙을 정면으로 받아들이고, 이름 있는 사람으로 왕좌에 들어갔다.\n\n그래서 패배한 뒤에도 성은 당신을 잊지 않았다. 검은 장부의 글자가 스스로 번지며 문과 사슬, 무명군의 명패에 같은 이름을 반복해서 새겼다.\n\n알곤은 그것을 보고 처음으로 아주 작게 웃었다. “적어도 네가 누구였는지는 영원히 남겠군.”\n\n북부에서 잊히지 않는다는 것은 구원이 아니었다. 때로는 가장 완벽한 감옥이었다.'
+  },
+  algonTalk: {
+    title:'말이 끝난 왕좌', kind:'BAD END · LORD ALGON · 대왕좌', art:'hard_algon', bonus:5700,
+    epilogue:'당신은 검보다 말을 오래 붙잡았다. 모은 기록을 들이밀고 희생자의 이름을 읽으며 알곤의 명분에 금을 냈다.\n\n한 번은 그의 손이 멈췄다. 두 번은 대답이 늦었다. 그러나 세 번째부터 그는 장부를 덮었다.\n\n“말로 끝낼 기회는 줬다.”\n\n그 뒤의 싸움은 짧지 않았지만 결말은 분명했다. 알곤은 논쟁에서 흔들렸고 왕좌는 흔들리지 않았다. 당신의 마지막 말은 기록되지 않았다.'
+  },
+  algonPrepared: {
+    title:'세 봉인은 주인을 살리지 못했다', kind:'BAD END · LORD ALGON · 대왕좌', art:'hard_algon', bonus:6400,
+    epilogue:'세 봉인은 모두 당신의 손에 있었고, 아르벤과 레오른의 기록도, 이관 원장의 증거도 충분했다. 무명군은 흔들렸고 알곤의 명분은 이미 무너지고 있었다.\n\n그래서 이 패배는 더 잔인했다. 거의 모든 준비가 옳았고, 거의 모든 선택이 왕좌를 약하게 만들었다. 마지막 한 번만 버티지 못했다.\n\n당신이 쓰러지자 세 봉인이 바닥을 굴렀다. 알곤은 그것들을 하나씩 주워 원래 자리에 돌려놓지 않았다. 대신 서로 다른 금고에 봉인했다.\n\n“다시는 한 사람이 셋을 모으지 못하게 해라.” 다음 도전자는 당신보다 더 어려운 성을 만나게 됐다.'
+  }
+};
+
+function hardAlgonBadEndingForCurrentScene(){
+  if(state?.flags?.gameMode!=='hard' || state?.flags?.hardRoute!=='algon')return null;
+  const id=state.sceneId;
+  if(id==='hardRoadMarauder')return HARD_ALGON_BAD_VARIANTS.roadMarauder;
+  if(id==='hardTollGate')return state.flags.hardWanted?HARD_ALGON_BAD_VARIANTS.tollWanted:HARD_ALGON_BAD_VARIANTS.toll;
+  if(id==='hardScout')return state.flags.hardFalseName?HARD_ALGON_BAD_VARIANTS.scoutFalseName:HARD_ALGON_BAD_VARIANTS.scout;
+  if(id==='hardOuterGate')return state.flags.hardScoutLie?HARD_ALGON_BAD_VARIANTS.outerGateLie:HARD_ALGON_BAD_VARIANTS.outerGate;
+  if(id==='hardNameVault')return HARD_ALGON_BAD_VARIANTS.nameVault;
+  if(id==='hardWarden')return state.flags.hard731Freed?HARD_ALGON_BAD_VARIANTS.wardenFreed:HARD_ALGON_BAD_VARIANTS.warden;
+  if(id==='hardForgeKnight')return Number(state.talkCount?.hardForgeKnight||0)>0?HARD_ALGON_BAD_VARIANTS.forgeKnightTalked:HARD_ALGON_BAD_VARIANTS.forgeKnight;
+  if(id==='hardForgeCore')return HARD_ALGON_BAD_VARIANTS.forgeCore;
+  if(id==='hardConfessor')return state.flags.algonDemonHint?HARD_ALGON_BAD_VARIANTS.confessorHint:HARD_ALGON_BAD_VARIANTS.confessor;
+  if(id==='hardChainKnight')return state.flags.algonSealCommand?HARD_ALGON_BAD_VARIANTS.chainSeal:HARD_ALGON_BAD_VARIANTS.chain;
+  if(id==='hardGraveCaptain')return state.flags.algonSealName?HARD_ALGON_BAD_VARIANTS.graveName:HARD_ALGON_BAD_VARIANTS.grave;
+  if(id==='hardAlgonBoss'){
+    const seals=algonSealCount(),evidence=hardEvidenceCount(),talks=Number(state.talkCount?.hardAlgonBoss||0);
+    if(seals>=3&&evidence>=3)return HARD_ALGON_BAD_VARIANTS.algonPrepared;
+    if(state.flags.algonNamedEntry)return HARD_ALGON_BAD_VARIANTS.algonNamed;
+    if(talks>=2)return HARD_ALGON_BAD_VARIANTS.algonTalk;
+    if(seals===0)return HARD_ALGON_BAD_VARIANTS.algonNoSeals;
+    return HARD_ALGON_BAD_VARIANTS.algonDefault;
+  }
+  return null;
+}
+
 function badEndingForCurrentScene() {
+  const hardAlgon = hardAlgonBadEndingForCurrentScene();
+  if (hardAlgon) return hardAlgon;
   const exact = BAD_ENDINGS[state.sceneId];
   if (exact) return exact;
   const sc = SCENES[state.sceneId];
@@ -3381,14 +3507,18 @@ async function submitScore(){
 async function showLeaderboard(){
   $('modal').innerHTML='<h2>통합 랭킹</h2>';showModal();
   const playerId=getPlayerId();
-  const HARD_ENDINGS=new Set(['검은 왕관의 몰락','이름을 돌려준 자','닫힌 성채의 새 주인','폐쇄령의 마지막 이름']);
+  const HARD_ENDINGS=new Set(['검은 왕관의 몰락','이름을 돌려준 자','닫힌 성채의 새 주인','폐쇄령의 마지막 이름','검은 밀랍의 첫 번째 이름','이름으로 낸 통행세','도둑에게 없는 퇴로','까마귀가 울린 뒤','빌린 이름의 끝','초대받지 못한 이름','거짓 허가의 종착지','손바닥에 남은 이름','732번','빈 감방의 대체자','화로 앞의 검은 재','하르트가 기억한 마지막 사람','봉인과 함께 꺼진 이름','검은 못의 성례','너무 늦은 고해','사슬문 아래','명령보다 늦은 의심','무명군의 새 병사','카르센이 기억한 마지막 이름','완벽한 폐쇄령','왕좌가 기억한 이름','말이 끝난 왕좌','세 봉인은 주인을 살리지 못했다']);
   const rankModeInfo=(row)=>{
     const rawMode=String(row?.gameMode||'').trim().toLowerCase();
     const rawRoute=String(row?.hardRoute||'').trim();
     const ending=String(row?.ending||'').trim();
     const isHard=rawMode==='hard'||rawRoute.length>0||HARD_ENDINGS.has(ending);
     const routeName=rawRoute==='algon'?'로드 알곤':rawRoute;
-    return {isHard,mode:isHard?'하드':'노말',route:isHard&&routeName?` · ${escapeHtml(routeName)}`:''};
+    return {
+      isHard,
+      mode:isHard?'하드':'노말',
+      route:isHard&&routeName?` · ${escapeHtml(routeName)}`:''
+    };
   };
   try{
     const [lr,mr]=await Promise.all([
@@ -3397,12 +3527,30 @@ async function showLeaderboard(){
     ]);
     if(!lr.ok)throw new Error('LEADERBOARD_HTTP');
     const rows=await lr.json();if(!Array.isArray(rows))throw new Error('LEADERBOARD_FORMAT');
-    let me=null;if(mr&&mr.ok){try{const md=await mr.json();if(md.ok&&md.found&&md.storage==='cloud')me=md;}catch{}}
-    if(me?.record&&!rows.some(x=>x.playerId===playerId))rows.push({...me.record,_personalFallback:true,_actualRank:me.rank});
-    rows.sort((a,b)=>Number(b.score||0)-Number(a.score||0)||Number(a.time||0)-Number(b.time||0));
+    let me=null;
+    if(mr&&mr.ok){
+      try{
+        const md=await mr.json();
+        if(md.ok&&md.found&&md.storage==='cloud')me=md;
+      }catch{}
+    }
+    if(me?.record && !rows.some(x=>x.playerId===playerId)){
+      rows.push({...me.record,_personalFallback:true,_actualRank:me.rank});
+    }
+    rows.sort((a,b)=>Number(b.score||0)-Number(a.score||0) || Number(a.time||0)-Number(b.time||0));
+
     const myInfo=rankModeInfo(me?.record||{});
-    const myCard=me?`<div class="my-rank-card"><b>내 최고 기록 · ${myInfo.mode}${myInfo.route}</b><div class="rank-status-grid"><span>점수</span><b>${Number(me.record.score).toLocaleString()}</b><span>현재 순위</span><b>${me.rank?me.rank+'위':'확인됨'}</b><span>직업</span><b>${escapeHtml(me.record.className)}</b><span>엔딩</span><b>${escapeHtml(me.record.ending)}</b></div></div>`:'';
-    const listHtml=rows.length?rows.slice(0,50).map((x,i)=>{const info=rankModeInfo(x);return `<div class="rank-row ${x.playerId===playerId?'mine':''}"><div class="rank-num">${x._actualRank||i+1}</div><div><b>${escapeHtml(x.nickname)}${x.playerId===playerId?' · 나':''}</b><div class="rank-meta">${info.mode}${info.route} · ${escapeHtml(x.className)} · ${escapeHtml(x.ending)}</div></div><div class="rank-score">${Number(x.score).toLocaleString()}</div></div>`;}).join(''):'<p class="modal-sub">아직 등록된 기록이 없습니다.</p>';
+    const myCard=me
+      ? `<div class="my-rank-card"><b>내 최고 기록 · ${myInfo.mode}${myInfo.route}</b><div class="rank-status-grid"><span>점수</span><b>${Number(me.record.score).toLocaleString()}</b><span>현재 순위</span><b>${me.rank?me.rank+'위':'확인됨'}</b><span>직업</span><b>${escapeHtml(me.record.className)}</b><span>엔딩</span><b>${escapeHtml(me.record.ending)}</b></div></div>`
+      : '';
+
+    const listHtml=rows.length
+      ? rows.slice(0,50).map((x,i)=>{
+          const info=rankModeInfo(x);
+          return `<div class="rank-row ${x.playerId===playerId?'mine':''}"><div class="rank-num">${x._actualRank||i+1}</div><div><b>${escapeHtml(x.nickname)}${x.playerId===playerId?' · 나':''}</b><div class="rank-meta">${info.mode}${info.route} · ${escapeHtml(x.className)} · ${escapeHtml(x.ending)}</div></div><div class="rank-score">${Number(x.score).toLocaleString()}</div></div>`;
+        }).join('')
+      : '<p class="modal-sub">아직 등록된 기록이 없습니다.</p>';
+
     $('modal').innerHTML=`<h2>통합 랭킹</h2>${myCard}${listHtml}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;
   }catch(err){
     $('modal').innerHTML='<h2>통합 랭킹</h2><p class="modal-sub">랭킹을 불러오지 못했습니다.</p><button class="btn modal-close" onclick="closeModal()">닫기</button>';
