@@ -1,13 +1,12 @@
 {
   "name": "fallen-normal-mode",
-  "version": "0.9.19",
+  "version": "0.9.17",
   "private": true,
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^5.1.0",
-    "@supabase/supabase-js": "^2.0.0",
-    "socket.io": "^4.8.1"
+    "@supabase/supabase-js": "^2.0.0"
   }
 }

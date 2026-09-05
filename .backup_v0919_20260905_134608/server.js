@@ -2,13 +2,9 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const http = require('http');
-const { Server } = require('socket.io');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server,{cors:{origin:true,credentials:false},pingTimeout:12000,pingInterval:10000});
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'scores.json');
 const SUPABASE_URL = String(process.env.SUPABASE_URL || '').replace(/\/$/, '');
@@ -23,7 +19,7 @@ const SUPABASE_PUBLIC_KEY=SUPABASE_KEY.startsWith('sb_publishable_')||SUPABASE_K
 const CLOUD_WRITABLE=CLOUD_CONFIGURED&&!SUPABASE_PUBLIC_KEY;
 const supabase = CLOUD_CONFIGURED ? createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { autoRefreshToken:false, persistSession:false, detectSessionInUrl:false },
-  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.19' } }
+  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.17' } }
 }) : null;
 
 function withTimeout(promise, ms = 6000, code = 'UPSTREAM_TIMEOUT') {
@@ -79,8 +75,6 @@ const ENDING_BONUS = {
   '지배자': 30000,
   '길을 잃은 자': 420,
   '빈 호칭': 900,
-  '팬텀': 1800,
-  '끝없는 악몽': 2400,
 };
 
 function n(v, max = 100000) {
@@ -144,7 +138,6 @@ function scoreRun(s = {}) {
   const survivors = n(s.survivors, 100);
   const growths = n(s.growths, 100);
   const overTalks = n(s.overTalks, 100);
-  const riskySocial = n(s.riskySocial, 100);
   const ending = String(s.ending || 'BAD END').slice(0, 30);
 
   let score = 0;
@@ -155,9 +148,8 @@ function scoreRun(s = {}) {
   score += eliteKills * 950;
   score += riskyWins * 650;
   score += comebackWins * 900;
-  score += talkSolved * 210;
-  score += socialSuccess * 300;
-  score += riskySocial * 500;
+  score += talkSolved * 170;
+  score += socialSuccess * 185;
   score += runSuccess * 85;
   score += secrets * 500;
   score += survivors * 220;
@@ -183,7 +175,6 @@ async function cloudGetLeaderboard(limit = 50) {
   const { data, error } = await supabase
     .from('fallen_scores')
     .select('player_id,nickname,class_name,ending,score,kills,gold,progress,stats,updated_at')
-    .neq('ending','PVP RATING')
     .order('score', { ascending:false })
     .order('updated_at', { ascending:true })
     .limit(Math.max(50, Math.min(1000, Math.max(Number(limit)||50, 300))));
@@ -191,7 +182,7 @@ async function cloudGetLeaderboard(limit = 50) {
   const mapped=(data || []).map(mapCloudRow);
   // Canonical best rows created by v0.9.5 are hidden from the run leaderboard to avoid duplicates.
   // Legacy rows have no recordType and remain visible so old scores are never lost from view.
-  return mapped.filter(x => x.recordType !== 'best' && x.recordType !== 'pvp_rating').slice(0, Math.max(1, Math.min(200, Number(limit)||50)));
+  return mapped.filter(x => x.recordType !== 'best').slice(0, Math.max(1, Math.min(200, Number(limit)||50)));
 }
 
 async function cloudGetPlayer(playerId) {
@@ -274,12 +265,11 @@ async function cloudRunRank(score) {
   // Ranking is based on visible run/legacy records, not hidden canonical-best mirror rows.
   const { data, error } = await supabase
     .from('fallen_scores')
-    .select('player_id,score,stats,ending')
-    .neq('ending','PVP RATING')
+    .select('player_id,score,stats')
     .order('score', { ascending:false })
     .limit(1000);
   if (error) throw new Error(`SUPABASE_RUN_RANK:${error.message}`);
-  const visible=(data||[]).filter(x => !['best','pvp_rating'].includes(String(x?.stats?.recordType||'')));
+  const visible=(data||[]).filter(x => String(x?.stats?.recordType||'') !== 'best');
   return visible.filter(x => Number(x.score||0) > Number(score||0)).length + 1;
 }
 
@@ -287,12 +277,11 @@ async function cloudRank(score) {
   // Personal-best rank counts canonical/legacy player rows only, never per-run rows.
   const { data, error } = await supabase
     .from('fallen_scores')
-    .select('player_id,score,stats,ending')
-    .neq('ending','PVP RATING')
+    .select('player_id,score,stats')
     .order('score', { ascending:false })
     .limit(1000);
   if (error) throw new Error(`SUPABASE_RANK:${error.message}`);
-  const bestRows=(data||[]).filter(x => !String(x.player_id||'').startsWith('run_') && String(x?.stats?.recordType||'')!=='pvp_rating');
+  const bestRows=(data||[]).filter(x => !String(x.player_id||'').startsWith('run_'));
   return bestRows.filter(x => Number(x.score||0) > Number(score||0)).length + 1;
 }
 
@@ -322,69 +311,6 @@ function mapCloudRow(x) {
     progress: Number(x.progress || 0),
     time: x.updated_at ? Date.parse(x.updated_at) : Date.now(),
   };
-}
-
-
-// ---------- Normal PVP rating ----------
-function pvpRowId(playerId){return `pvp_${String(playerId||'').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,72)}`;}
-function mapPvpRow(x){const st=(x&&typeof x.stats==='object'&&x.stats)||{};return {playerId:String(st.ownerPlayerId||String(x.player_id||'').replace(/^pvp_/,'')),nickname:safeNickname(x.nickname),className:String(st.lastClass||x.class_name||''),rating:Number(st.rating||x.score||1000),wins:Number(st.wins||0),losses:Number(st.losses||0),draws:Number(st.draws||0),games:Number(st.games||0),updatedAt:x.updated_at||''};}
-async function cloudGetPvpProfile(playerId){
-  if(!CLOUD_CONFIGURED)return {playerId,rating:1000,wins:0,losses:0,draws:0,games:0,nickname:'',className:''};
-  const {data,error}=await supabase.from('fallen_scores').select('player_id,nickname,class_name,score,stats,updated_at').eq('player_id',pvpRowId(playerId)).maybeSingle();
-  if(error)throw new Error(`PVP_PROFILE:${error.message}`);return data?mapPvpRow(data):{playerId,rating:1000,wins:0,losses:0,draws:0,games:0,nickname:'',className:''};
-}
-async function cloudSavePvpProfile(profile){
-  if(!CLOUD_WRITABLE)return profile;
-  const body={player_id:pvpRowId(profile.playerId),nickname:safeNickname(profile.nickname||'익명'),class_name:String(profile.className||'').slice(0,12),ending:'PVP RATING',score:Math.max(0,Math.round(profile.rating||1000)),kills:0,gold:0,progress:0,stats:{recordType:'pvp_rating',ownerPlayerId:profile.playerId,rating:Math.max(0,Math.round(profile.rating||1000)),wins:Number(profile.wins||0),losses:Number(profile.losses||0),draws:Number(profile.draws||0),games:Number(profile.games||0),lastClass:String(profile.className||'')},updated_at:new Date().toISOString()};
-  const {data,error}=await supabase.from('fallen_scores').upsert(body,{onConflict:'player_id'}).select('player_id,nickname,class_name,score,stats,updated_at').single();if(error)throw new Error(`PVP_SAVE:${error.message}`);return mapPvpRow(data);
-}
-async function cloudGetPvpLeaderboard(limit=50){
-  if(!CLOUD_CONFIGURED)return [];
-  const {data,error}=await supabase.from('fallen_scores').select('player_id,nickname,class_name,score,stats,updated_at').eq('ending','PVP RATING').order('score',{ascending:false}).limit(Math.max(1,Math.min(50,Number(limit)||50)));if(error)throw new Error(`PVP_BOARD:${error.message}`);
-  return (data||[]).filter(x=>String(x?.stats?.recordType||'')==='pvp_rating').map(mapPvpRow).sort((a,b)=>b.rating-a.rating||b.wins-a.wins);
-}
-function eloPair(a,b,resultA){const ra=Number(a||1000),rb=Number(b||1000),ea=1/(1+Math.pow(10,(rb-ra)/400)),eb=1-ea,k=32;const sa=resultA==='win'?1:resultA==='loss'?0:.5,sb=1-sa;return [Math.max(0,Math.round(ra+k*(sa-ea))),Math.max(0,Math.round(rb+k*(sb-eb)))];}
-function pvpSnapshotScore(payload){const st=(payload&&payload.stats)||{};return scoreRun({...st,goldHeld:n(st.goldHeld??payload.gold,100000)});}
-
-const pvpQueue=[];
-const pvpMatches=new Map();
-const pvpSocketPlayer=new Map();
-function publicPvpPlayer(p){return {playerId:p.playerId,nickname:p.nickname,classId:p.classId,className:p.className,score:Number(p.score||0),progress:Number(p.progress||0),hp:Number(p.hp||0),gold:Number(p.gold||0),finished:!!p.finished,connected:p.connected!==false};}
-function removeFromQueue(socketId){for(let i=pvpQueue.length-1;i>=0;i--)if(pvpQueue[i].socketId===socketId)pvpQueue.splice(i,1);}
-function removePlayerFromQueue(playerId){for(let i=pvpQueue.length-1;i>=0;i--)if(pvpQueue[i].playerId===playerId)pvpQueue.splice(i,1);}
-function pvpOpponent(match,playerId){return match.players.find(x=>x.playerId!==playerId);}
-function emitOpponent(match,p){const o=pvpOpponent(match,p.playerId);if(!o)return;io.to(p.socketId).emit('pvp:opponent',publicPvpPlayer(o));}
-function broadcastPvp(match){for(const p of match.players)emitOpponent(match,p);}
-async function finalizePvpMatch(match,forcedWinnerId=null,reason='finished'){
-  if(!match||match.resolved)return;match.resolved=true;clearTimeout(match.deadlineTimer);
-  const [a,b]=match.players;let resultA='draw';
-  if(forcedWinnerId)resultA=forcedWinnerId===a.playerId?'win':'loss';
-  else{const ta=[a.score,a.progress,a.hp,a.gold],tb=[b.score,b.progress,b.hp,b.gold];for(let i=0;i<ta.length;i++){if(Number(ta[i])>Number(tb[i])){resultA='win';break;}if(Number(ta[i])<Number(tb[i])){resultA='loss';break;}}}
-  const resultB=resultA==='win'?'loss':resultA==='loss'?'win':'draw';
-  let pa={playerId:a.playerId,rating:1000,wins:0,losses:0,draws:0,games:0},pb={playerId:b.playerId,rating:1000,wins:0,losses:0,draws:0,games:0};
-  try{[pa,pb]=await Promise.all([cloudGetPvpProfile(a.playerId),cloudGetPvpProfile(b.playerId)]);}catch(e){console.error('[pvp profiles]',e.message);}
-  const [newA,newB]=eloPair(pa.rating,pb.rating,resultA);
-  function nextProfile(base,p,result,newRating){return {...base,playerId:p.playerId,nickname:p.nickname,className:p.className,rating:newRating,games:Number(base.games||0)+1,wins:Number(base.wins||0)+(result==='win'?1:0),losses:Number(base.losses||0)+(result==='loss'?1:0),draws:Number(base.draws||0)+(result==='draw'?1:0)};}
-  const na=nextProfile(pa,a,resultA,newA),nb=nextProfile(pb,b,resultB,newB);try{await Promise.all([cloudSavePvpProfile(na),cloudSavePvpProfile(nb)]);}catch(e){console.error('[pvp rating save]',e.message);}
-  const pack=(self,opp,result,oldR,newR)=>({matchId:match.id,reason,you:{...publicPvpPlayer(self),result,oldRating:Number(oldR||1000),newRating:Number(newR||1000),delta:Number(newR||1000)-Number(oldR||1000)},opponent:{...publicPvpPlayer(opp)}});
-  io.to(a.socketId).emit('pvp:result',pack(a,b,resultA,pa.rating,newA));io.to(b.socketId).emit('pvp:result',pack(b,a,resultB,pb.rating,newB));
-  setTimeout(()=>pvpMatches.delete(match.id),60000);
-}
-async function createPvpMatch(a,b){
-  const id=`m_${Date.now().toString(36)}_${crypto.randomBytes(4).toString('hex')}`;const match={id,players:[a,b],createdAt:Date.now(),resolved:false};pvpMatches.set(id,match);
-  for(const p of match.players){p.matchId=id;p.connected=true;p.finished=false;p.score=0;p.progress=0;p.hp=0;p.gold=0;pvpSocketPlayer.set(p.socketId,p);}
-  match.deadlineTimer=setTimeout(()=>finalizePvpMatch(match,null,'timeout'),30*60*1000);
-  io.to(a.socketId).emit('pvp:match',{matchId:id,you:publicPvpPlayer(a),opponent:publicPvpPlayer(b),limitSeconds:1800});io.to(b.socketId).emit('pvp:match',{matchId:id,you:publicPvpPlayer(b),opponent:publicPvpPlayer(a),limitSeconds:1800});broadcastPvp(match);
-}
-function tryPvpMatch(){
-  for(let i=pvpQueue.length-1;i>=0;i--) if(!io.sockets.sockets.get(pvpQueue[i].socketId)) pvpQueue.splice(i,1);
-  while(pvpQueue.length>=2){
-    const a=pvpQueue.shift();
-    const idx=pvpQueue.findIndex(x=>x.playerId!==a.playerId && io.sockets.sockets.get(x.socketId));
-    if(idx<0){pvpQueue.unshift(a);break;}
-    const b=pvpQueue.splice(idx,1)[0];
-    createPvpMatch(a,b).catch(e=>console.error('[pvp match]',e.message));
-  }
 }
 
 function localLeaderboard() {
@@ -475,19 +401,6 @@ app.get('/api/run/:runId', async (req, res) => {
     console.error('[run cloud]', e.message);
     return res.status(503).json({ ok:false, error:'CLOUD_RUN_LOOKUP_FAILED' });
   }
-});
-
-app.get('/api/pvp/profile/:playerId',async(req,res)=>{const playerId=String(req.params.playerId||'').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,80);if(!playerId)return res.status(400).json({ok:false});try{const p=await withTimeout(cloudGetPvpProfile(playerId),5000,'PVP_PROFILE_TIMEOUT');return res.json({ok:true,...p});}catch(e){return res.status(503).json({ok:false,error:'PVP_PROFILE_UNAVAILABLE'});}});
-app.get('/api/pvp/leaderboard',async(_req,res)=>{res.set('Cache-Control','no-store');try{return res.json(await withTimeout(cloudGetPvpLeaderboard(50),6500,'PVP_BOARD_TIMEOUT'));}catch(e){return res.status(503).json({ok:false,error:'PVP_LEADERBOARD_UNAVAILABLE'});}});
-
-io.on('connection',socket=>{
-  socket.on('pvp:queue',payload=>{try{removeFromQueue(socket.id);const playerId=String(payload?.playerId||'').replace(/[^a-zA-Z0-9_-]/g,'').slice(0,80);const nick=nicknameAllowed(payload?.nickname||'');const classId=String(payload?.classId||'').slice(0,24),className=String(payload?.className||'').slice(0,12);if(!playerId||!nick.ok)return socket.emit('pvp:error',{message:'이름 또는 플레이어 정보가 올바르지 않습니다.'});removePlayerFromQueue(playerId);const active=[...pvpMatches.values()].some(m=>!m.resolved&&m.players.some(x=>x.playerId===playerId));if(active)return socket.emit('pvp:error',{message:'이미 진행 중인 PVP 경기가 있습니다.'});const p={socketId:socket.id,playerId,nickname:nick.value,classId,className,connected:true};pvpQueue.push(p);pvpSocketPlayer.set(socket.id,p);socket.emit('pvp:queue',{position:pvpQueue.length});tryPvpMatch();}catch(e){socket.emit('pvp:error',{message:'매칭을 시작하지 못했습니다.'});}});
-  socket.on('pvp:cancel',()=>{removeFromQueue(socket.id);pvpSocketPlayer.delete(socket.id);});
-  socket.on('pvp:update',payload=>{const match=pvpMatches.get(String(payload?.matchId||''));if(!match||match.resolved)return;const p=match.players.find(x=>x.playerId===String(payload?.playerId||''));if(!p||p.socketId!==socket.id)return;p.score=pvpSnapshotScore(payload);p.progress=n(payload?.progress??payload?.stats?.progress,500);p.hp=n(payload?.hp,999);p.gold=n(payload?.gold,100000);p.connected=true;broadcastPvp(match);});
-  socket.on('pvp:finish',payload=>{const match=pvpMatches.get(String(payload?.matchId||''));if(!match||match.resolved)return;const p=match.players.find(x=>x.playerId===String(payload?.playerId||''));if(!p||p.socketId!==socket.id)return;p.score=pvpSnapshotScore(payload);p.progress=n(payload?.progress??payload?.stats?.progress,500);p.hp=n(payload?.hp,999);p.gold=n(payload?.gold,100000);p.finished=true;p.ending=String(payload?.ending||payload?.stats?.ending||'').slice(0,30);broadcastPvp(match);if(match.players.every(x=>x.finished))finalizePvpMatch(match,null,'finished');});
-  socket.on('pvp:forfeit',payload=>{const match=pvpMatches.get(String(payload?.matchId||''));if(!match||match.resolved)return;const loser=match.players.find(x=>x.playerId===String(payload?.playerId||''));if(!loser)return;const winner=pvpOpponent(match,loser.playerId);if(winner)finalizePvpMatch(match,winner.playerId,'forfeit');});
-  socket.on('pvp:resume',payload=>{const match=pvpMatches.get(String(payload?.matchId||''));if(!match||match.resolved)return socket.emit('pvp:error',{message:'이미 끝난 경기입니다.'});const p=match.players.find(x=>x.playerId===String(payload?.playerId||''));if(!p)return;clearTimeout(p.disconnectTimer);p.socketId=socket.id;p.connected=true;pvpSocketPlayer.set(socket.id,p);const o=pvpOpponent(match,p.playerId);socket.emit('pvp:match',{matchId:match.id,you:publicPvpPlayer(p),opponent:publicPvpPlayer(o),resumed:true,limitSeconds:Math.max(0,Math.floor((match.createdAt+30*60*1000-Date.now())/1000))});broadcastPvp(match);});
-  socket.on('disconnect',()=>{removeFromQueue(socket.id);const p=pvpSocketPlayer.get(socket.id);pvpSocketPlayer.delete(socket.id);if(!p?.matchId)return;const match=pvpMatches.get(p.matchId);if(!match||match.resolved)return;p.connected=false;broadcastPvp(match);p.disconnectTimer=setTimeout(()=>{if(match.resolved||p.connected)return;const winner=pvpOpponent(match,p.playerId);if(winner)finalizePvpMatch(match,winner.playerId,'disconnect');},20000);});
 });
 
 app.post('/api/score', async (req, res) => {
@@ -596,11 +509,11 @@ app.post('/api/score', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.19' });
+  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.17' });
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n몰락자 v0.9.19`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`\n몰락자 v0.9.17`);
   console.log(`http://localhost:${PORT}`);
   console.log(`랭킹 설정: ${CLOUD_CONFIGURED ? 'Supabase 환경변수 있음 (실연결은 /api/storage에서 검증)' : '로컬 파일'}\n`);
 });

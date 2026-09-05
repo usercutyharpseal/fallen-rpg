@@ -4,10 +4,7 @@ const SAVE_KEY = 'fallen_normal_v08';
 const PLAYER_ID_KEY = 'fallen_player_id';
 const PENDING_KEY = 'fallen_pending_scores';
 const META_KEY = 'fallen_meta_v1';
-const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
-const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
-const PVP_NICK_KEY = 'fallen_pvp_nickname';
-const GAME_VERSION = 119;
+const GAME_VERSION = 106;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, necromancer:3, dictator:5 };
 function loadMeta(){
@@ -83,8 +80,7 @@ const ENEMIES = {
   noviceKnight: { name:'상인협회 초급 기사', hp:10, atk:8, social:9, speed:7, gold:42, rank:'보통' },
   midKnight: { name:'상인협회 중급 기사', hp:21, atk:16, social:23, speed:9, gold:95, rank:'매우 강함', elite:true },
   banditBoss: { name:'도적단 두목 세리아', hp:19, atk:14, social:19, speed:10, gold:125, rank:'두목', elite:true },
-  king: { name:'격분한 왕 에드란', hp:22, atk:17, social:25, speed:9, gold:180, rank:'왕', elite:true },
-  phantom: { name:'밤의 괴수 팬텀', hp:26, atk:19, social:99, speed:5, gold:0, rank:'밤의 괴수', elite:true }
+  king: { name:'격분한 왕 에드란', hp:22, atk:17, social:25, speed:9, gold:180, rank:'왕', elite:true }
 };
 
 const ENDINGS = {
@@ -97,14 +93,11 @@ const ENDINGS = {
   '두 개의 깃발': { icon:'⚔', kind:'SPECIAL END · 배신', bonus:18000, epilogue:'당신은 한때 왕국의 깃발 아래 섰고, 마지막에는 그것을 향해 검을 들었다.\n왕국은 당신을 배신자라 불렀고 반란군은 영웅이라 불렀다. 둘 다 틀리지 않았다.\n되찾은 것은 명예가 아니라, 어느 편에서도 완전히 지워지지 않을 이름이었다.' },
   '지배자': { icon:'♛', kind:'LEGEND END', bonus:30000, epilogue:'전설마저 쓰러졌다.\n왕좌를 지킬 자도, 당신에게 명령할 자도 더는 남지 않았다.' },
   '길을 잃은 자': { icon:'∅', kind:'BAD END · 방황', bonus:420, bad:true, art:'crossroad', epilogue:'다리의 한쪽에는 왕국이, 다른 한쪽에는 숲이 있었다.\n당신은 두 곳에서 모두 물러났고 어느 쪽에도 돌아갈 이유를 남기지 못했다.\n해가 질 때까지 다리 위에 서 있었지만 누구도 당신을 부르러 오지 않았다.\n결국 길을 잃은 것은 발이 아니라, 선택이었다.' },
-  '빈 호칭': { icon:'♙', kind:'BAD END · 귀족', bonus:900, bad:true, art:'crossroad', epilogue:'당신은 다리 한가운데에서 끝까지 말을 골랐다.\n한때는 가문의 이름 하나로 문이 열렸고, 말 한마디로 싸움을 미룰 수 있었다. 하지만 굶주림과 죽음은 예법을 몰랐다.\n해가 기울자 왕국도 숲도 먼저 돌아섰다. 어느 쪽도 당신을 적으로 부르지는 않았다. 그렇다고 자기 사람이라 부르지도 않았다.\n끝내 남은 것은, 아무도 불러주지 않는 호칭뿐이었다.' },
-  '팬텀': { icon:'◐', kind:'BAD END · 밤의 괴수', bonus:1800, bad:true, art:'phantom', epilogue:'몇 번이나 지나온 길 끝에서, 이번에는 길이 먼저 당신을 알아보았다.\n검은 형체는 발소리도 숨소리도 없이 거리를 지웠다. 칼이 닿았는지조차 알 수 없었다.\n다음 날 그 길에는 발자국 하나만 남았다. 시작은 있었지만 끝은 없었다.' },
-  '끝없는 악몽': { icon:'∞', kind:'BAD END · 반복', bonus:2400, bad:true, art:'phantom', epilogue:'당신은 싸우지 않았다. 멈추지도 않았다. 익숙한 길을 고르고 또 골랐다.\n숲은 같은 나무를 내놓았고 성벽은 같은 종을 울렸다. 리안의 표식도, 모르텐의 흰 실도 어느 순간부터 매번 처음 보는 것처럼 느껴졌다.\n마지막에는 팬텀조차 보이지 않았다. 악몽에는 괴물조차 필요 없었다.' }
+  '빈 호칭': { icon:'♙', kind:'BAD END · 귀족', bonus:900, bad:true, art:'crossroad', epilogue:'당신은 다리 한가운데에서 끝까지 말을 골랐다.\n한때는 가문의 이름 하나로 문이 열렸고, 말 한마디로 싸움을 미룰 수 있었다. 하지만 굶주림과 죽음은 예법을 몰랐다.\n해가 기울자 왕국도 숲도 먼저 돌아섰다. 어느 쪽도 당신을 적으로 부르지는 않았다. 그렇다고 자기 사람이라 부르지도 않았다.\n끝내 남은 것은, 아무도 불러주지 않는 호칭뿐이었다.' }
 };
 
 
 const BAD_ENDINGS = {
-  phantomEncounter: { title:'팬텀', kind:'BAD END · 밤의 괴수', art:'phantom', bonus:1800, epilogue:'몇 번이나 지나온 길 끝에서, 이번에는 길이 먼저 당신을 알아보았다.\n검은 형체는 발소리도 숨소리도 없이 거리를 지웠다. 칼이 닿았는지조차 알 수 없었다.\n다음 날 그 길에는 발자국 하나만 남았다. 시작은 있었지만 끝은 없었다.' },
   gangster: {
     title:'첫 칼날', kind:'BAD END · 빈민가', art:'gangster', bonus:0,
     epilogue:'몰락한 뒤 처음 맞닥뜨린 싸움은 생각보다 짧았다.\n거지들의 변명도, 깡패의 분노도 이제 당신과는 상관없는 이야기가 되었다.\n이름을 되찾기도 전에 당신의 여정은 뒷골목의 젖은 돌바닥에서 멈췄다.'
@@ -305,8 +298,7 @@ function worldShape(w={}){
   return {
     deadActors:{...(w.deadActors||{})}, encounters:{...(w.encounters||{})}, escapeUsed:{...(w.escapeUsed||{})}, merchantPaid:{...(w.merchantPaid||{})},
     anomalies:{undertakerSeen:!!w.anomalies?.undertakerSeen,trackerSeen:!!w.anomalies?.trackerSeen},
-    invalidReturns:Number(w.invalidReturns||0), recovery:w.recovery||null,
-    loop:{history:Array.isArray(w.loop?.history)?w.loop.history.slice(-24):[],stagnant:Number(w.loop?.stagnant||0),warningSeen:!!w.loop?.warningSeen,warningSource:w.loop?.warningSource||'',warningAt:Number(w.loop?.warningAt||0),phantomSeen:!!w.loop?.phantomSeen,phantomDefeated:!!w.loop?.phantomDefeated,phantomEscapes:Number(w.loop?.phantomEscapes||0),returnTarget:w.loop?.returnTarget||'',cooldown:Number(w.loop?.cooldown||0)}
+    invalidReturns:Number(w.invalidReturns||0), recovery:w.recovery||null
   };
 }
 function metaForScene(id=state.sceneId){return ENCOUNTER_META[id]||null;}
@@ -323,7 +315,7 @@ function markEncounterResolution(method,next,ending,onlyIfUnset=false){
   if(status==='dead')state.world.deadActors[meta.actor]={sceneId:state.sceneId,at:Number(state.stats?.progress||0),name:ACTOR_NAMES[meta.actor]||meta.actor};
 }
 function recoveryTarget(ctx){
-  const t=ctx?.next; if(t && SCENES[t] && !['undertakerMorten','trackerRian','emptyAftermath','brokenTrail','loopTrackerWarning','loopUndertakerWarning','phantomEncounter','phantomAfterEscape','phantomAfterVictory','phantomLastTurn'].includes(t))return t;
+  const t=ctx?.next; if(t && SCENES[t] && !['undertakerMorten','trackerRian','emptyAftermath','brokenTrail'].includes(t))return t;
   const fb=RECOVERY_FALLBACK[ctx?.attemptedScene]; if(fb && SCENES[fb])return fb;
   if(state.flags?.rebel)return 'rebelRetreat';
   if(state.entered?.friendBridge)return 'friendBridge';
@@ -337,57 +329,17 @@ function recoverFromAnomaly(){
   state.world.recovery=null; state.pending=null; state.lastToast=''; state.escapeAttempted=false;
   state.sceneId=target; save(); enter(target);
 }
-function loopSpecialScene(id){return ['undertakerMorten','trackerRian','emptyAftermath','brokenTrail','loopTrackerWarning','loopUndertakerWarning','phantomEncounter','phantomAfterEscape','phantomAfterVictory','phantomLastTurn'].includes(id);}
-function loopState(){state.world ||= worldShape();state.world.loop ||= worldShape().loop;return state.world.loop;}
-function repeatedLoopPattern(history){
-  for(let len=2;len<=4;len++){
-    const need=len*4;if(history.length<need)continue;
-    const tail=history.slice(-need),pat=tail.slice(-len);let ok=true;
-    for(let i=0;i<need;i++)if(tail[i]!==pat[i%len]){ok=false;break;}
-    if(ok&&new Set(pat).size>1)return pat;
-  }
-  return null;
-}
-function loopForwardTarget(fallback=state.sceneId){
-  if(state.flags?.rebel)return 'rebelRetreat';
-  if(state.entered?.friendBridge)return 'friendBridge';
-  if(state.entered?.forestRoad||state.entered?.forestMerchant)return forestProgressScene(true);
-  if(state.entered?.citySquare)return 'citySquare';
-  if(state.entered?.roadsideAftermath)return 'roadsideAftermath';
-  return SCENES[fallback]?fallback:'roadsideAftermath';
-}
-function noteLoopWarning(source='tracker',returnTarget=state.sceneId){const l=loopState();l.warningSeen=true;l.warningSource=source;l.warningAt=Number(state.stats?.progress||0);l.returnTarget=loopForwardTarget(returnTarget);l.history=[];l.stagnant=0;}
-function triggerLoopInterruption(kind,returnTarget){
-  const l=loopState();l.returnTarget=loopForwardTarget(returnTarget);l.history=[];l.stagnant=0;
-  if(kind==='phantom'){l.phantomSeen=true;state.sceneId='phantomEncounter';state.pending=null;state.lastToast='';save();showScreen('gameScreen');render();fx('bad');return true;}
-  noteLoopWarning(kind,returnTarget);state.sceneId=kind==='undertaker'?'loopUndertakerWarning':'loopTrackerWarning';state.pending=null;state.lastToast='';save();showScreen('gameScreen');render();fx(kind==='undertaker'?'ash':'trail');return true;
-}
-function recordLoopTransition(id){
-  if(!state?.p||state.ended||loopSpecialScene(id))return false;const l=loopState();
-  if(l.cooldown>0){l.cooldown--;return false;}
-  const first=!state.entered?.[id];if(first){l.history=[id];l.stagnant=0;return false;}
-  l.history.push(id);if(l.history.length>24)l.history.shift();l.stagnant++;
-  const pattern=repeatedLoopPattern(l.history);if(!pattern||l.stagnant<10)return false;
-  if(!l.warningSeen)return triggerLoopInterruption('tracker',id);
-  if(!l.phantomSeen&&Number(state.stats?.progress||0)-Number(l.warningAt||0)>=10)return triggerLoopInterruption('phantom',id);
-  return false;
-}
-function recoverFromLoopWarning(){const l=loopState(),target=loopForwardTarget(l.returnTarget||'roadsideAftermath');l.cooldown=3;l.history=[];l.stagnant=0;state.pending=null;state.lastToast='';state.sceneId=target;save();enter(target);}
-function recoverAfterPhantom(){const l=loopState(),target=loopForwardTarget(l.returnTarget||'roadsideAftermath');l.cooldown=6;l.history=[];l.stagnant=0;l.phantomEscapes=0;state.pending=null;state.lastToast='팬텀이 사라진 뒤 길의 모양이 다시 한 번만 앞으로 이어졌다.';state.sceneId=target;save();enter(target);}
-
 function maybeReplaceResolvedEncounter(id){
-  if(state.pending||state.ended||['undertakerMorten','trackerRian','emptyAftermath','brokenTrail','loopTrackerWarning','loopUndertakerWarning','phantomEncounter','phantomAfterEscape','phantomAfterVictory','phantomLastTurn'].includes(id))return false;
+  if(state.pending||state.ended||['undertakerMorten','trackerRian','emptyAftermath','brokenTrail'].includes(id))return false;
   const meta=ENCOUNTER_META[id]; if(!meta)return false;
   state.world ||= worldShape();
   const dead=state.world.deadActors[meta.actor]; const rec=state.world.encounters[meta.episode];
   if(!dead && !rec?.resolved)return false;
   const ctx={actor:meta.actor,episode:meta.episode,attemptedScene:id,status:dead?'dead':rec.status,next:rec?.next||'',at:Date.now()};
   state.world.invalidReturns=(state.world.invalidReturns||0)+1;state.world.recovery=ctx;
-  const l=loopState();
-  if((state.world.invalidReturns||0)>=8&&l.warningSeen&&!l.phantomSeen){l.returnTarget=recoveryTarget(ctx);return triggerLoopInterruption('phantom',l.returnTarget);}
   let special;
-  if(dead){special=state.world.anomalies.undertakerSeen?'emptyAftermath':'undertakerMorten';state.world.anomalies.undertakerSeen=true;if(!l.warningSeen)noteLoopWarning('undertaker',recoveryTarget(ctx));}
-  else{special=state.world.anomalies.trackerSeen?'brokenTrail':'trackerRian';state.world.anomalies.trackerSeen=true;if(!l.warningSeen)noteLoopWarning('tracker',recoveryTarget(ctx));}
+  if(dead){special=state.world.anomalies.undertakerSeen?'emptyAftermath':'undertakerMorten';state.world.anomalies.undertakerSeen=true;}
+  else{special=state.world.anomalies.trackerSeen?'brokenTrail':'trackerRian';state.world.anomalies.trackerSeen=true;}
   state.sceneId=special;state.lastToast='';state.pending=null;save();showScreen('gameScreen');render();fx(dead?'ash':'trail');return true;
 }
 function migrateLegacyWorld(merged,data){
@@ -429,7 +381,7 @@ function freshState() {
     stats: {
       progress:0, goldEarned:0, goldSpent:0, kills:0, eliteKills:0, riskyWins:0,
       talkSolved:0, socialSuccess:0, socialFail:0, runSuccess:0, secrets:0,
-      survivors:0, growths:0, comebackWins:0, talkInteractions:0, overTalks:0, itemsUsed:0, corpses:0, tyranny:0, merchantDeals:0, merchantIncome:0, socialIncome:0, riskySocial:0, ending:'', maxAttackChanceBeaten:100
+      survivors:0, growths:0, comebackWins:0, talkInteractions:0, overTalks:0, itemsUsed:0, corpses:0, tyranny:0, merchantDeals:0, merchantIncome:0, ending:'', maxAttackChanceBeaten:100
     }
   };
 }
@@ -1071,44 +1023,6 @@ const SCENES = {
     choices:()=>[c('표식을 따라간다','',()=>recoverFromAnomaly())]
   }),
 
-  loopTrackerWarning: scene('loopTrackerWarning', {
-    chapter:'같은 밤', location:'겹쳐진 길목', art:'tracker',
-    text:`세 번째쯤부터는 우연이라 생각했다. 그보다 더 지나고 나서는 숫자를 세지 않았다.\n\n같은 돌, 같은 부러진 가지, 같은 발자국. 그런데 이번에는 그 발자국 사이에 회색 망토가 서 있다.\n\n추적자 리안이 땅을 내려다본다.\n\n“이건 길을 잃은 게 아니야. 길이 널 기억하기 시작한 거지.”\n\n그녀는 앞으로 난 흔적 하나만 남기고 나머지를 칼끝으로 지운다.`,
-    choices:()=>[c('리안이 남긴 방향으로 간다','',()=>recoverFromLoopWarning())]
-  }),
-
-  loopUndertakerWarning: scene('loopUndertakerWarning', {
-    chapter:'같은 밤', location:'묻힌 길의 가장자리', art:'undertaker',
-    text:`장의사 모르텐은 관이 아니라 빈 땅을 파고 있다.\n\n“오늘은 묻을 사람이 없는데.”\n\n삽날이 축축한 흙을 한 번 뒤집는다.\n\n“자꾸 돌아오면 나중엔 사람 대신 길을 묻게 돼. 그때는 네가 어느 쪽에 서 있었는지도 같이 묻히겠지.”\n\n그는 더 말하지 않고, 당신이 왔던 쪽을 흙으로 덮어버린다.`,
-    choices:()=>[c('덮이지 않은 길로 간다','',()=>recoverFromLoopWarning())]
-  }),
-
-  phantomEncounter: scene('phantomEncounter', {
-    chapter:'NIGHTMARE', location:'밤이 길을 삼킨 자리', art:'phantom', enemy:'phantom', socialDisabled:true,
-    text:`경고를 들은 뒤에도 길은 다시 겹쳤다.\n\n이번에는 달빛이 먼저 꺼진다. 나무 사이의 어둠 한 조각이 천천히 사람의 높이까지 일어난다. 얼굴도 눈도 없다. 다만 당신이 돌아섰던 횟수만큼 검은 흔적이 겹쳐 있다.\n\n리안이 말한 기억하는 길. 모르텐이 묻겠다고 한 길.\n\n그 끝에서 밤의 괴수 팬텀이 당신을 기다린다.`,
-    talk(){queueOutcome('대답은 없다. 대신 조금 전 당신이 했던 발소리가 어둠 속에서 한 번 더 들린다.',null);},
-    attackWin(){const l=loopState();l.phantomDefeated=true;l.phantomSeen=true;l.cooldown=8;l.history=[];l.stagnant=0;state.flags.phantomDefeated=true;state.stats.secrets=(state.stats.secrets||0)+1;gainGold(120);queueOutcome('칼끝이 검은 형체를 가른 순간, 밤이 종이처럼 찢어진다.\n\n팬텀은 피 대신 차가운 안개를 흘리며 사라졌다. 겹쳐 있던 길 하나만 남고 나머지는 어둠 속으로 접혀 들어간다.\n\n◆ 120','phantomAfterVictory');},
-    runSuccess(){const l=loopState();l.phantomEscapes=(l.phantomEscapes||0)+1;go('phantomAfterEscape','팬텀의 그림자가 뒤에서 길게 늘어난다.');}
-  }),
-
-  phantomAfterEscape: scene('phantomAfterEscape', {
-    chapter:'NIGHTMARE', location:'끝나지 않는 추적', art:'phantom',
-    text:`숨이 턱까지 차오른 뒤에야 뒤를 본다. 팬텀은 쫓아오지 않는다.\n\n그런데 앞쪽 길에 당신의 발자국이 이미 찍혀 있다. 조금 전 달아날 때 남긴 발자국이다.\n\n숲이 둥글게 휘어진 것도 아닌데 출발점이 앞에 있다.`,
-    choices:()=>[c('익숙하지 않은 방향을 택한다','',()=>recoverAfterPhantom()),c('다시 익숙한 길로 들어간다','',()=>go('phantomLastTurn'))]
-  }),
-
-  phantomAfterVictory: scene('phantomAfterVictory', {
-    chapter:'NIGHTMARE', location:'새벽 직전', art:'trail',
-    text:`팬텀이 사라진 자리에는 아무것도 남지 않았다.\n\n다만 모든 발자국이 한 방향으로만 이어진다. 반복되던 길이 처음으로 끝을 보여준다.`,
-    choices:()=>[c('새벽 쪽으로 걷는다','',()=>recoverAfterPhantom())]
-  }),
-
-  phantomLastTurn: scene('phantomLastTurn', {
-    chapter:'NIGHTMARE', location:'몇 번째인지 모를 길', art:'phantom',
-    text:`한 번 더 같은 나무가 나타난다.\n\n이번에는 리안의 칼자국도, 모르텐의 흰 실도 없다. 경고조차 반복 속에서 닳아 없어졌다.\n\n멀리서 팬텀의 형체가 다시 일어난다. 이제 어느 쪽이 앞인지도 알 수 없다.`,
-    choices:()=>[c('멈춰 서서 팬텀과 맞선다','',()=>{const l=loopState();l.history=[];l.stagnant=0;state.world.escapeUsed.phantomEncounter=false;go('phantomEncounter');}),c('계속 달린다','',()=>finish('끝없는 악몽'))]
-  }),
-
   beggarCamp: scene('beggarCamp', {
     chapter:'CHAPTER 1 · EXTRA', location:'빈민가 · 천막촌', art:'beggars',
     text:`깡패를 만나러 가기 전, 거지들의 임시 거처를 지난다.
@@ -1664,7 +1578,7 @@ function encounterStatusHtml(){ return ''; }
 
 // ---------- Rendering / UI ----------
 const $ = (id) => document.getElementById(id);
-const screens = ['menuScreen','classScreen','modeScreen','normalModeScreen','pvpLobbyScreen','hardModeScreen','developmentScreen','gameScreen','endScreen'];
+const screens = ['menuScreen','classScreen','modeScreen','hardModeScreen','developmentScreen','gameScreen','endScreen'];
 
 function showScreen(id) {
   for (const s of screens) $(s).classList.toggle('active', s === id);
@@ -1676,8 +1590,8 @@ function showScreen(id) {
 const GAME_MODES = {
   normal: {
     id:'normal', name:'노말 모드', state:'PLAYABLE', stateClass:'playable', symbol:'♜', cardClass:'normal',
-    desc:'이야기를 따라 끝까지 살아남는다.', foot:'솔로 / PVP · 같은 스토리',
-    enter:()=>openNormalSelection()
+    desc:'이야기를 따라 끝까지 살아남는다.', foot:'현재 기록 · 엔딩 · 랭킹 지원',
+    enter:()=>beginNormalMode()
   },
   hard: {
     id:'hard', name:'하드 모드', state:'PREVIEW', stateClass:'preview', symbol:'✦', cardClass:'hard',
@@ -1685,11 +1599,6 @@ const GAME_MODES = {
     enter:()=>openHardSelection()
   }
 };
-const NORMAL_VARIANTS = {
-  solo:{id:'solo',name:'솔로',subtitle:'기존 노말 스토리',icon:'◇'},
-  pvp:{id:'pvp',name:'PVP',subtitle:'실시간 1대1 점수 경쟁',icon:'⚔',cardClass:'pvp'}
-};
-
 // Hard variants are likewise data-driven. Replace developmentOnly:false and provide enter() when implemented.
 const HARD_VARIANTS = {
   solo: {id:'solo', name:'솔로', subtitle:'한 사람의 기록', icon:'◇', developmentOnly:true},
@@ -1697,7 +1606,6 @@ const HARD_VARIANTS = {
 };
 
 let pendingClassId = null;
-let pendingNormalType = null;
 let pendingHardType = null;
 
 function selectedClass(){ return pendingClassId ? CLASSES[pendingClassId] : null; }
@@ -1717,29 +1625,16 @@ function openModeSelection(){
   if(!selectedClass()){renderClasses();showScreen('classScreen');return;}
   renderModeSelection();showScreen('modeScreen');
 }
-function renderNormalVariants(){
-  $('normalChoiceGrid').innerHTML=Object.values(NORMAL_VARIANTS).map(v=>`<button class="hard-choice ${v.cardClass||''}" data-normal-id="${escapeAttr(v.id)}"><span class="hard-choice-icon">${v.icon}</span><span><b>${escapeHtml(v.name)}</b><small>${escapeHtml(v.subtitle)}</small></span><i>›</i></button>`).join('');
-}
-function openNormalSelection(){
-  const cl=selectedClass();if(!cl){openModeSelection();return;}
-  $('normalClassLabel').textContent=`${cl.name} · NORMAL`;
-  pendingNormalType=null;renderNormalVariants();showScreen('normalModeScreen');
-}
-function enterNormalVariant(id){
-  if(id==='solo'){beginNormalMode('solo');return;}
-  if(id==='pvp'){openPvpLobby();return;}
-}
-
 function openHardSelection(){
   const cl=selectedClass();if(!cl){openModeSelection();return;}
   $('hardClassLabel').textContent=`${cl.name} · HARD`;
   pendingHardType=null;renderHardVariants();showScreen('hardModeScreen');
 }
-function beginNormalMode(variant='solo'){
+function beginNormalMode(){
   const id=pendingClassId,cl=selectedClass();if(!id||!cl||!isClassUnlocked(id)){renderClasses();showScreen('classScreen');return;}
   state=freshState(); state.classId=id;
   state.p={className:cl.name,maxHp:cl.hp,hp:cl.hp,atk:cl.atk,social:cl.social,speed:cl.speed,gold:10};
-  state.flags.gameMode='normal'; state.flags.gameVariant=variant==='pvp'?'pvp':'solo';
+  state.flags.gameMode='normal'; state.flags.gameVariant='story';
   state.sceneId='intro'; save(); showScreen('gameScreen'); enter('intro');
 }
 function enterGameMode(modeId){
@@ -1758,76 +1653,6 @@ function showHardDevelopment(type){
   $('devTitle').textContent=`${variant.name} · 개발 중`;
   $('devPath').textContent=`${cl.name} · HARD / ${label}`;
   showScreen('developmentScreen');
-}
-
-
-// ---------- Normal PVP: existing story, real-time score race ----------
-const pvpClient={socket:null,matchId:'',nickname:'',opponent:null,queueing:false,finished:false,result:null,lastSyncAt:0,resumeTried:false};
-function isPvpMode(){return state?.flags?.gameMode==='normal'&&state?.flags?.gameVariant==='pvp'&&!!pvpClient.matchId;}
-function pvpSocket(){
-  if(pvpClient.socket)return pvpClient.socket;
-  if(typeof io!=='function')return null;
-  const sock=io({transports:['websocket','polling']});pvpClient.socket=sock;
-  sock.on('connect',()=>{const sess=loadPvpSession();if(sess?.matchId&&!pvpClient.resumeTried){pvpClient.resumeTried=true;sock.emit('pvp:resume',sess);}});
-  sock.on('pvp:queue',d=>{pvpClient.queueing=true;const e=$('pvpQueueStatus');if(e){e.textContent=`상대를 찾는 중 · 대기 ${Number(d?.position||1)}번째`;e.className='pvp-queue-status searching';}});
-  sock.on('pvp:match',d=>startPvpMatch(d));
-  sock.on('pvp:opponent',d=>{pvpClient.opponent=d;renderPvpOpponent();});
-  sock.on('pvp:result',d=>showPvpResult(d));
-  sock.on('pvp:error',d=>{const e=$('pvpQueueStatus');if(e){e.textContent=d?.message||'매칭 서버 오류';e.className='pvp-queue-status';}});
-  sock.on('disconnect',()=>{if(isPvpMode()){const e=$('pvpOpponentStatus');if(e)e.textContent='연결 복구 중';}});
-  return sock;
-}
-function loadPvpSession(){try{return JSON.parse(localStorage.getItem(PVP_SESSION_KEY)||'null');}catch{return null;}}
-function savePvpSession(){if(!pvpClient.matchId)return;localStorage.setItem(PVP_SESSION_KEY,JSON.stringify({matchId:pvpClient.matchId,playerId:getPlayerId(),nickname:pvpClient.nickname,classId:state.classId}));}
-function clearPvpSession(){localStorage.removeItem(PVP_SESSION_KEY);localStorage.removeItem(PVP_SAVE_KEY);}
-async function loadPvpProfile(){
-  const rating=$('pvpRatingValue');if(rating)rating.textContent='…';
-  try{const r=await fetchTimed(`/api/pvp/profile/${encodeURIComponent(getPlayerId())}?t=${Date.now()}`,{cache:'no-store'},5000);const d=await r.json();if(r.ok&&d.ok&&rating)rating.textContent=Number(d.rating||1000).toLocaleString();else if(rating)rating.textContent='1000';}catch{if(rating)rating.textContent='1000';}
-}
-function openPvpLobby(){
-  const cl=selectedClass();if(!cl){openNormalSelection();return;}
-  $('pvpClassLabel').textContent=`${cl.name} · NORMAL PVP`;
-  const input=$('pvpNickname');if(input&&!input.value)input.value=localStorage.getItem(PVP_NICK_KEY)||'';
-  const st=$('pvpQueueStatus');if(st){st.textContent='대기 중인 상대를 실시간으로 찾습니다.';st.className='pvp-queue-status';}
-  const btn=$('pvpQueueBtn');if(btn){btn.disabled=false;btn.textContent='매칭 시작';}
-  showScreen('pvpLobbyScreen');loadPvpProfile();
-}
-function startPvpQueue(){
-  const cl=selectedClass();if(!cl)return openNormalSelection();
-  const input=$('pvpNickname');const nick=String(input?.value||'').trim();
-  if(!nicknameAllowed(nick)){if(input)input.classList.add('nickname-invalid');const st=$('pvpQueueStatus');if(st)st.textContent='사용할 수 없는 이름입니다.';return;}
-  const nickname=nick||`몰락자${Math.floor(1000+Math.random()*9000)}`;localStorage.setItem(PVP_NICK_KEY,nickname);
-  const sock=pvpSocket();if(!sock){const st=$('pvpQueueStatus');if(st)st.textContent='실시간 서버를 불러오지 못했습니다.';return;}
-  pvpClient.nickname=nickname;pvpClient.queueing=true;
-  const btn=$('pvpQueueBtn');if(btn){btn.disabled=false;btn.textContent='매칭 취소';}
-  sock.emit('pvp:queue',{playerId:getPlayerId(),nickname,classId:pendingClassId,className:cl.name});
-}
-function cancelPvpQueue(){if(pvpClient.socket)pvpClient.socket.emit('pvp:cancel');pvpClient.queueing=false;const btn=$('pvpQueueBtn');if(btn){btn.disabled=false;btn.textContent='매칭 시작';}const st=$('pvpQueueStatus');if(st){st.textContent='매칭을 취소했습니다.';st.className='pvp-queue-status';}}
-function startPvpMatch(d){
-  const cl=CLASSES[d?.you?.classId||pendingClassId];if(!cl)return;
-  pvpClient.matchId=String(d.matchId||'');pvpClient.nickname=String(d.you?.nickname||pvpClient.nickname||'몰락자');pvpClient.opponent=d.opponent||null;pvpClient.queueing=false;pvpClient.finished=false;pvpClient.result=null;
-  state=freshState();state.classId=d.you?.classId||pendingClassId;state.p={className:cl.name,maxHp:cl.hp,hp:cl.hp,atk:cl.atk,social:cl.social,speed:cl.speed,gold:10};state.flags.gameMode='normal';state.flags.gameVariant='pvp';state.flags.pvpMatchId=pvpClient.matchId;state.sceneId='intro';
-  savePvpSession();save();showScreen('gameScreen');enter('intro');renderPvpOpponent();
-}
-function pvpSnapshot(){return {stats:{...state.stats,goldHeld:state.p?.gold||0},hp:state.p?.hp||0,gold:state.p?.gold||0,progress:state.stats?.progress||0,className:state.p?.className||'',ended:!!state.ended,ending:state.stats?.ending||''};}
-function schedulePvpSync(force=false){
-  if(!isPvpMode()||!pvpClient.socket||pvpClient.finished)return;const now=Date.now();if(!force&&now-pvpClient.lastSyncAt<850)return;pvpClient.lastSyncAt=now;pvpClient.socket.emit('pvp:update',{matchId:pvpClient.matchId,playerId:getPlayerId(),...pvpSnapshot()});
-}
-function renderPvpOpponent(){
-  const panel=$('pvpOpponentPanel');if(!panel)return;panel.classList.toggle('hidden',!isPvpMode());if(!isPvpMode())return;const o=pvpClient.opponent||{};$('pvpOpponentName').textContent=o.nickname||'상대';$('pvpOpponentClass').textContent=o.className||'';$('pvpOpponentScore').textContent=Number(o.score||0).toLocaleString();$('pvpOpponentProgress').textContent=Number(o.progress||0);$('pvpOpponentStatus').textContent=o.finished?'기록 완료':o.connected===false?'재접속 대기':'진행 중';
-}
-function pvpFinish(){if(!isPvpMode()||pvpClient.finished)return;pvpClient.finished=true;save();pvpClient.socket?.emit('pvp:finish',{matchId:pvpClient.matchId,playerId:getPlayerId(),...pvpSnapshot()});const panel=$('pvpEndPanel');if(panel){panel.classList.remove('hidden');$('pvpEndTitle').textContent='상대 기록을 기다리는 중';$('pvpEndBody').textContent='당신의 최종 점수는 서버에 도착했습니다. 상대가 끝나면 승패와 레이팅이 확정됩니다.';}}
-function showPvpResult(d){
-  pvpClient.result=d;const panel=$('pvpEndPanel');if(panel)panel.classList.remove('hidden');const mine=d.you||{},opp=d.opponent||{},result=mine.result||'draw';const title=result==='win'?'승리':result==='loss'?'패배':'무승부';$('pvpEndTitle').textContent=title;$('pvpEndTitle').className=result==='win'?'pvp-result-win':result==='loss'?'pvp-result-loss':'pvp-result-draw';$('pvpEndBody').innerHTML=`내 점수 <b>${Number(mine.score||0).toLocaleString()}</b> · 상대 <b>${Number(opp.score||0).toLocaleString()}</b><br>레이팅 <b>${Number(mine.oldRating||1000)}</b> → <b>${Number(mine.newRating||1000)}</b> (${Number(mine.delta||0)>=0?'+':''}${Number(mine.delta||0)})`;
-  clearPvpSession();
-}
-function confirmPvpForfeit(){closeModal();pvpClient.socket?.emit('pvp:forfeit',{matchId:pvpClient.matchId,playerId:getPlayerId()});clearPvpSession();pvpClient.matchId='';pvpClient.finished=true;showScreen('menuScreen');updateMenuSaveInfo();}
-async function showPvpLeaderboard(){
-  $('modal').innerHTML='<h2>PVP 레이팅</h2><div class="modal-sub">실시간 대전 레이팅 TOP 50을 불러오는 중...</div>';showModal();
-  try{const r=await fetchTimed(`/api/pvp/leaderboard?t=${Date.now()}`,{cache:'no-store'},7000);const rows=await r.json();if(!r.ok||!Array.isArray(rows))throw new Error('PVP_RANK');$('modal').innerHTML=`<h2>PVP 레이팅</h2><div class="modal-sub">노말 PVP · Elo 레이팅 TOP 50</div>${rows.length?rows.map((x,i)=>`<div class="rank-row ${x.playerId===getPlayerId()?'mine':''}"><div class="rank-num">${i+1}</div><div><b>${escapeHtml(x.nickname)}${x.playerId===getPlayerId()?' · 나':''}</b><div class="rank-meta">${escapeHtml(x.className||'')} · ${Number(x.wins||0)}승 ${Number(x.losses||0)}패 ${Number(x.draws||0)}무</div></div><div class="rank-score">${Number(x.rating||1000)}</div></div>`).join(''):'<p class="modal-sub">아직 PVP 기록이 없습니다.</p>'}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;}catch{$('modal').innerHTML='<h2>PVP 레이팅</h2><p class="modal-sub">PVP 랭킹을 불러오지 못했습니다.</p><button class="btn modal-close" onclick="closeModal()">닫기</button>';}
-}
-function maybeRestorePvp(){
-  const sess=loadPvpSession();if(!sess?.matchId)return;try{const raw=localStorage.getItem(PVP_SAVE_KEY);if(!raw)return;state=normalizeLoadedState(JSON.parse(raw));if(!state?.p||state.ended)return;pvpClient.matchId=sess.matchId;pvpClient.nickname=sess.nickname||'';pendingClassId=state.classId;showScreen('gameScreen');enter(state.sceneId);pvpSocket();}catch{}
 }
 
 function renderClasses() {
@@ -1911,7 +1736,6 @@ function render() {
   $('sceneCard').classList.toggle('deep-dialogue', !!talkProfile() && (state.talkCount[state.sceneId]||0)>0);
   $('sceneCard').classList.toggle('aftermath-dead',['undertaker','grave'].includes(sc.art));
   $('sceneCard').classList.toggle('aftermath-trail',['tracker','trail'].includes(sc.art));
-  renderPvpOpponent(); schedulePvpSync();
   $('choiceArea').innerHTML = choices.filter(Boolean).map((x,i)=>`<button class="choice-btn" data-choice="${i}"><b>${escapeHtml(x.label)}</b></button>`).join('');
   [...document.querySelectorAll('[data-choice]')].forEach(btn => {
     btn.onclick = () => { if(!state.pending) choices[Number(btn.dataset.choice)].fn(); };
@@ -1925,12 +1749,12 @@ function art(kind) {
     alarm:['#26171a','#5d252b','#b64b4f'], captain:['#1b202a','#4d5668','#c9d0dc'], oldguard:['#17191d','#47443c','#c1ae7d'], king:['#251d1d','#6f3434','#d1aa55'],
     barracks:['#1e2429','#515c62','#a89a78'], bandits:['#1c251f','#40543f','#a35a44'], camp:['#24241e','#615a3d','#d0a55b'], banditcamp:['#182018','#3f5233','#b06d44'],
     boss:['#241b21','#613343','#c65e72'], rebel:['#281619','#6d262e','#d16b56'], kingrage:['#2b1516','#761f25','#dc9b4d'], merchant:['#24251e','#626142','#cfb06a'],
-    forest:['#111d18','#284b36','#78975d'], capture:['#151e19','#3b4939','#a65a3b'], officer:['#231b1d','#5a3037','#bd614e'], guild:['#1d2327','#45535d','#a9b9c2'], midknight:['#171b20','#36424f','#bdc8d4'],crossroad:['#1b1e20','#45413d','#b49663'],undertaker:['#17191d','#3a3c40','#b8b1a4'],tracker:['#151c1d','#31484a','#8eb3ad'],grave:['#151719','#34363a','#8b8f92'],trail:['#121918','#2d403b','#789b8c'],phantom:['#070810','#171324','#66577f']
+    forest:['#111d18','#284b36','#78975d'], capture:['#151e19','#3b4939','#a65a3b'], officer:['#231b1d','#5a3037','#bd614e'], guild:['#1d2327','#45535d','#a9b9c2'], midknight:['#171b20','#36424f','#bdc8d4'],crossroad:['#1b1e20','#45413d','#b49663'],undertaker:['#17191d','#3a3c40','#b8b1a4'],tracker:['#151c1d','#31484a','#8eb3ad'],grave:['#151719','#34363a','#8b8f92'],trail:['#121918','#2d403b','#789b8c']
   };
   const p = palettes[kind] || palettes.exile;
-  const moon = ['forest','bandits','banditcamp','capture','officer','boss','crossroad','phantom'].includes(kind);
+  const moon = ['forest','bandits','banditcamp','capture','officer','boss','crossroad'].includes(kind);
   const castle = ['gate','city','alarm','captain','oldguard','king','kingrage','barracks','rebel'].includes(kind);
-  const figures = ['beggars','gangster','citizen','captain','oldguard','boss','merchant','officer','guild','midknight','king','kingrage','undertaker','tracker','phantom'].includes(kind);
+  const figures = ['beggars','gangster','citizen','captain','oldguard','boss','merchant','officer','guild','midknight','king','kingrage','undertaker','tracker'].includes(kind);
   return `<svg viewBox="0 0 600 280" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
     <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop stop-color="${p[1]}"/><stop offset="1" stop-color="${p[0]}"/></linearGradient><filter id="blur"><feGaussianBlur stdDeviation="9"/></filter></defs>
     <rect width="600" height="280" fill="url(#g)"/>
@@ -1941,7 +1765,6 @@ function art(kind) {
     ${kind==='beggars'?`<g fill="#101113" opacity=".9"><circle cx="210" cy="155" r="12"/><path d="M195 210q4-42 15-43t16 43z"/><circle cx="390" cy="165" r="11"/><path d="M376 214q4-37 14-38t15 38z"/></g>`:''}
     ${kind==='shop'?`<rect x="170" y="105" width="260" height="130" rx="4" fill="#11100d"/><path d="M150 115h300l-35-48H185z" fill="#4c3824"/><rect x="275" y="160" width="55" height="75" fill="#241b12"/><circle cx="315" cy="125" r="18" fill="${p[2]}" opacity=".8"/>`:''}
     ${kind==='rebel'?`<path d="M120 70v155M120 75l90 30-90 32z" stroke="#171012" stroke-width="8" fill="#7d2630"/><path d="M480 70v155M480 75l-90 30 90 32z" stroke="#171012" stroke-width="8" fill="#7d2630"/>`:''}
-    ${kind==='phantom'?`<ellipse cx="300" cy="145" rx="92" ry="112" fill="#05050a" opacity=".72" filter="url(#blur)"/><path d="M258 204Q255 86 300 74Q345 86 342 204Q320 180 300 218Q280 180 258 204z" fill="#050509"/><circle cx="282" cy="126" r="3" fill="#b9add7" opacity=".75"/><circle cx="318" cy="126" r="3" fill="#b9add7" opacity=".75"/>`:''}
     <rect y="220" width="600" height="60" fill="#08090c" opacity=".45"/>
   </svg>`;
 }
@@ -2051,8 +1874,7 @@ const ESCAPE_ROUTES = {
   guildNoviceAngry:  {to:'forestBeforeBoss', text:'초급 기사의 추격을 피해 본거지 외곽까지 달아났다.'},
   midKnight:         {to:'banditBossForest', text:'중급 기사의 추격을 따돌리고 도적단 본거지 안으로 뛰어들었다.', before(){state.flags.midKnightEscaped=true;}},
   banditBossForest:  {to:'friendBridge', text:'세리아와의 결판을 미루고 본거지를 빠져나왔다.'},
-  banditBossAngryForest:{to:'friendBridge',text:'세리아와의 싸움을 피해 왕국과 숲 사이 다리로 이동했다.'},
-  phantomEncounter:{to:'phantomAfterEscape',text:'팬텀의 손이 닿기 직전 어둠을 가르며 달아났다.'}
+  banditBossAngryForest:{to:'friendBridge',text:'세리아와의 싸움을 피해 왕국과 숲 사이 다리로 이동했다.'}
 };
 function handleEscapeSuccess(){
   const route=ESCAPE_ROUTES[state.sceneId];
@@ -2073,17 +1895,6 @@ function handleEscapeSuccess(){
   resolve('run',target,route.text||'도망에 성공했다.');
 }
 
-function grantSocialReward(enemy,chance){
-  const base=clamp(Math.round(Number(enemy?.social||1)*0.7),4,18);
-  const hard=Number(chance||100)<=45;
-  let amount=base+(hard?6:0);
-  if(state.classId==='noble')amount=Math.ceil(amount*1.5);
-  state.stats.socialIncome=Number(state.stats.socialIncome||0)+amount;
-  if(hard)state.stats.riskySocial=Number(state.stats.riskySocial||0)+1;
-  state.p.gold+=amount;state.stats.goldEarned+=amount;
-  floatText(`◆ +${amount}`);
-}
-
 function gameAction(type) {
   const sc=SCENES[state.sceneId], enemy=getEnemy(sc); if(!sc||!enemy||state.ended)return;
   if(type==='talk') { handleTalk(sc); return; }
@@ -2093,7 +1904,7 @@ function gameAction(type) {
     if(sc.socialDisabled || state.socialUsed[socialKey]) return;
     state.socialUsed[socialKey]=true;
     const chance=socialChance(enemy,sc);
-    if(Math.random()*100<chance){state.stats.socialSuccess++;grantSocialReward(enemy,chance);if(state.classId==='dictator')gainTyranny('social');fx('good');floatText('처세 성공');if(sc.socialSuccess)sc.socialSuccess();else resolve('social',null,'처세에 성공했다.');}
+    if(Math.random()*100<chance){state.stats.socialSuccess++;if(state.classId==='dictator')gainTyranny('social');fx('good');floatText('처세 성공');if(sc.socialSuccess)sc.socialSuccess();else resolve('social',null,'처세에 성공했다.');}
     else {state.stats.socialFail++;fx('bad');floatText('처세 실패');if(sc.socialFail)sc.socialFail();else {toast('처세에 실패했다. 같은 방법은 다시 통하지 않는다.','bad');render();save();}}
     return;
   }
@@ -2201,10 +2012,8 @@ function summonWraith(){
   if(Number(state.stats.corpses||0)<=0){toast('불러낼 시체가 없다.');return;}
   state.stats.corpses--;
   m.wraithSummoned=true;
-  const boss=!!(sc.enemy&&ENEMIES[sc.enemy]?.elite)||['oldVeteran','banditBossRoyal','banditBossForest','kingEnraged','phantomEncounter'].includes(state.sceneId);
-  const hpBonus=Math.min(5,Math.max(0,Math.floor((Number(state.p.maxHp||8)-8)/2)));
-  m.attackPct=clamp(Number(m.attackPct||0)+(boss?14:18)+hpBonus,-30,40);
-  m.enemyAtk=clamp(Number(m.enemyAtk||0)-(boss?3:4),-10,8);
+  m.attackPct=clamp(Number(m.attackPct||0)+12,-30,35);
+  m.enemyAtk=clamp(Number(m.enemyAtk||0)-2,-8,8);
   state.lastToast='차가운 그림자가 당신 옆에 일어선다. 상대의 시선이 갈라진다.';
   floatText('망령 소환');save();render();
 }
@@ -2302,7 +2111,7 @@ function continueOutcome(){
   if(p.next){ go(p.next); return; }
   render();
 }
-function go(id, msg='') { if(!SCENES[id])return; state.pending=null; if(maybeReplaceResolvedEncounter(id))return; const changed=id!==state.sceneId; if(changed&&state.encounterMods)delete state.encounterMods[state.sceneId]; if(changed){state.escapeAttempted=false;state.escapeSerial=(state.escapeSerial||0)+1;} state.sceneId=id; state.lastToast=msg; state.stats.progress++; if(recordLoopTransition(id))return; save(); enter(id); }
+function go(id, msg='') { if(!SCENES[id])return; state.pending=null; if(maybeReplaceResolvedEncounter(id))return; const changed=id!==state.sceneId; if(changed&&state.encounterMods)delete state.encounterMods[state.sceneId]; if(changed){state.escapeAttempted=false;state.escapeSerial=(state.escapeSerial||0)+1;} state.sceneId=id; state.lastToast=msg; state.stats.progress++; save(); enter(id); }
 function enter(id) {
   showScreen('gameScreen');
   if(maybeReplaceResolvedEncounter(id))return;
@@ -2401,22 +2210,14 @@ function finish(name) {
   $('playStyle').textContent=`플레이 스타일 · ${playStyle()}`;
   $('endScore').textContent=clientScore().toLocaleString();
   const deathBlock=e.bad&&state.flags.deathReason?`<b>최후의 순간</b> · ${escapeHtml(state.flags.deathReason)}<br><b>사망 장소</b> · ${escapeHtml(SCENES[state.flags.deathScene]?.location||'알 수 없는 장소')}<br><br><br>`:'';
-  $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>협상 수익 <b>◆ ${state.stats.socialIncome||0}</b> · 고난도 협상 <b>${state.stats.riskySocial||0}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 과대화 <b>${state.stats.overTalks||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>${state.classId==='merchant'?`<br>장사 수익 <b>${state.stats.merchantIncome||0}</b> · 새 조우 <b>${state.stats.merchantDeals||0}</b>`:''}`;
+  $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 과대화 <b>${state.stats.overTalks||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>${state.classId==='merchant'?`<br>장사 수익 <b>${state.stats.merchantIncome||0}</b> · 새 조우 <b>${state.stats.merchantDeals||0}</b>`:''}`;
   const meta=loadMeta();
   if(!e.bad){
     const unlockLine=state.flags.newClassUnlocks?.length?`<br><br><b>새 직업 해금 · ${state.flags.newClassUnlocks.map(escapeHtml).join(' / ')}</b>`:`<br><br>노말 엔딩 <b>${meta.normalClears}회</b>`;
     $('endStats').innerHTML+=unlockLine;
   }
   resetRankSubmitUI();
-  const pvpMode=isPvpMode();
-  if($('nickname'))$('nickname').classList.toggle('hidden',pvpMode);
-  if($('submitScoreBtn'))$('submitScoreBtn').classList.toggle('hidden',pvpMode);
-  if($('rankSubmitStatus'))$('rankSubmitStatus').classList.toggle('hidden',pvpMode);
-  if($('pvpEndPanel'))$('pvpEndPanel').classList.toggle('hidden',!pvpMode);
-  if($('endNormalLeaderboardBtn'))$('endNormalLeaderboardBtn').classList.toggle('hidden',pvpMode);
-  if($('endPvpLeaderboardBtn'))$('endPvpLeaderboardBtn').classList.toggle('hidden',!pvpMode);
   fx(e.bad?'bad':'good');showScreen('endScreen');
-  if(pvpMode)pvpFinish();
 }
 function die(reason){
   state.p.hp=0;
@@ -2433,7 +2234,7 @@ function playStyle(){
   const pairs=[['전투광',s.kills*3+s.riskyWins*2],['협상가',s.socialSuccess*3+s.talkSolved],['생존가',s.runSuccess*4],['탐색가',s.secrets*5+s.talkSolved],['장사꾼',(s.merchantDeals||0)*4+Math.floor((s.merchantIncome||0)/5)],['파괴자',s.eliteKills*5+s.kills]];
   pairs.sort((a,b)=>b[1]-a[1]);return pairs[0][1]===0?'방랑자':pairs[0][0];
 }
-function clientScore(){const s=state.stats,b=Number(endingProfile(s.ending)?.bonus||s.endingBonus||0);return Math.max(0,Math.floor(s.progress*115+s.goldEarned*3+state.p.gold*1.2+s.kills*170+s.eliteKills*950+s.riskyWins*650+(s.comebackWins||0)*900+s.talkSolved*210+s.socialSuccess*300+(s.riskySocial||0)*500+s.runSuccess*85+s.secrets*500+(s.growths||0)*140+s.survivors*220-s.socialFail*25-(s.overTalks||0)*90+b));}
+function clientScore(){const s=state.stats,b=Number(endingProfile(s.ending)?.bonus||s.endingBonus||0);return Math.max(0,Math.floor(s.progress*115+s.goldEarned*3+state.p.gold*1.2+s.kills*170+s.eliteKills*950+s.riskyWins*650+(s.comebackWins||0)*900+s.talkSolved*170+s.socialSuccess*185+s.runSuccess*85+s.secrets*500+(s.growths||0)*140+s.survivors*220-s.socialFail*25-(s.overTalks||0)*90+b));}
 
 // ---------- Merchant class economy ----------
 function merchantEncounterProfit(id=state.sceneId){
@@ -2538,17 +2339,17 @@ function normalizeLoadedState(data){
   merged.stats.tyranny=Number(data.stats?.tyranny||0);
   merged.stats.merchantDeals=Number(data.stats?.merchantDeals||0);
   merged.stats.merchantIncome=Number(data.stats?.merchantIncome||0);
-  merged.stats.socialIncome=Number(data.stats?.socialIncome||0);
-  merged.stats.riskySocial=Number(data.stats?.riskySocial||0);
   merged.runId=String(data.runId||base.runId);
   merged.version=GAME_VERSION;
   return migrateLegacyWorld(merged,data);
 }
-function save(){localStorage.setItem(isPvpMode()?PVP_SAVE_KEY:SAVE_KEY,JSON.stringify(state));if(!isPvpMode())updateMenuSaveInfo();schedulePvpSync();}
+function save(){localStorage.setItem(SAVE_KEY,JSON.stringify(state));updateMenuSaveInfo();}
 function saveAndExit(){
-  if(battleBusy){toast('전투 중에는 나갈 수 없다.','bad');return;}
-  if(isPvpMode()){ $('modal').innerHTML='<h2>PVP 기권</h2><p class="modal-sub">지금 나가면 이번 경기는 패배 처리됩니다.</p><button class="btn primary full" onclick="confirmPvpForfeit()">기권하고 나가기</button><button class="btn full" onclick="closeModal()">계속 플레이</button>';showModal();return; }
-  save();closeModal();showScreen('menuScreen');updateMenuSaveInfo();
+  if(battleBusy){toast('전투 중에는 저장 후 나갈 수 없다.','bad');return;}
+  save();
+  closeModal();
+  showScreen('menuScreen');
+  updateMenuSaveInfo();
 }
 function continueGame(){try{const raw=localStorage.getItem(SAVE_KEY);if(!raw)return alert('저장된 게임이 없다.');state=normalizeLoadedState(JSON.parse(raw));if(!state.p)throw new Error();showScreen(state.ended?'endScreen':'gameScreen');if(state.ended)finishLoaded();else enter(state.sceneId);}catch{alert('저장 데이터를 불러오지 못했다.');}}
 function updateMenuSaveInfo(){
@@ -2756,15 +2557,12 @@ function escapeAttr(v){return escapeHtml(v);}
 // ---------- Events ----------
 document.addEventListener('click',e=>{
   const act=e.target.closest('[data-action]')?.dataset.action;
-  if(act==='new-game'){pendingClassId=null;pendingNormalType=null;pendingHardType=null;renderClasses();showScreen('classScreen');}
+  if(act==='new-game'){pendingClassId=null;pendingHardType=null;renderClasses();showScreen('classScreen');}
   if(act==='continue')continueGame();
   if(act==='leaderboard')showLeaderboard();
-  if(act==='pvp-leaderboard')showPvpLeaderboard();
-  if(act==='pvp-queue'){pvpClient.queueing?cancelPvpQueue():startPvpQueue();}
   if(act==='back-menu'){closeModal();pendingHardType=null;showScreen('menuScreen');updateMenuSaveInfo();}
   if(act==='back-classes'){renderClasses();showScreen('classScreen');}
   if(act==='back-mode')openModeSelection();
-  if(act==='back-normal')openNormalSelection();
   if(act==='back-hard')openHardSelection();
   if(act==='bag')openBag();
   if(act==='encounter-items')openEncounterItems();
@@ -2773,16 +2571,13 @@ document.addEventListener('click',e=>{
   if(act==='submit-score')submitScore();
   if(act==='continue-result')continueOutcome();
   const modeId=e.target.closest('[data-mode-id]')?.dataset.modeId;if(modeId)enterGameMode(modeId);
-  const normalId=e.target.closest('[data-normal-id]')?.dataset.normalId;if(normalId)enterNormalVariant(normalId);
   const hardId=e.target.closest('[data-hard-id]')?.dataset.hardId;if(hardId)enterHardVariant(hardId);
   const ga=e.target.closest('[data-game-action]')?.dataset.gameAction;
   if(ga)gameAction(ga);
 });
-window.selectClass=selectClass;window.confirmPvpForfeit=confirmPvpForfeit;window.recoverFromAnomaly=recoverFromAnomaly;window.summonWraith=summonWraith;window.openShop=openShop;window.openBag=openBag;window.openEncounterItems=openEncounterItems;window.closeModal=closeModal;window.continueOutcome=continueOutcome;window.saveAndExit=saveAndExit;
+window.selectClass=selectClass;window.recoverFromAnomaly=recoverFromAnomaly;window.summonWraith=summonWraith;window.openShop=openShop;window.openBag=openBag;window.openEncounterItems=openEncounterItems;window.closeModal=closeModal;window.continueOutcome=continueOutcome;window.saveAndExit=saveAndExit;
 const nicknameInput=$('nickname');if(nicknameInput)nicknameInput.addEventListener('input',refreshNicknameValidation);
-const pvpNicknameInput=$('pvpNickname');if(pvpNicknameInput)pvpNicknameInput.addEventListener('input',()=>pvpNicknameInput.classList.toggle('nickname-invalid',!nicknameAllowed(pvpNicknameInput.value)));
 
 updateMenuSaveInfo();
 updateStorageStatus();
 flushPending();
-maybeRestorePvp();
