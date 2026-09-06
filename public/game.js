@@ -7,7 +7,7 @@ const META_KEY = 'fallen_meta_v1';
 const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
 const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
 const PVP_NICK_KEY = 'fallen_pvp_nickname';
-const GAME_VERSION = 138;
+const GAME_VERSION = 139;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5, godfather:7 };
 function loadMeta(){
@@ -32,6 +32,7 @@ function saveMeta(meta){localStorage.setItem(META_KEY,JSON.stringify(meta));}
 
 const ELITE_SKIN_CLASSES=new Set(['knight','noble','thief']);
 const ELITE_SKIN_REQUIRED_HIDDEN=3;
+const CLASS_SKIN_PREVIEW={};
 function hiddenSkinHistoricalFloor(meta=loadMeta()){
   const names=Array.isArray(meta.endings)?meta.endings:[];
   let n=0;
@@ -99,19 +100,44 @@ function flashSkinHint(card,text){
   if(!el){el=document.createElement('div');el.className='skin-swipe-hint';card.querySelector('.class-portrait-wrap')?.appendChild(el);}
   el.textContent=text;el.classList.remove('show');void el.offsetWidth;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1250);
 }
+function previewClassSkin(id,meta=loadMeta()){
+  if(!ELITE_SKIN_CLASSES.has(id))return 'base';
+  return CLASS_SKIN_PREVIEW[id]||preferredClassSkin(id,meta);
+}
 function cycleClassSkin(id,dir=1,card=null){
   if(!ELITE_SKIN_CLASSES.has(id))return;
   const meta=loadMeta();
-  if(!eliteSkinsUnlocked(meta)){flashSkinHint(card||document.querySelector(`.class-card[data-class-id="${id}"]`),'히든 엔딩 3회 달성 후 해금');return;}
-  const current=preferredClassSkin(id,meta);const next=current==='elite'?'base':'elite';
-  setPreferredClassSkin(id,next);renderClasses();
+  const current=previewClassSkin(id,meta);
+  const next=current==='elite'?'base':'elite';
+
+  if(next==='elite'){
+    CLASS_SKIN_PREVIEW[id]='elite';
+    if(eliteSkinsUnlocked(meta))setPreferredClassSkin(id,'elite');
+  }else{
+    delete CLASS_SKIN_PREVIEW[id];
+    if(eliteSkinsUnlocked(meta))setPreferredClassSkin(id,'base');
+  }
+  renderClasses();
 }
 function bindClassSkinSwipes(){
   document.querySelectorAll('#classScreen .class-card[data-class-id]').forEach(card=>{
     const id=card.dataset.classId;if(!ELITE_SKIN_CLASSES.has(id))return;
-    let sx=0,sy=0;
-    card.addEventListener('touchstart',e=>{const t=e.touches?.[0];if(!t)return;sx=t.clientX;sy=t.clientY;},{passive:true});
-    card.addEventListener('touchend',e=>{const t=e.changedTouches?.[0];if(!t)return;const dx=t.clientX-sx,dy=t.clientY-sy;if(Math.abs(dx)>=52&&Math.abs(dx)>Math.abs(dy)*1.25)cycleClassSkin(id,dx<0?1:-1,card);},{passive:true});
+    let sx=0,sy=0,mouseDown=false;
+    card.addEventListener('touchstart',e=>{
+      const t=e.touches?.[0];if(!t)return;sx=t.clientX;sy=t.clientY;
+    },{passive:true});
+    card.addEventListener('touchend',e=>{
+      const t=e.changedTouches?.[0];if(!t)return;
+      const dx=t.clientX-sx,dy=t.clientY-sy;
+      if(Math.abs(dx)>=46&&Math.abs(dx)>Math.abs(dy)*1.2)cycleClassSkin(id,dx<0?1:-1,card);
+    },{passive:true});
+    card.addEventListener('mousedown',e=>{mouseDown=true;sx=e.clientX;sy=e.clientY;});
+    card.addEventListener('mouseup',e=>{
+      if(!mouseDown)return;mouseDown=false;
+      const dx=e.clientX-sx,dy=e.clientY-sy;
+      if(Math.abs(dx)>=46&&Math.abs(dx)>Math.abs(dy)*1.2)cycleClassSkin(id,dx<0?1:-1,card);
+    });
+    card.addEventListener('mouseleave',()=>{mouseDown=false;});
   });
 }
 
@@ -2729,11 +2755,19 @@ function renderClasses() {
     const unlocked=isClassUnlocked(id);
     const unlockText=classUnlockText(id);
     const grown=classGrowthStats(id,cl);
-    const skin=preferredClassSkin(id),view=classSkinPresentation(id,cl,skin),hasElite=ELITE_SKIN_CLASSES.has(id);
-    const skinChip=hasElite?`<button type="button" class="skin-chip ${skin==='elite'?'elite':skinUnlocked?'':'locked'}" onclick="event.stopPropagation();cycleClassSkin('${id}',1,this.closest('.class-card'))">${skin==='elite'?'ELITE':skinUnlocked?'기본':'ELITE 잠김'}</button>`:'';
+    const hasElite=ELITE_SKIN_CLASSES.has(id);
+    const skin=hasElite?previewClassSkin(id):'base';
+    const elitePreviewLocked=hasElite&&skin==='elite'&&!skinUnlocked;
+    const view=classSkinPresentation(id,cl,skin);
+    const pageDots=hasElite?`<div class="skin-page-dots" aria-hidden="true"><i class="${skin==='base'?'on':''}"></i><i class="${skin==='elite'?'on':''}"></i></div>`:'';
+    const lockOverlay=elitePreviewLocked?`<div class="skin-preview-lock"><span>🔒</span><b>잠김</b></div>`:'';
+    const canStart=unlocked&&!elitePreviewLocked;
     return `
-    <article class="class-card ${unlocked?'':'locked'} ${skin==='elite'?'elite-skin-card':''}" data-class-id="${id}" data-skin="${skin}">
-      <div class="class-portrait-wrap"><img class="class-portrait" src="${classArtUrl(id,skin)}?v=0938" alt="${cl.name} 삽화" loading="lazy" decoding="async">${skinChip}</div>
+    <article class="class-card ${unlocked?'':'locked'} ${skin==='elite'?'elite-skin-card':''} ${elitePreviewLocked?'elite-preview-locked':''}" data-class-id="${id}" data-skin="${skin}">
+      <div class="class-portrait-wrap">
+        <img class="class-portrait" src="${classArtUrl(id,skin)}?v=0939" alt="${cl.name} 삽화" loading="lazy" decoding="async">
+        ${lockOverlay}${pageDots}
+      </div>
       <div class="class-info">
         <div class="class-head"><div class="class-name">${unlocked?'':'🔒 '}${view.name}</div><span class="tag">${unlocked?(grown.bonus?`성장 +${grown.bonus}`:'선택 가능'):unlockText}</span></div>
         <div class="stats-row">
@@ -2741,7 +2775,7 @@ function renderClasses() {
         </div>
         <div class="passive"><strong>${unlocked?view.passive:'???'}</strong><br><span>${unlocked?view.desc:`노말 엔딩을 더 보면 기억이 열린다.`}</span></div>
       </div>
-      <button class="btn ${unlocked?'primary':''}" ${unlocked?'':'disabled'} onclick="selectClass('${id}')">${unlocked?'이 직업으로 시작':'잠김'}</button>
+      <button class="btn ${canStart?'primary':''}" ${canStart?'':'disabled'} onclick="selectClass('${id}')">${!unlocked?'잠김':elitePreviewLocked?'스킨 잠김':'이 직업으로 시작'}</button>
     </article>`;
   }).join('');
   bindClassSkinSwipes();
@@ -2842,6 +2876,7 @@ function art(kind) {
 // ---------- Gameplay ----------
 function selectClass(id) {
   const cl=CLASSES[id]; if(!cl || !isClassUnlocked(id)) return;
+  if(ELITE_SKIN_CLASSES.has(id)&&previewClassSkin(id)==='elite'&&!eliteSkinsUnlocked())return;
   pendingClassId=id; pendingHardType=null;
   renderModeSelection();
   showScreen('modeScreen');
@@ -4040,7 +4075,7 @@ function escapeAttr(v){return escapeHtml(v);}
 // ---------- Events ----------
 document.addEventListener('click',e=>{
   const act=e.target.closest('[data-action]')?.dataset.action;
-  if(act==='new-game'){pendingClassId=null;pendingNormalType=null;pendingHardType=null;renderClasses();showScreen('classScreen');}
+  if(act==='new-game'){pendingClassId=null;pendingNormalType=null;pendingHardType=null;for(const k of Object.keys(CLASS_SKIN_PREVIEW))delete CLASS_SKIN_PREVIEW[k];renderClasses();showScreen('classScreen');}
   if(act==='continue')continueGame();
   if(act==='leaderboard')showLeaderboard();
   if(act==='pvp-leaderboard')showPvpLeaderboard();
