@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <meta name="theme-color" content="#090a0d" />
   <title>몰락자</title>
-  <link rel="stylesheet" href="/style.css?v=0945" />
+  <link rel="stylesheet" href="/style.css?v=0947" />
 </head>
 <body>
   <main id="app">
@@ -22,7 +22,7 @@
         <button class="btn" data-action="leaderboard">통합 랭킹</button>
         <button class="btn" data-action="pvp-leaderboard">PVP 레이팅</button>
       </div>
-      <div class="version">THE FALLEN · v0.9.45</div>
+      <div class="version">THE FALLEN · v0.9.47</div>
       <div id="storageInfo" class="storage-info">랭킹 저장 상태 확인 중…</div>
       <div class="device-transfer">
         <div class="device-transfer-head">
@@ -139,11 +139,30 @@
       </div>
       <div id="infRelics" class="inf-relic-strip"></div>
       <section class="scene-card inf-stage">
-        <div class="scene-art inf-stage-art"><img src="/assets/art/infinite_archive.webp?v=0941" alt="심연의 기록 보관소"><div class="scene-shade"></div></div>
+        <div class="scene-art inf-stage-art"><img id="infSceneArt" src="/assets/art/infinite_archive.webp?v=0947" alt="심연의 기록 보관소" decoding="async"><div class="scene-shade"></div></div>
         <div class="scene-content inf-stage-copy">
           <div id="infKicker" class="chapter">RECORD FLOOR</div>
           <h2 id="infTitle" class="inf-scene-title">기록을 고른다</h2>
           <p id="infBody" class="story"></p>
+          <div id="infCombatPanel" class="inf-combat-panel hidden">
+            <div class="inf-combat-head">
+              <div><span id="infEnemyRank">적</span><b id="infEnemyName">적</b></div>
+              <span id="infCombatRound">1턴</span>
+            </div>
+            <div class="inf-enemy-mainbar">
+              <div class="inf-enemy-bar"><i id="infEnemyHpBar"></i><span id="infEnemyHpText">0/0</span></div>
+            </div>
+            <div class="inf-route-meters">
+              <div><span>의지</span><div class="inf-route-bar will"><i id="infEnemyWillBar"></i></div><b id="infEnemyWillText">0/0</b></div>
+              <div><span>거리</span><div class="inf-route-bar escape"><i id="infEnemyEscapeBar"></i></div><b id="infEnemyEscapeText">0/0</b></div>
+            </div>
+            <div class="inf-intent-box">
+              <span>다음 행동</span>
+              <b id="infEnemyIntent">주시</b>
+              <small id="infEnemyIntentDesc"></small>
+            </div>
+            <div id="infCombatEffects" class="inf-combat-effects"></div>
+          </div>
           <div id="infStatus" class="result-toast hidden"></div>
         </div>
       </section>
@@ -277,6 +296,6 @@
     });
   </script>
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/game.js?v=0945"></script>
+  <script src="/game.js?v=0947"></script>
 </body>
 </html>

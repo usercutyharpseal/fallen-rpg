@@ -345,3 +345,75 @@ button,input{font:inherit}button{color:inherit}button:disabled{opacity:.36}
     animation:none!important;
   }
 }
+
+
+/* v0.9.46 ENDLESS · real turn combat */
+.inf-combat-panel{
+  margin-top:auto;
+  margin-bottom:10px;
+  border:1px solid #343139;
+  border-left:2px solid #8e754c;
+  border-radius:11px;
+  background:#08090dd9;
+  padding:10px 11px;
+  backdrop-filter:blur(6px);
+}
+.inf-combat-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.inf-combat-head>div{display:flex;align-items:baseline;gap:7px;min-width:0}
+.inf-combat-head span{font-size:8px;color:#9c8967;letter-spacing:.12em}
+.inf-combat-head b{font-family:Georgia,"Noto Serif KR",serif;font-size:15px;color:#eee8dc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.inf-combat-head>span:last-child{color:#858890;white-space:nowrap}
+.inf-enemy-mainbar{margin-top:8px}
+.inf-enemy-bar{height:16px;position:relative;border:1px solid #4c3035;border-radius:999px;background:#201317;overflow:hidden}
+.inf-enemy-bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#69232a,#ab3f45);transition:width .36s ease}
+.inf-enemy-bar span{position:absolute;inset:0;display:grid;place-items:center;font-size:8px;font-weight:800;text-shadow:0 1px 2px #000}
+.inf-route-meters{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}
+.inf-route-meters>div{display:grid;grid-template-columns:25px 1fr auto;gap:5px;align-items:center}
+.inf-route-meters span,.inf-route-meters b{font-size:8px;color:#94969c}
+.inf-route-bar{height:7px;border:1px solid #363942;border-radius:999px;background:#1b1d23;overflow:hidden}
+.inf-route-bar i{display:block;height:100%;transition:width .35s ease}
+.inf-route-bar.will i{background:linear-gradient(90deg,#5d4a76,#9275a8)}
+.inf-route-bar.escape i{background:linear-gradient(90deg,#36584e,#5f8b78)}
+.inf-intent-box{display:grid;grid-template-columns:auto 1fr;column-gap:7px;row-gap:2px;margin-top:9px;padding:8px 9px;border:1px solid #4a4033;border-radius:8px;background:#15120dd6}
+.inf-intent-box>span{grid-row:1/3;font-size:8px;color:#a89064;align-self:center}
+.inf-intent-box>b{font-size:12px;color:#e2d5ba}
+.inf-intent-box>small{font-size:9px;color:#8e8d89}
+.inf-combat-effects{min-height:12px;margin-top:6px;font-size:8px;color:#a9787c}
+#infiniteGameScreen .inf-action.attack{border-color:#563237}
+#infiniteGameScreen .inf-action.social{border-color:#4a405c}
+#infiniteGameScreen .inf-action.run{border-color:#394a45}
+#infiniteGameScreen .inf-action .action-icon{display:inline-block;width:18px;color:#c2aa7a}
+#infiniteGameScreen .inf-action:disabled{opacity:.34;filter:saturate(.4)}
+#infiniteGameScreen .inf-stage.inf-player-hit .inf-enemy-bar i{animation:infEnemyHit .32s ease}
+@keyframes infEnemyHit{0%{filter:brightness(1)}35%{filter:brightness(1.8)}100%{filter:brightness(1)}}
+#infiniteGameScreen .inf-stage.inf-enemy-turn{border-color:#4a3035}
+@media(max-width:360px){
+  .inf-combat-panel{padding:9px}
+  .inf-route-meters{grid-template-columns:1fr}
+}
+
+
+/* v0.9.47 ENDLESS enemy portraits */
+#infiniteGameScreen .inf-stage-art{height:auto;inset:0 0 39%;background:#050609}
+#infiniteGameScreen .inf-stage-art img{
+  object-fit:cover;object-position:center 32%;
+  filter:saturate(.84) brightness(.74) contrast(1.07);
+  transform:scale(1.01);
+}
+#infiniteGameScreen .inf-stage-art img.elite-art{filter:saturate(.9) brightness(.76) contrast(1.09)}
+#infiniteGameScreen .inf-stage-art img.boss-art{filter:saturate(.92) brightness(.79) contrast(1.10);object-position:center 38%}
+#infiniteGameScreen .inf-stage-art img.inf-art-enter{animation:infEnemyArtEnter .42s ease both}
+@keyframes infEnemyArtEnter{
+  from{opacity:.25;transform:scale(1.045);filter:brightness(.5) contrast(1.15)}
+  to{opacity:1;transform:scale(1.01)}
+}
+#infiniteGameScreen .inf-stage.inf-hit .inf-stage-art img{animation:infEnemyArtHit .28s ease}
+@keyframes infEnemyArtHit{
+  0%,100%{transform:translateX(0) scale(1.01)}
+  35%{transform:translateX(-5px) scale(1.018)}
+  68%{transform:translateX(3px) scale(1.012)}
+}
+@media(prefers-reduced-motion:reduce){
+  #infiniteGameScreen .inf-stage-art img.inf-art-enter,
+  #infiniteGameScreen .inf-stage.inf-hit .inf-stage-art img{animation:none!important}
+}
