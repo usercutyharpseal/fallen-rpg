@@ -8,7 +8,7 @@ const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
 const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
 const PVP_NICK_KEY = 'fallen_pvp_nickname';
 const INFINITE_SAVE_KEY = 'fallen_infinite_save_v1';
-const GAME_VERSION = 141;
+const GAME_VERSION = 142;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5, godfather:7 };
 function loadMeta(){
@@ -2703,7 +2703,7 @@ function showHardGimmick(type,title,body){
 
 // ---------- Rendering / UI ----------
 const $ = (id) => document.getElementById(id);
-const screens = ['menuScreen','classScreen','modeScreen','normalModeScreen','pvpLobbyScreen','hardModeScreen','developmentScreen','gameScreen','endScreen'];
+const screens = ['menuScreen','classScreen','modeScreen','normalModeScreen','pvpLobbyScreen','hardModeScreen','infiniteModeScreen','developmentScreen','gameScreen','infiniteGameScreen','endScreen'];
 
 function showScreen(id) {
   for (const s of screens) $(s).classList.toggle('active', s === id);
