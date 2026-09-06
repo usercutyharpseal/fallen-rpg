@@ -7,7 +7,7 @@ const META_KEY = 'fallen_meta_v1';
 const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
 const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
 const PVP_NICK_KEY = 'fallen_pvp_nickname';
-const GAME_VERSION = 134;
+const GAME_VERSION = 135;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5, godfather:7 };
 function loadMeta(){
@@ -122,6 +122,11 @@ const CLASSES = {
     passive: '장사꾼의 재능',
     desc: '새로운 조우마다 최대 체력만큼 골드를 얻고, 상점 가격이 25% 저렴해진다.'
   },
+  undead: {
+    name: '언데드', hp: 10, atk: 7, social: 7, speed: 3, unlocked: true,
+    passive: '죽지 못한 자',
+    desc: '행동이 실패할 상황에 1회 부활해 같은 조우의 시작으로 돌아간다. 적을 4번 처치할 때마다 부활 횟수가 다시 충전된다.'
+  },
   gambler: {
     name: '도박꾼', hp: 5, atk: 4, social: 4, speed: 2, unlocked: false,
     passive: '운세가 좋군',
@@ -138,11 +143,6 @@ const CLASSES = {
   dictator: {
     name: '독재자', hp: 4, atk: 14, social: 14, speed: 0, unlocked: false,
     passive: '끝없는 격차', desc: '처치와 처세 성공으로 독재가 쌓인다. 8이 될 때마다 직전 방식에 맞는 능력치가 크게 오른다.'
-  },
-  undead: {
-    name: '언데드', hp: 10, atk: 6, social: 6, speed: 3, unlocked: true,
-    passive: '죽지 못한 자',
-    desc: '행동이 실패할 상황에 1회 부활해 같은 조우의 시작으로 돌아간다. 적을 4번 처치할 때마다 부활 횟수가 다시 충전된다.'
   },
   godfather: {
     name: '대부', hp: 8, atk: 2, social: 8, speed: 2, unlocked: false,
