@@ -7,7 +7,7 @@ const META_KEY = 'fallen_meta_v1';
 const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
 const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
 const PVP_NICK_KEY = 'fallen_pvp_nickname';
-const GAME_VERSION = 136;
+const GAME_VERSION = 137;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5, godfather:7 };
 function loadMeta(){
@@ -147,7 +147,7 @@ const CLASSES = {
   godfather: {
     name: '대부', hp: 8, atk: 2, social: 8, speed: 2, unlocked: false,
     passive: '너라면 함께할 가치가 있겠군',
-    desc: '처세에 성공할 때마다 공격력이 4 오른다. 노말 정상엔딩 7회 또는 하드 정상엔딩 1회로 해금된다.'
+    desc: '처세에 성공할 때마다 공격력이 4 오른다.'
   }
 };
 
