@@ -7,21 +7,23 @@ const META_KEY = 'fallen_meta_v1';
 const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
 const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
 const PVP_NICK_KEY = 'fallen_pvp_nickname';
-const GAME_VERSION = 133;
+const GAME_VERSION = 134;
 
-const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5 };
+const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5, godfather:7 };
 function loadMeta(){
   try{
     const raw=JSON.parse(localStorage.getItem(META_KEY)||'{}');
     const classGrowth=(raw.classGrowth&&typeof raw.classGrowth==='object'&&!Array.isArray(raw.classGrowth))?raw.classGrowth:{};
+    const inferredHardClears=Object.values(classGrowth).reduce((sum,row)=>sum+Math.max(0,Number(row?.hardGoodClears||0)),0);
     return {
       normalClears:Number(raw.normalClears||0),
+      hardClears:Math.max(Number(raw.hardClears||0),inferredHardClears),
       endings:Array.isArray(raw.endings)?raw.endings:[],
       awardedRuns:Array.isArray(raw.awardedRuns)?raw.awardedRuns:[],
       classGrowth,
       growthAwardedRuns:Array.isArray(raw.growthAwardedRuns)?raw.growthAwardedRuns:[]
     };
-  }catch{return {normalClears:0,endings:[],awardedRuns:[],classGrowth:{},growthAwardedRuns:[]};}
+  }catch{return {normalClears:0,hardClears:0,endings:[],awardedRuns:[],classGrowth:{},growthAwardedRuns:[]};}
 }
 function saveMeta(meta){localStorage.setItem(META_KEY,JSON.stringify(meta));}
 
@@ -82,13 +84,20 @@ function recordClassGrowth(e){
   };
 }
 function isClassUnlocked(id){
+  const meta=loadMeta();
+  if(id==='godfather')return Number(meta.normalClears||0)>=7 || Number(meta.hardClears||0)>=1;
   if(!CLASS_UNLOCK_CLEAR_REQUIREMENTS[id])return true;
-  return loadMeta().normalClears>=CLASS_UNLOCK_CLEAR_REQUIREMENTS[id];
+  return Number(meta.normalClears||0)>=CLASS_UNLOCK_CLEAR_REQUIREMENTS[id];
 }
 function classUnlockText(id){
+  const meta=loadMeta();
+  if(id==='godfather'){
+    if(isClassUnlocked(id))return '해금됨';
+    return `노말 정상엔딩 ${Math.min(Number(meta.normalClears||0),7)}/7 · 하드 정상엔딩 ${Math.min(Number(meta.hardClears||0),1)}/1`;
+  }
   const need=CLASS_UNLOCK_CLEAR_REQUIREMENTS[id];
   if(!need)return '';
-  const n=loadMeta().normalClears;
+  const n=Number(meta.normalClears||0);
   return n>=need?'해금됨':`노말 엔딩 ${need}회 · ${Math.min(n,need)}/${need}`;
 }
 
@@ -128,7 +137,17 @@ const CLASSES = {
   },
   dictator: {
     name: '독재자', hp: 4, atk: 14, social: 14, speed: 0, unlocked: false,
-    passive: '끝없는 격차', desc: '처치와 처세 성공으로 독재가 쌓인다. 10이 될 때마다 직전 방식에 맞는 능력치가 크게 오른다.'
+    passive: '끝없는 격차', desc: '처치와 처세 성공으로 독재가 쌓인다. 8이 될 때마다 직전 방식에 맞는 능력치가 크게 오른다.'
+  },
+  undead: {
+    name: '언데드', hp: 10, atk: 6, social: 6, speed: 3, unlocked: true,
+    passive: '죽지 못한 자',
+    desc: '행동이 실패할 상황에 1회 부활해 같은 조우의 시작으로 돌아간다. 적을 4번 처치할 때마다 부활 횟수가 다시 충전된다.'
+  },
+  godfather: {
+    name: '대부', hp: 8, atk: 2, social: 8, speed: 2, unlocked: false,
+    passive: '너라면 함께할 가치가 있겠군',
+    desc: '처세에 성공할 때마다 공격력이 4 오른다. 노말 정상엔딩 7회 또는 하드 정상엔딩 1회로 해금된다.'
   }
 };
 
@@ -645,7 +664,7 @@ function freshState() {
     stats: {
       progress:0, goldEarned:0, goldSpent:0, kills:0, eliteKills:0, riskyWins:0,
       talkSolved:0, socialSuccess:0, socialFail:0, runSuccess:0, secrets:0,
-      survivors:0, growths:0, comebackWins:0, talkInteractions:0, overTalks:0, itemsUsed:0, corpses:0, tyranny:0, merchantDeals:0, merchantIncome:0, socialIncome:0, riskySocial:0, teamSwitches:0, gamblerFaces:[], gamblerFaceHits:0, gamblerDuplicates:0, ending:'', maxAttackChanceBeaten:100
+      survivors:0, growths:0, comebackWins:0, talkInteractions:0, overTalks:0, itemsUsed:0, corpses:0, tyranny:0, merchantDeals:0, merchantIncome:0, socialIncome:0, riskySocial:0, teamSwitches:0, undeadKillsSinceReset:0, undeadRevives:0, godfatherSocialBoosts:0, gamblerFaces:[], gamblerFaceHits:0, gamblerDuplicates:0, ending:'', maxAttackChanceBeaten:100
     }
   };
 }
@@ -2412,6 +2431,7 @@ function beginHardMode(){
   state=freshState();state.classId=id;
   state.p={className:cl.name,maxHp:grown.hp,hp:grown.hp,atk:grown.atk,social:grown.social,speed:grown.speed,gold:30};
   state.flags.classGrowthBonus=grown.bonus;
+  if(id==='undead')state.flags.undeadReviveReady=true;
   state.flags.gameMode='hard';state.flags.gameVariant='solo';state.flags.hardRoute='';state.sceneId='hardPrologue';
   save();showScreen('gameScreen');enter('hardPrologue');
 }
@@ -2504,6 +2524,7 @@ function beginNormalMode(variant='solo'){
   state=freshState(); state.classId=id;
   state.p={className:cl.name,maxHp:grown.hp,hp:grown.hp,atk:grown.atk,social:grown.social,speed:grown.speed,gold:10};
   state.flags.classGrowthBonus=grown.bonus;
+  if(id==='undead')state.flags.undeadReviveReady=true;
   state.flags.gameMode='normal'; state.flags.gameVariant=variant==='pvp'?'pvp':'solo';
   state.sceneId='intro'; save(); showScreen('gameScreen'); enter('intro');
 }
@@ -2598,7 +2619,8 @@ function maybeRestorePvp(){
 const CLASS_ART_FILES = {
   knight:'/assets/classes/knight.webp', noble:'/assets/classes/noble.webp', thief:'/assets/classes/thief.webp',
   merchant:'/assets/classes/merchant.webp', gambler:'/assets/classes/gambler.webp', spellsword:'/assets/classes/spellsword.webp',
-  necromancer:'/assets/classes/necromancer.webp', dictator:'/assets/classes/dictator.webp'
+  necromancer:'/assets/classes/necromancer.webp', dictator:'/assets/classes/dictator.webp',
+  undead:'/assets/classes/undead.png', godfather:'/assets/classes/godfather.png'
 };
 function classArtUrl(id){return CLASS_ART_FILES[id]||'';}
 
@@ -2632,7 +2654,7 @@ function render() {
   $('hudGold').textContent = `◆ ${state.p.gold}`;
   $('hpText').textContent = `${state.p.hp} / ${state.p.maxHp}`;
   $('hpBar').style.width = `${Math.max(0, Math.min(100, state.p.hp/state.p.maxHp*100))}%`;
-  const classExtra=state.classId==='necromancer'?` · 시체 ${state.stats.corpses||0}`:state.classId==='dictator'?` · 독재 ${state.stats.tyranny||0}`:state.classId==='merchant'?` · 장사 ${state.stats.merchantIncome||0}`:state.classId==='gambler'?` · 강화 눈 ${(state.stats.gamblerFaces||[]).length?(state.stats.gamblerFaces||[]).join('·'):'없음'}`:'';
+  const classExtra=state.classId==='necromancer'?` · 시체 ${state.stats.corpses||0}`:state.classId==='dictator'?` · 독재 ${state.stats.tyranny||0}/8`:state.classId==='merchant'?` · 장사 ${state.stats.merchantIncome||0}`:state.classId==='gambler'?` · 강화 눈 ${(state.stats.gamblerFaces||[]).length?(state.stats.gamblerFaces||[]).join('·'):'없음'}`:state.classId==='undead'?` · 부활 ${state.flags.undeadReviveReady===false?'소모':'준비'} · 충전 ${state.stats.undeadKillsSinceReset||0}/4`:state.classId==='godfather'?` · 영입 ${state.stats.godfatherSocialBoosts||0}`:'';
   $('hudStats').textContent = `처세 ${state.p.social} · 속도 ${state.p.speed} · 진행 ${state.stats.progress}${classExtra}`;
 
   $('chapter').textContent = sc.chapter || '';
@@ -2925,8 +2947,9 @@ function gameAction(type) {
       grantSocialReward(enemy,chance);
       if(state.classId==='gambler')gamblerFortuneOnSocialSuccess();
       if(state.classId==='dictator')gainTyranny('social');
+      const godfatherNote=godfatherSocialSuccess();
       fx('good');
-      if(state.classId!=='gambler')floatText('처세 성공');
+      if(state.classId!=='gambler'&&state.classId!=='godfather')floatText('처세 성공');
       if(sc.socialSuccess)sc.socialSuccess();else resolve('social',null,'처세에 성공했다.');
       if(state.flags?.gamblerFortuneNote){
         const note=state.flags.gamblerFortuneNote;
@@ -2934,8 +2957,16 @@ function gameAction(type) {
         state.lastToast=state.lastToast?`${state.lastToast}\n\n${note}`:note;
         save();render();
       }
+      if(godfatherNote&&!state.ended){
+        state.lastToast=state.lastToast?`${state.lastToast}\n\n${godfatherNote}`:godfatherNote;
+        save();render();
+      }
     }
-    else {state.stats.socialFail++;fx('bad');floatText('처세 실패');if(sc.socialFail)sc.socialFail();else {toast('처세에 실패했다. 같은 방법은 다시 통하지 않는다.','bad');render();save();}}
+    else {
+      state.stats.socialFail++;fx('bad');floatText('처세 실패');
+      if(tryUndeadRevive('처세가 실패할 순간'))return;
+      if(sc.socialFail)sc.socialFail();else {toast('처세에 실패했다. 같은 방법은 다시 통하지 않는다.','bad');render();save();}
+    }
     return;
   }
   if(type==='run') {
@@ -2956,6 +2987,7 @@ function gameAction(type) {
       }
     } else {
       fx('hit');floatText('도주 실패');
+      if(tryUndeadRevive('도주가 실패할 순간')){save();return;}
       const damage=Math.max(1,Math.floor(enemy.atk/3));
       damagePlayer(damage,true);
       if(state.p.hp>0){
@@ -3013,9 +3045,34 @@ async function rollComebackDie(){
   await sleep(650);
   return finalRoll;
 }
+function tryUndeadRevive(reason='행동 실패'){
+  if(state.classId!=='undead'||state.flags.undeadReviveReady===false)return false;
+  state.flags.undeadReviveReady=false;
+  state.stats.undeadRevives=Number(state.stats.undeadRevives||0)+1;
+  state.p.hp=state.p.maxHp;
+  const key=socialUseKey();
+  if(state.socialUsed)delete state.socialUsed[key];
+  state.world ||= worldShape();
+  if(state.world.escapeUsed)delete state.world.escapeUsed[encounterKey()];
+  state.escapeAttempted=false;
+  if(state.encounterMods)delete state.encounterMods[state.sceneId];
+  state.pending=null;
+  state.lastToast=`${reason}.\n\n몸이 바닥에 닿기 직전, 멎었던 숨이 다시 이어진다. 죽지 못한 자가 같은 조우의 시작으로 돌아왔다.`;
+  fx('good');floatText('부활');
+  save();render();
+  return true;
+}
+function godfatherSocialSuccess(){
+  if(state.classId!=='godfather')return '';
+  state.p.atk+=4;
+  state.stats.godfatherSocialBoosts=Number(state.stats.godfatherSocialBoosts||0)+1;
+  floatText('공격력 +4');
+  return '너라면 함께할 가치가 있겠군. 사람을 자기 편으로 끌어들일수록 대부의 공격력이 오른다. 공격력 +4';
+}
+
 function gainTyranny(source){
   state.stats.tyranny=Number(state.stats.tyranny||0)+1;
-  const current=Math.floor(state.stats.tyranny/10);
+  const current=Math.floor(state.stats.tyranny/8);
   const claimed=Number(state.flags.tyrannyMilestones||0);
   if(current>claimed){
     state.flags.tyrannyMilestones=current;
@@ -3040,6 +3097,14 @@ function applyClassKillReward(){
     floatText('시체 +1');
   }else if(state.classId==='dictator'){
     gainTyranny('kill');
+  }else if(state.classId==='undead'){
+    state.stats.undeadKillsSinceReset=Number(state.stats.undeadKillsSinceReset||0)+1;
+    if(state.stats.undeadKillsSinceReset>=4){
+      state.stats.undeadKillsSinceReset=0;
+      state.flags.undeadReviveReady=true;
+      floatText('부활 충전');
+      state.lastToast='네 번째 적이 쓰러졌다. 죽지 못한 자의 부활 횟수가 다시 1회로 초기화됐다.';
+    }
   }
 }
 function summonWraith(){
@@ -3089,7 +3154,9 @@ async function startBattleSequence(sc, enemy){
     if(sc.comebackDisabled){
       $('battleOverlay').classList.add('defeat');
       setBattleText('역전 주사위가 산산이 부서졌다.\n마지막 기회는 오지 않는다.','danger');
-      await sleep(1000);hideBattleOverlay();battleBusy=false;die(`${enemy.name}이 역전의 기회 자체를 파괴했다.`);return;
+      await sleep(1000);hideBattleOverlay();battleBusy=false;
+      if(tryUndeadRevive(`${enemy.name}이 역전의 기회 자체를 파괴할 순간`))return;
+      die(`${enemy.name}이 역전의 기회 자체를 파괴했다.`);return;
     }
     const comebackMin=encMod().comebackMin||6;
     setBattleText(`역전 주사위를 굴린다.\n${comebackRuleText()}이면 전세를 뒤집는다.`,'danger');
@@ -3112,6 +3179,7 @@ async function startBattleSequence(sc, enemy){
     await sleep(900);
     hideBattleOverlay();
     battleBusy=false;
+    if(tryUndeadRevive(`${enemy.name}과의 전투가 실패로 끝날 순간`))return;
     die(`${enemy.name}과의 전투에서 밀린 끝에 역전 주사위도 실패했다.`);
   }catch(err){
     console.error(err);
@@ -3309,15 +3377,16 @@ function friendEndingHint(loose=false){
 }
 
 function recordClearForUnlock(name,e){
-  if(isHardMode()||e?.bad || String(e?.kind||'').startsWith('BAD END'))return [];
+  if(e?.bad || String(e?.kind||'').startsWith('BAD END'))return [];
   const meta=loadMeta();
   const runId=String(state.runId||'');
   if(runId && meta.awardedRuns.includes(runId))return [];
   const before=Object.keys(CLASS_UNLOCK_CLEAR_REQUIREMENTS).filter(isClassUnlocked);
-  meta.normalClears=Math.max(0,Number(meta.normalClears||0))+1;
+  if(isHardMode())meta.hardClears=Math.max(0,Number(meta.hardClears||0))+1;
+  else meta.normalClears=Math.max(0,Number(meta.normalClears||0))+1;
   if(!meta.endings.includes(name))meta.endings.push(name);
   if(runId)meta.awardedRuns.push(runId);
-  meta.awardedRuns=meta.awardedRuns.slice(-100);
+  meta.awardedRuns=meta.awardedRuns.slice(-150);
   saveMeta(meta);
   const after=Object.keys(CLASS_UNLOCK_CLEAR_REQUIREMENTS).filter(isClassUnlocked);
   return after.filter(x=>!before.includes(x)).map(x=>CLASSES[x].name);
@@ -3347,7 +3416,7 @@ function finish(name) {
   $('playStyle').textContent=`플레이 스타일 · ${playStyle()}`;
   $('endScore').textContent=clientScore().toLocaleString();
   const deathBlock=e.bad&&state.flags.deathReason?`<b>최후의 순간</b> · ${escapeHtml(state.flags.deathReason)}<br><b>사망 장소</b> · ${escapeHtml(SCENES[state.flags.deathScene]?.location||'알 수 없는 장소')}<br><br><br>`:'';
-  $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>협상 수익 <b>◆ ${state.stats.socialIncome||0}</b> · 고난도 협상 <b>${state.stats.riskySocial||0}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 과대화 <b>${state.stats.overTalks||0}</b> · 진영 전환 <b>${state.stats.teamSwitches||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>${state.classId==='merchant'?`<br>장사 수익 <b>${state.stats.merchantIncome||0}</b> · 새 조우 <b>${state.stats.merchantDeals||0}</b>`:state.classId==='gambler'?`<br>강화한 눈 <b>${(state.stats.gamblerFaces||[]).length?(state.stats.gamblerFaces||[]).join(' · '):'없음'}</b> · 강화 역전 <b>${state.stats.gamblerFaceHits||0}</b> · 중복 꽝 <b>${state.stats.gamblerDuplicates||0}</b>`:''}`;
+  $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>협상 수익 <b>◆ ${state.stats.socialIncome||0}</b> · 고난도 협상 <b>${state.stats.riskySocial||0}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 과대화 <b>${state.stats.overTalks||0}</b> · 진영 전환 <b>${state.stats.teamSwitches||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>${state.classId==='merchant'?`<br>장사 수익 <b>${state.stats.merchantIncome||0}</b> · 새 조우 <b>${state.stats.merchantDeals||0}</b>`:state.classId==='gambler'?`<br>강화한 눈 <b>${(state.stats.gamblerFaces||[]).length?(state.stats.gamblerFaces||[]).join(' · '):'없음'}</b> · 강화 역전 <b>${state.stats.gamblerFaceHits||0}</b> · 중복 꽝 <b>${state.stats.gamblerDuplicates||0}</b>`:state.classId==='undead'?`<br>부활 사용 <b>${state.stats.undeadRevives||0}</b> · 다음 충전 <b>${state.stats.undeadKillsSinceReset||0}/4</b>`:state.classId==='godfather'?`<br>처세 영입 <b>${state.stats.godfatherSocialBoosts||0}</b> · 패시브 공격 증가 <b>+${(state.stats.godfatherSocialBoosts||0)*4}</b>`:''}`;
   if(name==='팬텀'&&state.flags.phantomOriginalEnding){
     $('endStats').innerHTML+=`<br><br><b>팬텀 생환</b> · 원래 도달한 결말 <b>${escapeHtml(state.flags.phantomOriginalEnding)}</b>`;
   }
@@ -3355,7 +3424,7 @@ function finish(name) {
   const pvpMode=isPvpMode();
   const hardMode=isHardMode();
   if(!e.bad&&!hardMode){
-    const unlockLine=state.flags.newClassUnlocks?.length?`<br><br><b>새 직업 해금 · ${state.flags.newClassUnlocks.map(escapeHtml).join(' / ')}</b>`:`<br><br>노말 엔딩 <b>${meta.normalClears}회</b>`;
+    const unlockLine=state.flags.newClassUnlocks?.length?`<br><br><b>새 직업 해금 · ${state.flags.newClassUnlocks.map(escapeHtml).join(' / ')}</b>`:`<br><br>노말 정상엔딩 <b>${meta.normalClears}회</b> · 하드 정상엔딩 <b>${meta.hardClears||0}회</b>`;
     $('endStats').innerHTML+=unlockLine;
   }
   const growthResult=state.flags.classGrowthResult;
