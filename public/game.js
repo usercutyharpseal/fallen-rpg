@@ -8,7 +8,7 @@ const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
 const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
 const PVP_NICK_KEY = 'fallen_pvp_nickname';
 const INFINITE_SAVE_KEY = 'fallen_infinite_save_v1';
-const GAME_VERSION = 143;
+const GAME_VERSION = 144;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5, godfather:7 };
 function loadMeta(){
@@ -2713,6 +2713,83 @@ function showScreen(id) {
 // ---------- Extensible game-mode registry ----------
 // Add a new top-level mode by appending one object here. No event-listener edits are needed.
 
+// ---------- v0.9.44 ENDLESS pacing ----------
+let infiniteBusy=false;
+let infiniteLastViewKey='';
+const infWait=(ms)=>new Promise(resolve=>setTimeout(resolve,ms));
+
+function infStageElement(){
+  return document.querySelector('#infiniteGameScreen .inf-stage');
+}
+function infChoiceElement(){
+  return $('infChoices');
+}
+function infSetBusy(on){
+  infiniteBusy=!!on;
+  const grid=infChoiceElement();
+  if(grid)grid.classList.toggle('inf-locked',infiniteBusy);
+  document.querySelectorAll('#infiniteGameScreen [data-inf-node],#infiniteGameScreen [data-inf-action],#infiniteGameScreen [data-inf-relic],#infiniteGameScreen [data-inf-checkpoint]').forEach(btn=>{
+    if(infiniteBusy)btn.setAttribute('data-inf-temp-disabled','1');
+    btn.disabled=infiniteBusy || btn.hasAttribute('data-inf-perma-disabled');
+  });
+}
+function infStageClass(name,ms=520){
+  const el=infStageElement();if(!el)return;
+  el.classList.remove('inf-view-enter','inf-hit','inf-good','inf-corrupt','inf-boss-break');
+  void el.offsetWidth;
+  el.classList.add(name);
+  clearTimeout(infStageClass._t);
+  infStageClass._t=setTimeout(()=>el.classList.remove(name),ms);
+}
+function infShake(){
+  const el=infStageElement();if(!el)return;
+  el.classList.remove('inf-hit');void el.offsetWidth;el.classList.add('inf-hit');
+  setTimeout(()=>el.classList.remove('inf-hit'),430);
+}
+function infFloat(text){
+  if(!text)return;
+  try{floatText(text);}catch{}
+}
+function infFlash(kind){
+  try{fx(kind);}catch{}
+}
+function infViewEntry(){
+  const el=infStageElement();if(!el)return;
+  el.classList.remove('inf-view-enter');void el.offsetWidth;el.classList.add('inf-view-enter');
+  setTimeout(()=>el.classList.remove('inf-view-enter'),430);
+}
+function infMarkView(r){
+  const key=`${r?.floor||0}:${r?.phase||''}:${r?.current?.title||''}`;
+  if(key!==infiniteLastViewKey){
+    infiniteLastViewKey=key;
+    requestAnimationFrame(()=>infViewEntry());
+  }
+}
+function infActionLabel(action){
+  return ({attack:'공격',social:'처세',speed:'도주',read:'열람',burn:'봉인',heal:'휴식',cleanse:'정화',transcribe:'필사'})[action]||'판정';
+}
+async function infBeforeRoll(action){
+  infSetBusy(true);
+  const status=$('infStatus');
+  if(status){
+    status.textContent=`${infActionLabel(action)} 판정 중…`;
+    status.classList.remove('hidden');
+  }
+  infStageClass('inf-resolving',360);
+  await infWait(320);
+}
+async function infResultBeat(kind,text,wait=620){
+  if(kind==='good'){
+    infFlash('good');infStageClass('inf-good',520);
+  }else if(kind==='bad'){
+    infFlash('hit');infShake();
+  }else if(kind==='corrupt'){
+    infFlash('bad');infStageClass('inf-corrupt',600);
+  }
+  infFloat(text);
+  await infWait(wait);
+}
+
 // ---------- v0.9.41 ENDLESS ARCHIVE · SOLO ROGUELIKE ----------
 const INFINITE_LOGS=[
   {id:'wet_date',cat:'증언',title:'젖은 종이의 날짜',text:'같은 날짜가 사흘 연속 적혀 있다. 필체는 매번 조금씩 늙어 있다.',base:34},
@@ -2869,7 +2946,20 @@ function openInfiniteSelection(){
 function infSave(){if(infiniteRun&&!infiniteRun.ended)localStorage.setItem(INFINITE_SAVE_KEY,JSON.stringify(infiniteRun));}
 function continueInfinite(){try{const raw=localStorage.getItem(INFINITE_SAVE_KEY);if(!raw)return openInfiniteSelection();infiniteRun=JSON.parse(raw);if(!infiniteRun||infiniteRun.ended)throw new Error();pendingClassId=infiniteRun.classId;showScreen('infiniteGameScreen');infRender();}catch{localStorage.removeItem(INFINITE_SAVE_KEY);openInfiniteSelection();}}
 function infSaveExit(){if(!infiniteRun||infiniteRun.ended){openInfiniteSelection();return;}infSave();showScreen('menuScreen');updateMenuSaveInfo();}
-function infChooseNode(index){if(infiniteRun?.phase!=='nodes')return;const n=infiniteRun.nodeChoices?.[Number(index)];if(!n)return;infiniteRun.current=infEventFor(n.type);infiniteRun.phase='event';infSave();infRender();}
+async function infChooseNode(index){
+  if(infiniteBusy||infiniteRun?.phase!=='nodes')return;
+  const n=infiniteRun.nodeChoices?.[Number(index)];if(!n)return;
+  infSetBusy(true);
+  const btn=document.querySelector(`[data-inf-node="${Number(index)}"]`);
+  btn?.classList.add('inf-selected');
+  await infWait(230);
+  infiniteRun.current=infEventFor(n.type);
+  infiniteRun.phase='event';
+  infiniteRun.status='';
+  infSave();infRender();
+  await infWait(260);
+  infSetBusy(false);
+}
 function infActionSuccess(action,nodeType){
   const r=infiniteRun;let base=24+r.floor*5;
   if(nodeType==='combat')base*=1.35;if(nodeType==='testimony')base*=1.15;if(nodeType==='anomaly')base*=1.25;
@@ -2878,42 +2968,113 @@ function infActionSuccess(action,nodeType){
   if(action==='attack'&&nodeType==='combat'){r.kills++;if(r.classId==='undead'){r.undeadKills++;if(r.undeadKills>=4){r.undeadKills=0;r.reviveReady=true;infAddRecent('죽지 못한 자 · 4번째 처치로 부활 재충전');}}}
   if(action==='social')r.socialWins++;if(action==='speed')r.escapes++;
   infApplyClassSuccess(action,nodeType);infGainGold();
-  r.status=`성공 · 기록 가치 +${amount}${rec?` · ${rec.title}`:''}${r.lastGamble?` · 주사위 ${r.lastGamble}`:''}`;r.lastGamble=0;
-  infFinishFloor();
+  r.status=`성공 · 기록 +${amount}${rec?` · ${rec.title}`:''}${r.lastGamble?` · 주사위 ${r.lastGamble}`:''}`;r.lastGamble=0;
+  return {amount,rec};
 }
 function infFailAction(action){
-  const c=infiniteRun.current;c.failed=c.failed||[];if(c.failed.includes(action))return;c.failed.push(action);
-  const dmg=Math.max(1,Math.round(1+infiniteRun.floor*.16));const got=infTakeDamage(dmg,action);if(infiniteRun.ended)return;if(got===-1){infSave();infRender();return;}
-  infAddCorruption(infInt(4,8));if(infiniteRun.ended)return;infiniteRun.status=`실패 · HP -${got} · 오염 상승`;
-  if(c.failed.length>=3){infiniteRun.status='세 가지 접근이 전부 실패했다. 기록 일부를 버리고 강제로 빠져나왔다.';infiniteRun.unbanked=Math.floor(infiniteRun.unbanked*.82);infFinishFloor();return;}
+  const c=infiniteRun.current;c.failed=c.failed||[];if(c.failed.includes(action))return {kind:'ignored'};c.failed.push(action);
+  const dmg=Math.max(1,Math.round(1+infiniteRun.floor*.16));const got=infTakeDamage(dmg,action);
+  if(infiniteRun.ended)return {kind:'ended'};
+  if(got===-1){infSave();infRender();return {kind:'revive'};}
+  infAddCorruption(infInt(4,8));if(infiniteRun.ended)return {kind:'ended'};
+  infiniteRun.status=`실패 · HP -${got} · 오염 상승`;
+  if(c.failed.length>=3){
+    infiniteRun.status='모든 접근이 막혔다. 기록 일부를 버리고 빠져나왔다.';
+    infiniteRun.unbanked=Math.floor(infiniteRun.unbanked*.82);
+    return {kind:'exhausted',damage:got};
+  }
   infSave();infRender();
+  return {kind:'retry',damage:got};
 }
-function infDoAction(action){
-  if(!infiniteRun||!['event','boss'].includes(infiniteRun.phase))return;
-  if(infiniteRun.phase==='boss'){infBossAction(action);return;}
+async function infDoAction(action){
+  if(infiniteBusy||!infiniteRun||!['event','boss'].includes(infiniteRun.phase))return;
+  if(infiniteRun.phase==='boss'){await infBossAction(action);return;}
   const e=infiniteRun.current;if(!e||e.failed?.includes(action))return;
+
+  await infBeforeRoll(action);
+
   if(e.type==='forbidden'){
-    if(action==='read'){const rec=infAcquireRecord(4);const amount=infGainRecords(75+infiniteRun.floor*8,'read','forbidden');infAddCorruption(infInt(12,18));if(infiniteRun.ended)return;infiniteRun.status=`금단 기록 확보 · +${amount} · ${rec.title}`;infFinishFloor();return;}
-    if(action==='burn'){infiniteRun.corruption=Math.max(0,infiniteRun.corruption-8);infiniteRun.status='문서를 봉했다 · 오염 -8';infGainRecords(8,'','forbidden');infFinishFloor();return;}
+    if(action==='read'){
+      const rec=infAcquireRecord(4);
+      const amount=infGainRecords(75+infiniteRun.floor*8,'read','forbidden');
+      const corrupt=infInt(12,18);infAddCorruption(corrupt);
+      if(infiniteRun.ended){infSetBusy(false);return;}
+      infiniteRun.status=`금단 기록 확보 · +${amount} · ${rec.title}`;
+      infRender();
+      await infResultBeat('corrupt',`오염 +${corrupt}`,760);
+      infFinishFloor();infSetBusy(false);return;
+    }
+    if(action==='burn'){
+      infiniteRun.corruption=Math.max(0,infiniteRun.corruption-8);
+      infiniteRun.status='문서를 봉했다 · 오염 -8';
+      infGainRecords(8,'','forbidden');infRender();
+      await infResultBeat('good','오염 -8',560);
+      infFinishFloor();infSetBusy(false);return;
+    }
   }
+
   if(e.type==='rest'){
-    if(action==='heal')infiniteRun.hp=Math.min(infiniteRun.maxHp,infiniteRun.hp+Math.max(2,Math.ceil(infiniteRun.maxHp*.35)));
-    if(action==='cleanse')infiniteRun.corruption=Math.max(0,infiniteRun.corruption-16);
-    if(action==='transcribe'){const n=Math.floor(infiniteRun.unbanked*.2);infiniteRun.unbanked-=n;infiniteRun.secured+=n;infCommitLogs();}
-    infiniteRun.status=action==='heal'?'휴식으로 체력을 회복했다.':action==='cleanse'?'소금 원을 고쳐 오염을 낮췄다.':'원본 일부를 필사해 즉시 봉인했다.';infFinishFloor();return;
+    let float='';
+    if(action==='heal'){
+      const before=infiniteRun.hp;
+      infiniteRun.hp=Math.min(infiniteRun.maxHp,infiniteRun.hp+Math.max(2,Math.ceil(infiniteRun.maxHp*.35)));
+      float=`HP +${infiniteRun.hp-before}`;
+      infiniteRun.status='잠깐 눈을 붙였다.';
+    }
+    if(action==='cleanse'){
+      const before=infiniteRun.corruption;
+      infiniteRun.corruption=Math.max(0,infiniteRun.corruption-16);
+      float=`오염 -${before-infiniteRun.corruption}`;
+      infiniteRun.status='소금 원을 다시 그었다.';
+    }
+    if(action==='transcribe'){
+      const n=Math.floor(infiniteRun.unbanked*.2);infiniteRun.unbanked-=n;infiniteRun.secured+=n;infCommitLogs();
+      float=`봉인 +${n}`;infiniteRun.status='원본 일부를 필사했다.';
+    }
+    infRender();await infResultBeat('good',float,560);infFinishFloor();infSetBusy(false);return;
   }
+
   if(e.type==='merchant'){
     const discount=infiniteRun.classId==='merchant'?.75:1;
-    const costs={buy_heal:Math.ceil(12*discount),buy_cleanse:Math.ceil(14*discount),buy_record:Math.ceil(18*discount)};const cost=costs[action];if(infiniteRun.gold<cost){infiniteRun.status='골드가 부족하다.';infRender();return;}infiniteRun.gold-=cost;
+    const costs={buy_heal:Math.ceil(12*discount),buy_cleanse:Math.ceil(14*discount),buy_record:Math.ceil(18*discount)};
+    const cost=costs[action];
+    if(infiniteRun.gold<cost){
+      infiniteRun.status='골드가 부족하다.';infRender();
+      await infResultBeat('bad','골드 부족',420);infSetBusy(false);return;
+    }
+    infiniteRun.gold-=cost;
     if(action==='buy_heal')infiniteRun.hp=Math.min(infiniteRun.maxHp,infiniteRun.hp+Math.max(3,Math.ceil(infiniteRun.maxHp*.45)));
     if(action==='buy_cleanse')infiniteRun.corruption=Math.max(0,infiniteRun.corruption-20);
     if(action==='buy_record'){const rec=infAcquireRecord(2);infGainRecords(rec.base*.7,'','merchant');}
-    infiniteRun.status='거래를 마쳤다.';infFinishFloor();return;
+    infiniteRun.status='거래를 마쳤다.';infRender();
+    await infResultBeat('good',`◆ -${cost}`,500);infFinishFloor();infSetBusy(false);return;
   }
+
   const mapped=action==='attack'?'attack':action==='social'?'social':action==='speed'?'speed':'social';
-  let extra=e.type==='testimony'&&action==='attack'?2:e.type==='forbidden'?3:0;const chance=infChance(mapped,extra);
-  if(e.type==='testimony'&&action==='attack')infAddCorruption(4);if(infiniteRun.ended)return;
-  if(infRng()*100<chance)infActionSuccess(mapped,e.type);else infFailAction(action);
+  let extra=e.type==='testimony'&&action==='attack'?2:e.type==='forbidden'?3:0;
+  const chance=infChance(mapped,extra);
+
+  if(e.type==='testimony'&&action==='attack'){
+    infAddCorruption(4);if(infiniteRun.ended){infSetBusy(false);return;}
+  }
+
+  const won=infRng()*100<chance;
+  if(won){
+    const result=infActionSuccess(mapped,e.type);
+    infRender();
+    await infResultBeat('good',mapped==='attack'?'성공':mapped==='social'?'처세 성공':'통과',650);
+    infFinishFloor();infSetBusy(false);return;
+  }
+
+  const failed=infFailAction(action);
+  if(failed?.kind==='ended'){infSetBusy(false);return;}
+  if(failed?.kind==='revive'){
+    await infResultBeat('good','부활',760);infSetBusy(false);return;
+  }
+  infRender();
+  await infResultBeat('bad',failed?.damage?`HP -${failed.damage}`:'실패',620);
+  if(failed?.kind==='exhausted')infFinishFloor();
+  infSetBusy(false);
 }
 function infFinishFloor(){
   if(!infiniteRun||infiniteRun.ended)return;const f=infiniteRun.floor;infiniteRun.postPhases=[];
@@ -2929,25 +3090,82 @@ function infOfferRelics(){
   let pool=INFINITE_RELICS.filter(x=>!infiniteRun.relics.includes(x.id));if(!pool.length){infiniteRun.atk++;infiniteRun.social++;infiniteRun.speed++;infiniteRun.status='모든 유물을 모았다 · 공격/처세/속도 +1';infNextPost();return;}
   const picks=[];while(picks.length<Math.min(3,pool.length)){const r=infPick(pool);if(!picks.some(x=>x.id===r.id))picks.push(r);}infiniteRun.phase='relic';infiniteRun.relicChoices=picks.map(x=>x.id);infSave();infRender();
 }
-function infPickRelic(id){if(infiniteRun?.phase!=='relic'||!infiniteRun.relicChoices.includes(id))return;const rel=INFINITE_RELICS.find(x=>x.id===id);if(!rel)return;infiniteRun.relics.push(id);rel.apply?.(infiniteRun);infAddRecent(`유물 획득 · ${rel.name}`);infiniteRun.status=`${rel.name} 획득`;infNextPost();}
-function infCheckpoint(action){
-  if(infiniteRun?.phase!=='checkpoint')return;const r=infiniteRun,m=infMods();
+async function infPickRelic(id){
+  if(infiniteBusy||infiniteRun?.phase!=='relic'||!infiniteRun.relicChoices.includes(id))return;
+  const rel=INFINITE_RELICS.find(x=>x.id===id);if(!rel)return;
+  infSetBusy(true);
+  infiniteRun.relics.push(id);rel.apply?.(infiniteRun);
+  infAddRecent(`유물 획득 · ${rel.name}`);infiniteRun.status=`${rel.name} 획득`;infRender();
+  await infResultBeat('good','유물 획득',720);
+  infNextPost();infSetBusy(false);
+}
+async function infCheckpoint(action){
+  if(infiniteBusy||infiniteRun?.phase!=='checkpoint')return;
+  infSetBusy(true);
+  const r=infiniteRun,m=infMods();
+
   if(action==='secure'||action==='retire'){
-    const bonus=Math.round(r.unbanked*m.secure);const moved=r.unbanked+bonus;r.secured+=moved;r.unbanked=0;r.multiplier=1;r.corruption=Math.max(0,r.corruption-(action==='retire'?18:10));const heal=Math.ceil(r.maxHp*(.22+m.checkpointHeal));r.hp=Math.min(r.maxHp,r.hp+heal);
+    const bonus=Math.round(r.unbanked*m.secure),moved=r.unbanked+bonus;
+    r.secured+=moved;r.unbanked=0;r.multiplier=1;
+    r.corruption=Math.max(0,r.corruption-(action==='retire'?18:10));
+    const heal=Math.ceil(r.maxHp*(.22+m.checkpointHeal));r.hp=Math.min(r.maxHp,r.hp+heal);
     infCommitLogs();infAddRecent(`기록 봉인 · ${moved.toLocaleString()}`);
-    if(action==='retire'){infEnd('기록을 봉인하고 살아서 귀환했다.',true);return;}
+    r.status=`기록 봉인 · ${moved.toLocaleString()}`;infRender();
+    await infResultBeat('good',`봉인 +${moved}`,760);
+    if(action==='retire'){infEnd('기록을 봉인하고 살아서 귀환했다.',true);infSetBusy(false);return;}
   }else if(action==='carry'){
-    r.multiplier=Math.min(4,r.multiplier+.25);r.corruption=infClamp(r.corruption+8,0,100);const kinds=['atk','social','speed'];const k=infPick(kinds);r[k]++;infAddRecent(`원본 지참 · 배율 ×${r.multiplier.toFixed(2)} · ${k==='atk'?'공격':k==='social'?'처세':'속도'} +1`);if(r.corruption>=100){infEnd('기록을 놓지 못해 심연에 잠식됐다.');return;}
+    r.multiplier=Math.min(4,r.multiplier+.25);r.corruption=infClamp(r.corruption+8,0,100);
+    const kinds=['atk','social','speed'],k=infPick(kinds);r[k]++;
+    infAddRecent(`원본 지참 · 배율 ×${r.multiplier.toFixed(2)} · ${k==='atk'?'공격':k==='social'?'처세':'속도'} +1`);
+    r.status=`원본을 들고 내려간다 · ${k==='atk'?'공격':k==='social'?'처세':'속도'} +1`;infRender();
+    await infResultBeat('corrupt',`${k==='atk'?'공격':k==='social'?'처세':'속도'} +1`,720);
+    if(r.corruption>=100){infEnd('기록을 놓지 못해 심연에 잠식됐다.');infSetBusy(false);return;}
   }
-  infNextPost();
+
+  infNextPost();infSetBusy(false);
 }
 function infCommitLogs(){
   const meta=loadMeta();meta.infinite ||= {bestFloor:0,bestScore:0,totalSecured:0,bosses:0,runs:0,discoveredLogs:[]};const before=new Set(meta.infinite.discoveredLogs||[]);for(const id of infiniteRun.carriedLogs||[])before.add(id);meta.infinite.discoveredLogs=[...before];meta.infinite.totalSecured=Math.max(0,Number(meta.infinite.totalSecured||0))+infiniteRun.secured-(infiniteRun.lastCommittedSecured||0);infiniteRun.lastCommittedSecured=infiniteRun.secured;infiniteRun.securedLogIds=[...new Set([...(infiniteRun.securedLogIds||[]),...(infiniteRun.carriedLogs||[])])];infiniteRun.carriedLogs=[];saveMeta(meta);
 }
-function infBossAction(action){
-  const b=infiniteRun.current;if(!b||b.type!=='boss')return;const diversity=infDiversity();let mapped=action==='attack'?'attack':action==='social'?'social':'speed';let extra=4+(b.maxHp-b.hp)*1.2;if(action==='social')extra-=Math.min(3,diversity*.7);const chance=infChance(mapped,extra);
-  if(infRng()*100<chance){b.hp--;infApplyClassSuccess(mapped,'boss');const amount=infGainRecords(90+infiniteRun.floor*12,mapped,'combat');infAddRecent(`${b.title} · 장막 ${b.hp}/${b.maxHp}`);infiniteRun.status=`보스 약화 성공 · 기록 +${amount}`;if(b.hp<=0){infiniteRun.bosses++;const rec=infAcquireRecord(5);infiniteRun.gold+=12+infiniteRun.bosses*3;infAddRecent(`보스 기록 확보 · ${rec.title}`);infFinishFloor();return;}infAddCorruption(3);if(infiniteRun.ended)return;infSave();infRender();}
-  else{const dmg=Math.max(2,Math.round(2+infiniteRun.floor*.2));const got=infTakeDamage(dmg,mapped);if(infiniteRun.ended)return;if(got===-1){infSave();infRender();return;}infAddCorruption(infInt(7,12));if(infiniteRun.ended)return;infiniteRun.status=`보스 대응 실패 · HP -${got}`;infSave();infRender();}
+async function infBossAction(action){
+  if(infiniteBusy)return;
+  const b=infiniteRun.current;if(!b||b.type!=='boss')return;
+  await infBeforeRoll(action);
+  const diversity=infDiversity();
+  const mapped=action==='attack'?'attack':action==='social'?'social':'speed';
+  let extra=4+(b.maxHp-b.hp)*1.2;if(action==='social')extra-=Math.min(3,diversity*.7);
+  const chance=infChance(mapped,extra);
+
+  if(infRng()*100<chance){
+    b.hp--;infApplyClassSuccess(mapped,'boss');
+    const amount=infGainRecords(90+infiniteRun.floor*12,mapped,'combat');
+    infAddRecent(`${b.title} · 장막 ${b.hp}/${b.maxHp}`);
+    infiniteRun.status=`장막 파괴 · 기록 +${amount}`;infRender();
+    await infResultBeat('good',`장막 ${b.hp}/${b.maxHp}`,720);
+
+    if(b.hp<=0){
+      infiniteRun.bosses++;
+      const rec=infAcquireRecord(5);infiniteRun.gold+=12+infiniteRun.bosses*3;
+      infAddRecent(`보스 기록 확보 · ${rec.title}`);
+      infStageClass('inf-boss-break',900);infFlash('good');infFloat('장막 붕괴');
+      await infWait(900);
+      infFinishFloor();infSetBusy(false);return;
+    }
+
+    infAddCorruption(3);
+    if(infiniteRun.ended){infSetBusy(false);return;}
+    infSave();infRender();infSetBusy(false);return;
+  }
+
+  const dmg=Math.max(2,Math.round(2+infiniteRun.floor*.2));
+  const got=infTakeDamage(dmg,mapped);
+  if(infiniteRun.ended){infSetBusy(false);return;}
+  if(got===-1){infSave();infRender();await infResultBeat('good','부활',760);infSetBusy(false);return;}
+  infAddCorruption(infInt(7,12));
+  if(infiniteRun.ended){infSetBusy(false);return;}
+  infiniteRun.status=`대응 실패 · HP -${got}`;infSave();infRender();
+  await infResultBeat('bad',`HP -${got}`,700);
+  infSetBusy(false);
 }
 function infScore(){if(!infiniteRun)return 0;return Math.max(0,Math.round(infiniteRun.secured+infiniteRun.unbanked*infiniteRun.multiplier+infiniteRun.floor*85+infiniteRun.bosses*1200+infiniteRun.relics.length*180));}
 function infEnd(reason,retired=false){
@@ -2963,13 +3181,13 @@ function infRender(){
   $('infRelics').innerHTML=r.relics.length?r.relics.map(id=>{const x=INFINITE_RELICS.find(y=>y.id===id);return `<span title="${escapeAttr(x?.desc||'')}">${escapeHtml(x?.name||id)}</span>`}).join(''):'';
   const statusEl=$('infStatus');statusEl.textContent=r.status||'';statusEl.classList.toggle('hidden',!r.status);
   const choices=$('infChoices'),k=$('infKicker'),title=$('infTitle'),body=$('infBody');
-  if(r.phase==='nodes'){k.textContent='RECORD FLOOR';title.textContent=`${r.floor}층 · 세 갈래 기록`;body.textContent='한 경로만 열 수 있다. 깊어질수록 같은 기록도 더 위험한 형태로 되돌아온다.';choices.innerHTML=r.nodeChoices.map((n,idx)=>`<button class="inf-node choice-btn risk-${n.risk}" data-inf-node="${idx}"><span>${n.icon}</span><b>${escapeHtml(n.name)}</b><i>${n.risk?`위험 ${'◆'.repeat(n.risk)}`:'안전'}</i></button>`).join('');}
-  else if(r.phase==='event'){const e=r.current;k.textContent='FOUND RECORD';title.textContent=e.title;body.textContent=e.body;choices.innerHTML=e.actions.map(a=>`<button class="inf-action action-btn" data-inf-action="${a[0]}" ${e.failed?.includes(a[0])?'disabled':''}><b>${escapeHtml(a[1])}</b><small>${escapeHtml(a[2])}</small>${e.failed?.includes(a[0])?'<i>실패</i>':''}</button>`).join('');}
-  else if(r.phase==='boss'){const b=r.current;k.textContent=`ENTITY · ${r.floor}F`;title.textContent=b.title;body.textContent=`${b.body}\n\n장막 ${b.hp}/${b.maxHp} · 보유 기록 범주가 많을수록 반증(처세)이 쉬워진다.`;choices.innerHTML=`<button class="inf-action action-btn boss" data-inf-action="attack"><b>형체를 파괴한다</b><small>공격 ${infChance('attack',4+(b.maxHp-b.hp)*1.2)}%</small></button><button class="inf-action action-btn boss" data-inf-action="social"><b>기록으로 존재를 반증한다</b><small>처세 ${infChance('social',4+(b.maxHp-b.hp)*1.2-Math.min(3,infDiversity()*.7))}%</small></button><button class="inf-action action-btn boss" data-inf-action="speed"><b>장막의 틈을 닫는다</b><small>속도 ${infChance('speed',4+(b.maxHp-b.hp)*1.2)}%</small></button>`;}
-  else if(r.phase==='relic'){k.textContent='RELIC DRAFT';title.textContent='하나만 가져갈 수 있다';body.textContent='유물은 이번 탐사에서만 유지된다. 조합에 따라 같은 직업도 전혀 다른 빌드가 된다.';choices.innerHTML=r.relicChoices.map(id=>{const x=INFINITE_RELICS.find(y=>y.id===id);return `<button class="inf-relic-card choice-btn" data-inf-relic="${id}"><b>${escapeHtml(x.name)}</b><small>${escapeHtml(x.desc)}</small></button>`}).join('');}
-  else if(r.phase==='checkpoint'){k.textContent='ARCHIVE CHECKPOINT';title.textContent=`${r.floor}층 · 봉인실`;body.textContent=`미보관 원본 ${r.unbanked.toLocaleString()}점. 봉인하면 영구 기록으로 남는다. 그대로 들고 가면 배율과 능력치가 오르지만 죽을 때 전부 잃는다.`;choices.innerHTML=`<button class="inf-action action-btn safe" data-inf-checkpoint="secure"><b>봉인하고 계속</b><small>전부 보관 · 회복</small></button><button class="inf-action action-btn danger" data-inf-checkpoint="carry"><b>들고 내려간다</b><small>배율 +0.25 · 능력 +1 · 오염 +8</small></button><button class="inf-action action-btn" data-inf-checkpoint="retire"><b>귀환</b><small>전부 봉인</small></button>`;}
-  else if(r.phase==='ended'){k.textContent=r.retired?'ARCHIVE CLOSED':'LOST RECORD';title.textContent=r.retired?'기록을 가지고 돌아왔다':'기록자가 기록이 되었다';body.textContent=`${r.endReason}\n\n도달 ${r.floor}층 · 보스 ${r.bosses} · 보관 기록 ${r.secured.toLocaleString()}${r.lostUnbanked?` · 소실 원본 ${r.lostUnbanked.toLocaleString()}`:''} · 최종 점수 ${infScore().toLocaleString()}`;choices.innerHTML=`<button class="inf-action action-btn safe" data-action="infinite-again"><b>새 탐사</b></button><button class="inf-action action-btn" data-action="infinite-back"><b>무한 기록 메뉴</b></button>`;}
-  $('infRecent').innerHTML=(r.recent||[]).length?`<b>최근 기록</b>${r.recent.map(x=>`<span>${escapeHtml(x)}</span>`).join('')}`:'';infSave();
+  if(r.phase==='nodes'){k.textContent='기록층';title.textContent=`${r.floor}층 · 세 갈래 기록`;body.textContent='세 갈래 중 하나를 고른다.';choices.innerHTML=r.nodeChoices.map((n,idx)=>`<button class="inf-node choice-btn risk-${n.risk}" data-inf-node="${idx}"><span>${n.icon}</span><b>${escapeHtml(n.name)}</b><i>${n.risk?`위험 ${'◆'.repeat(n.risk)}`:'안전'}</i></button>`).join('');}
+  else if(r.phase==='event'){const e=r.current;k.textContent='발견 기록';title.textContent=e.title;body.textContent=e.body;choices.innerHTML=e.actions.map(a=>`<button class="inf-action action-btn" data-inf-action="${a[0]}" ${e.failed?.includes(a[0])?'disabled':''}><b>${escapeHtml(a[1])}</b><small>${escapeHtml(a[2])}</small>${e.failed?.includes(a[0])?'<i>실패</i>':''}</button>`).join('');}
+  else if(r.phase==='boss'){const b=r.current;k.textContent=`심연 개체 · ${r.floor}층`;title.textContent=b.title;body.textContent=`${b.body}\n\n장막 ${b.hp}/${b.maxHp}`;choices.innerHTML=`<button class="inf-action action-btn boss" data-inf-action="attack"><b>형체를 파괴한다</b><small>공격 ${infChance('attack',4+(b.maxHp-b.hp)*1.2)}%</small></button><button class="inf-action action-btn boss" data-inf-action="social"><b>기록으로 존재를 반증한다</b><small>처세 ${infChance('social',4+(b.maxHp-b.hp)*1.2-Math.min(3,infDiversity()*.7))}%</small></button><button class="inf-action action-btn boss" data-inf-action="speed"><b>장막의 틈을 닫는다</b><small>속도 ${infChance('speed',4+(b.maxHp-b.hp)*1.2)}%</small></button>`;}
+  else if(r.phase==='relic'){k.textContent='유물';title.textContent='하나만 가져갈 수 있다';body.textContent='하나를 고른다.';choices.innerHTML=r.relicChoices.map(id=>{const x=INFINITE_RELICS.find(y=>y.id===id);return `<button class="inf-relic-card choice-btn" data-inf-relic="${id}"><b>${escapeHtml(x.name)}</b><small>${escapeHtml(x.desc)}</small></button>`}).join('');}
+  else if(r.phase==='checkpoint'){k.textContent='봉인실';title.textContent=`${r.floor}층 · 봉인실`;body.textContent=`미보관 원본 ${r.unbanked.toLocaleString()}`;choices.innerHTML=`<button class="inf-action action-btn safe" data-inf-checkpoint="secure"><b>봉인하고 계속</b><small>전부 보관 · 회복</small></button><button class="inf-action action-btn danger" data-inf-checkpoint="carry"><b>들고 내려간다</b><small>배율 +0.25 · 능력 +1 · 오염 +8</small></button><button class="inf-action action-btn" data-inf-checkpoint="retire"><b>귀환</b><small>전부 봉인</small></button>`;}
+  else if(r.phase==='ended'){k.textContent=r.retired?'귀환':'기록 소실';title.textContent=r.retired?'기록을 가지고 돌아왔다':'기록자가 기록이 되었다';body.textContent=`${r.endReason}\n\n도달 ${r.floor}층 · 보스 ${r.bosses} · 보관 기록 ${r.secured.toLocaleString()}${r.lostUnbanked?` · 소실 원본 ${r.lostUnbanked.toLocaleString()}`:''} · 최종 점수 ${infScore().toLocaleString()}`;choices.innerHTML=`<button class="inf-action action-btn safe" data-action="infinite-again"><b>새 탐사</b></button><button class="inf-action action-btn" data-action="infinite-back"><b>무한 기록 메뉴</b></button>`;}
+  $('infRecent').innerHTML=(r.recent||[]).length?`<b>최근 기록</b>${r.recent.map(x=>`<span>${escapeHtml(x)}</span>`).join('')}`:'';infSave();infMarkView(r);
 }
 function openInfiniteCodex(){const m=infiniteMeta();const found=new Set(m.discoveredLogs||[]);$('modal').innerHTML=`<h2>무한 기록 도감</h2><div class="modal-sub">수집 ${found.size}/${INFINITE_LOGS.length} · 누적 봉인 ${Number(m.totalSecured||0).toLocaleString()}</div>${INFINITE_LOGS.map(x=>`<div class="inf-codex-row ${found.has(x.id)?'':'locked'}"><b>${found.has(x.id)?escapeHtml(x.title):'미확인 기록'} <small>${found.has(x.id)?escapeHtml(x.cat):'?'}</small></b>${found.has(x.id)?`<p>${escapeHtml(x.text)}</p>`:''}</div>`).join('')}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;showModal();}
 

@@ -272,3 +272,76 @@ button,input{font:inherit}button{color:inherit}button:disabled{opacity:.36}
 .inf-codex-row.locked{opacity:.35}
 @media(min-width:560px){.inf-choice-grid{grid-template-columns:1fr 1fr}.inf-node:nth-child(3):last-child{grid-column:1/-1}.infinite-mode-art{height:235px}}
 @media(max-width:360px){.inf-resource-row b{font-size:13px}.inf-stage-copy .story{font-size:14px}}
+
+
+/* v0.9.44 ENDLESS pacing / restrained FX */
+#infiniteGameScreen .inf-choice-grid.inf-locked{
+  pointer-events:none;
+}
+#infiniteGameScreen .inf-choice-grid.inf-locked .inf-node,
+#infiniteGameScreen .inf-choice-grid.inf-locked .inf-action,
+#infiniteGameScreen .inf-choice-grid.inf-locked .inf-relic-card{
+  opacity:.58;
+}
+#infiniteGameScreen .inf-node.inf-selected{
+  border-color:#8d784f;
+  background:linear-gradient(180deg,#211c14,#101114);
+}
+#infiniteGameScreen .inf-stage.inf-view-enter{
+  animation:infViewEnter .36s ease both;
+}
+@keyframes infViewEnter{
+  from{opacity:.55;transform:translateY(5px)}
+  to{opacity:1;transform:none}
+}
+#infiniteGameScreen .inf-stage.inf-resolving .scene-content{
+  opacity:.88;
+}
+#infiniteGameScreen .inf-stage.inf-resolving{
+  border-color:#4d4941;
+}
+#infiniteGameScreen .inf-stage.inf-good{
+  animation:infGoodBeat .5s ease;
+}
+@keyframes infGoodBeat{
+  0%{border-color:#30343d}
+  35%{border-color:#766447}
+  100%{border-color:#30343d}
+}
+#infiniteGameScreen .inf-stage.inf-hit{
+  animation:infStageHit .38s ease;
+}
+@keyframes infStageHit{
+  0%,100%{transform:translateX(0)}
+  22%{transform:translateX(-4px)}
+  45%{transform:translateX(3px)}
+  67%{transform:translateX(-2px)}
+}
+#infiniteGameScreen .inf-stage.inf-corrupt{
+  animation:infCorruptBeat .58s ease;
+}
+@keyframes infCorruptBeat{
+  0%,100%{border-color:#30343d;filter:none}
+  45%{border-color:#673e45;filter:saturate(.82) brightness(.88)}
+}
+#infiniteGameScreen .inf-stage.inf-boss-break{
+  animation:infBossBreak .82s ease;
+}
+@keyframes infBossBreak{
+  0%{transform:scale(1)}
+  28%{transform:scale(.994);filter:contrast(1.08)}
+  48%{transform:scale(1.006);filter:brightness(1.12)}
+  100%{transform:scale(1);filter:none}
+}
+#infiniteGameScreen .result-toast:not(.hidden){
+  animation:toast .24s ease both;
+}
+@media (prefers-reduced-motion:reduce){
+  #infiniteGameScreen .inf-stage.inf-view-enter,
+  #infiniteGameScreen .inf-stage.inf-good,
+  #infiniteGameScreen .inf-stage.inf-hit,
+  #infiniteGameScreen .inf-stage.inf-corrupt,
+  #infiniteGameScreen .inf-stage.inf-boss-break{
+    animation:none!important;
+  }
+}
