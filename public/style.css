@@ -587,3 +587,9 @@ button,input{font:inherit}button{color:inherit}button:disabled{opacity:.36}
 .inf-turn-track i.done{background:#6e775c;border-color:#8b936f}
 .inf-turn-track i.current{background:#73513f;border-color:#a37759;box-shadow:0 0 0 1px #0005 inset}
 #infiniteGameScreen .inf-combat-panel .enemy-stats{color:#9c9fa5}
+
+
+/* v0.9.53 · additional infinite boss gimmicks */
+#infiniteGameScreen .inf-boss-gimmick{
+  text-wrap:balance;
+}

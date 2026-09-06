@@ -8,7 +8,7 @@ const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
 const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
 const PVP_NICK_KEY = 'fallen_pvp_nickname';
 const INFINITE_SAVE_KEY = 'fallen_infinite_save_v1';
-const GAME_VERSION = 152;
+const GAME_VERSION = 153;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5, godfather:7 };
 function loadMeta(){
@@ -2994,6 +2994,16 @@ const INFINITE_BOSSES=[
     {text:'말이 아닌 명령이 머릿속에 들어온다.',mods:{attack:1,social:-2,speed:1},corrupt:3},
     {text:'문이 보관소보다 커진다.',mods:{attack:2,social:1,speed:-1},damage:1},
     {text:'문 너머의 무언가가 마침내 이쪽을 본다.',mods:{attack:2,social:2,speed:2},damage:1,corrupt:2}
+  ]},
+  {id:'dice_shatterer',name:'확률 파쇄자',text:'붉은 돌 여섯 조각이 허공에서 회전한다. 그것들은 주사위였던 것의 면이다. 존재는 결과를 굴리지 않는다. 마음에 들지 않는 결과를 부순다.',hp:6,damage:3,corrupt:4,reward:2.38,patterns:[
+    {text:'손안의 운이 금이 가기 시작한다.',mods:{attack:0,social:0,speed:0}},
+    {text:'모든 결과가 하나의 면으로 강제로 접힌다.',mods:{attack:1,social:2,speed:1}},
+    {text:'여섯 개의 파편이 동시에 당신을 향한다.',mods:{attack:2,social:1,speed:2},damage:1}
+  ]},
+  {id:'recursive_executor',name:'재귀의 집행자',text:'한 번도 만난 적 없는 얼굴인데, 갑옷의 흠집과 검의 각도는 당신을 이미 여러 번 죽여 본 것처럼 정확하다. 다음 만남에는 더 많이 기억할 것이다.',hp:6,damage:3,corrupt:4,reward:2.30,predict:true,patterns:[
+    {text:'집행자가 지난 전투의 첫 선택을 흉내 낸다.',mods:{attack:1,social:1,speed:1}},
+    {text:'당신이 살아남았던 방법부터 지워 나간다.',mods:{attack:2,social:2,speed:2}},
+    {text:'이번 기록을 다음 싸움의 교본으로 저장한다.',mods:{attack:2,social:2,speed:2},damage:1,corrupt:1}
   ]}
 ];
 const INFINITE_ENTITY_ART={
@@ -3016,7 +3026,9 @@ const INFINITE_ENTITY_ART={
   reader_below:'/assets/infinite/enemies/reader_below.webp?v=0947',
   yellow_scribe:'/assets/infinite/enemies/yellow_scribe.webp?v=0947',
   nameless_star:'/assets/infinite/enemies/nameless_star.webp?v=0947',
-  lord_behind_door:'/assets/infinite/enemies/lord_behind_door.webp?v=0947'
+  lord_behind_door:'/assets/infinite/enemies/lord_behind_door.webp?v=0947',
+  dice_shatterer:'/assets/art/hard_alternil.webp?v=0953',
+  recursive_executor:'/assets/art/hard_lastknight.webp?v=0953'
 };
 const INFINITE_ARCHIVE_ART='/assets/art/infinite_archive.webp?v=0947';
 let infiniteArtPreloaded=false;
@@ -3074,7 +3086,14 @@ function infRewardMult(action,nodeType=''){
   if(nodeType==='combat')x*=1+m.combatReward;if(action==='speed')x*=1+m.speedReward;
   const d=infDiversity();if(d>=5)x*=1.25;else if(d>=3)x*=1.10;
   if(infiniteRun.classId==='noble'&&action==='social')x*=1.15;
-  if(infiniteRun.classId==='gambler'){const die=infInt(1,6);infiniteRun.lastGamble=die;x*=die===1?.55:die===6?1.8:1;}
+  if(infiniteRun.classId==='gambler'){
+    const diceBroken=infiniteRun.current?.id==='dice_shatterer'&&!!infiniteRun.current?.combat?.diceBroken;
+    if(diceBroken){
+      infiniteRun.lastGamble=0;
+    }else{
+      const die=infInt(1,6);infiniteRun.lastGamble=die;x*=die===1?.55:die===6?1.8:1;
+    }
+  }
   return x;
 }
 function infAddCorruption(v){const m=infMods();let starterMult=1;if(infHasStarter('sealed_grimoire'))starterMult*=1.10;if(infHasStarter('black_pearl'))starterMult*=1.15;v=Math.max(0,Math.round((v+m.corruptFlat)*m.corruptMult*starterMult));infiniteRun.corruption=infClamp(infiniteRun.corruption+v,0,100);if(infiniteRun.corruption>=100)infEnd('정신이 기록에 잠식됐다.');}
@@ -3167,6 +3186,13 @@ function infBossGimmick(entity){
   if(entity.id==='yellow_scribe')return '거짓 기록 · 표시되는 성공 확률이 실제와 다르다';
   if(entity.id==='nameless_star')return '불완전한 탄생 · 공격 성공 시 다음 행동이 크게 약화된다';
   if(entity.id==='lord_behind_door')return '문턱 봉쇄 · 직전에 쓴 행동이 다음 턴 봉인된다';
+  if(entity.id==='dice_shatterer')return infiniteRun?.classId==='gambler'
+    ?'주사위 파괴 · 첫 턴에 도박사의 보상 주사위를 산산이 부순다'
+    :'확률 파쇄 · 첫 턴에 행운의 규칙을 부순다';
+  if(entity.id==='recursive_executor'){
+    const lv=Math.max(1,Number(entity.repeatLevel||1)),re=Math.max(0,lv-1);
+    return `재전 기록 ${lv} · 재등장마다 성공률 -${re*6}% · 피해 +${re} · 보상 +${re*15}%`;
+  }
   return '';
 }
 function infCombatChance(entity,action){
@@ -3184,6 +3210,7 @@ function infCombatChance(entity,action){
   if(c.weakenSocial>0&&action==='social')extra+=2;
   if(c.weakenSpeed>0&&action==='speed')extra+=2;
   if(entity?.predict&&c.lastAction===action)extra+=3+Math.min(4,c.repeatAction||0);
+  if(entity?.id==='recursive_executor')extra+=Math.min(5,Math.max(0,Number(entity.repeatLevel||1)-1));
   if(entity?.trait==='중갑'&&action==='attack')extra+=1;
   if(entity?.trait==='추적'&&action==='speed')extra+=1;
 
@@ -3245,6 +3272,22 @@ function infMakeIntent(entity){
         {id:'command',name:'무명의 명령',desc:'강한 오염을 밀어 넣는다',kind:'dread',power:1.55}
       ];return {...cycle[(round-1)%cycle.length],phaseText:p?.text||''};
     }
+    if(entity.id==='dice_shatterer'){
+      const cycle=[
+        {id:'break_die',name:'주사위 파쇄',desc:'운을 굴리는 규칙 자체를 깨뜨린다',kind:'break_die',power:1},
+        {id:'fixed_result',name:'고정된 결과',desc:'반복 행동을 읽고 확률을 눌러 버린다',kind:'predict',power:1.28},
+        {id:'six_faces',name:'여섯 면의 처형',desc:'여섯 파편이 한꺼번에 덮친다',kind:'heavy',power:1.62}
+      ];return {...cycle[(round-1)%cycle.length],phaseText:p?.text||''};
+    }
+    if(entity.id==='recursive_executor'){
+      const lv=Math.max(1,Math.min(6,Number(entity.repeatLevel||1)));
+      const scale=1+(lv-1)*.08;
+      const cycle=[
+        {id:'remember',name:'기억',desc:'지난 싸움의 선택을 학습한다',kind:'predict',power:1.05*scale},
+        {id:'imitate',name:'모사',desc:'이전에 통했던 움직임을 베껴 공격한다',kind:'heavy',power:1.35*scale},
+        {id:'rewrite',name:'교정',desc:'이번 생존 기록을 다음 싸움의 무기로 남긴다',kind:'dread',power:1.30*scale}
+      ];return {...cycle[(round-1)%cycle.length],phaseText:p?.text||''};
+    }
     if(entity.id==='bell_keeper'){
       return round%2
         ?{id:'bell',name:'첫 번째 종',desc:'오염을 밀어 넣는다',kind:'dread',power:1.15,phaseText:p?.text||''}
@@ -3281,7 +3324,7 @@ function infEnsureCombat(entity){
     intent:null,lastAction:'',lastSuccess:'',lastSuccessfulAction:'',
     repeatAction:0,successes:{attack:0,social:0,speed:0},
     cleanTurns:0,bleed:0,weakenSocial:0,weakenSpeed:0,disrupted:0,evade:0,
-    sealedAction:'',sealedUntilRound:0,flood:0,starWeak:0
+    sealedAction:'',sealedUntilRound:0,flood:0,starWeak:0,diceBroken:false
   };
   entity.combat.intent=infMakeIntent(entity);
   return entity.combat;
@@ -3297,6 +3340,8 @@ function infCombatEffectsText(entity){
   if(c.sealedAction)out.push(`${infCombatActionName(c.sealedAction)} 봉인`);
   if(entity?.id==='reader_below'&&c.flood>0)out.push(`침수 ${c.flood}`);
   if(entity?.id==='nameless_star'&&c.starWeak>0)out.push('별의 형체 약화');
+  if(entity?.id==='dice_shatterer'&&c.diceBroken)out.push('주사위 파괴');
+  if(entity?.id==='recursive_executor'&&Number(entity.repeatLevel||1)>1)out.push(`재전 강화 ${entity.repeatLevel}`);
   return out.join(' · ');
 }
 function infResetCombatOnRevive(entity){
@@ -3342,6 +3387,9 @@ function infApplyCombatClassTurn(action,entity){
 function infCombatReward(entity,method){
   const r=infiniteRun,tier=infCombatTier(entity);
   let base=(34+r.floor*7)*(tier===1?1:tier===2?2.05:3.35)*Number(entity.reward||1);
+  if(entity.id==='recursive_executor'){
+    base*=1+Math.min(5,Math.max(0,Number(entity.repeatLevel||1)-1))*.15;
+  }
 
   if(method==='attack')base*=1.15;
   else if(method==='social')base*=1.08;
@@ -3370,6 +3418,9 @@ function infCombatReward(entity,method){
     r.corruption=Math.max(0,r.corruption-(tier===3?4:2));
   }
   if(method==='speed')r.escapes=Number(r.escapes||0)+1;
+  if(entity.id==='dice_shatterer'&&r.classId==='gambler'&&entity.combat?.diceBroken){
+    infAddRecent('확률 파쇄자 · 보상 주사위가 파괴되어 이번 보상에는 발동하지 않았다.');
+  }
 
   // 상인은 조우를 넘길 때 수익. 기타 전투 패시브는 성공 턴에서 이미 처리했다.
   infApplyClassSuccess(method,'combat');
@@ -3384,7 +3435,9 @@ function infCombatReward(entity,method){
 }
 function infCombatEnemyBaseDamage(entity){
   const tier=infCombatTier(entity),f=Number(infiniteRun.floor||1);
-  return Math.max(1,Math.round(1+f*.13)+(tier-1)+Number(entity.damage||0));
+  let bonus=0;
+  if(entity?.id==='recursive_executor')bonus=Math.min(5,Math.max(0,Number(entity.repeatLevel||1)-1));
+  return Math.max(1,Math.round(1+f*.13)+(tier-1)+Number(entity.damage||0)+bonus);
 }
 function infCombatEnemyTurn(entity,action,succeeded){
   const c=entity.combat,intent=c.intent||{kind:'hit',power:1,name:'공격'};
@@ -3435,6 +3488,13 @@ function infCombatEnemyTurn(entity,action,succeeded){
     // 문 뒤의 군주: 이번 행동을 다음 턴에 봉인.
     c.sealedAction=action;c.sealedUntilRound=c.round+1;
     note=`${infCombatActionName(action)}이 다음 턴 문턱에 봉인된다.`;
+  }else if(intent.kind==='break_die'){
+    c.diceBroken=true;infiniteRun.lastGamble=0;
+    if(infiniteRun.classId==='gambler'){
+      note='손안의 주사위가 여섯 조각으로 갈라졌다. 이 보스전의 보상 주사위가 파괴됐다.';
+    }else{
+      note='붉은 파편이 운을 계산하던 규칙을 깨뜨렸다.';
+    }
   }else if(intent.kind==='predict'){
     damage=Math.max(1,Math.round(base*Number(intent.power||1)));
     if(entity.predict&&c.repeatAction>0)damage+=1;
@@ -3453,6 +3513,10 @@ function infCombatEnemyTurn(entity,action,succeeded){
   }
   // 무명 별의 태아는 마지막 턴의 호명이 더 거칠다.
   if(entity.id==='nameless_star'&&c.round>=3)corrupt+=2;
+  // 재귀의 집행자는 재전 횟수만큼 오염까지 조금씩 학습한다.
+  if(entity.id==='recursive_executor'){
+    corrupt+=Math.floor(Math.min(5,Math.max(0,Number(entity.repeatLevel||1)-1))/2);
+  }
 
   damage=Math.max(0,damage-damageCut);
   corrupt=Math.max(0,corrupt-corruptCut);
@@ -3641,13 +3705,25 @@ function infEventFor(type){
   if(type==='rest')return {type,title:'닫힌 열람실',body:'문틈에 소금이 뿌려져 있다. 잠깐 숨을 돌릴 수 있다.',failed:[],actions:[['heal','잠깐 눈을 붙인다','HP 35% 회복'],['cleanse','소금 원을 다시 긋는다','오염 -16'],['transcribe','원본을 필사한다','원본 20% 봉인']]};
   return {type:'merchant',title:'떠도는 수집상',body:'얼굴을 천으로 가린 수집상이 좁은 통로에서 기다린다.',failed:[],actions:[['buy_heal','응급 약품을 산다','◆ 12 · HP 45% 회복'],['buy_cleanse','정화 소금을 산다','◆ 14 · 오염 -20'],['buy_record','봉인된 기록을 산다','◆ 18 · 기록 1개']]};
 }
+function infBossForFloor(floor){
+  const n=Math.max(1,Math.floor(Number(floor||10)/10));
+  // 재귀의 집행자는 30층마다 반드시 돌아와 '재전할수록 강해지는' 정체성을 보장한다.
+  if(n%3===0)return INFINITE_BOSSES.find(x=>x.id==='recursive_executor');
+  const rotation=['reader_below','dice_shatterer','yellow_scribe','nameless_star','lord_behind_door'];
+  const ordinaryIndex=n-Math.floor(n/3)-1;
+  const id=rotation[((ordinaryIndex%rotation.length)+rotation.length)%rotation.length];
+  return INFINITE_BOSSES.find(x=>x.id===id)||INFINITE_BOSSES[0];
+}
 function infPrepareFloor(){
   if(!infiniteRun||infiniteRun.ended)return;
   infiniteRun.status='';infiniteRun.current=null;infiniteRun.failed=[];
   if(infiniteRun.floor%10===0){
-    const src=INFINITE_BOSSES[((infiniteRun.floor/10)-1)%INFINITE_BOSSES.length];
+    const src=infBossForFloor(infiniteRun.floor);
+    infiniteRun.bossVisits=(infiniteRun.bossVisits&&typeof infiniteRun.bossVisits==='object')?infiniteRun.bossVisits:{};
+    const visit=Number(infiniteRun.bossVisits[src.id]||0)+1;
+    infiniteRun.bossVisits[src.id]=visit;
     infiniteRun.phase='boss';
-    infiniteRun.current={type:'boss',id:src.id,title:src.name,body:src.text,hp:src.hp,maxHp:src.hp,damage:src.damage||0,corrupt:src.corrupt||0,reward:src.reward||2,patterns:infClone(src.patterns||[]),predict:!!src.predict,mods:{...(src.mods||{})},lastAction:''};
+    infiniteRun.current={type:'boss',id:src.id,title:src.name,body:src.text,hp:src.hp,maxHp:src.hp,damage:src.damage||0,corrupt:src.corrupt||0,reward:src.reward||2,patterns:infClone(src.patterns||[]),predict:!!src.predict,mods:{...(src.mods||{})},lastAction:'',repeatLevel:src.id==='recursive_executor'?visit:1};
   }else if(infiniteRun.floor%5===0){
     const src=INFINITE_ELITES[((Math.floor(infiniteRun.floor/5)-1)+infInt(0,INFINITE_ELITES.length-1))%INFINITE_ELITES.length];
     infiniteRun.phase='elite';
@@ -3662,7 +3738,7 @@ function beginInfiniteSolo(classIdOverride=null,starterId=null){
   if(!starterId||!INFINITE_START_ITEMS.some(x=>x.id===starterId)){openInfiniteStarterDraft();return;}
   pendingClassId=id;
   const grown=classGrowthStats(id,cl);const seed=(Date.now()^(Math.random()*0xffffffff))>>>0;
-  infiniteRun={version:1,runId:`inf_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`,rngState:seed||123456789,classId:id,classSkin:preferredClassSkin(id),floor:1,hp:grown.hp,maxHp:grown.hp,atk:grown.atk,social:grown.social,speed:grown.speed,gold:8,corruption:0,unbanked:0,secured:0,multiplier:1,runRecordTotal:0,carriedLogs:[],securedLogIds:[],relics:[],starterItem:starterId,starterItemUses:0,starterWardSector:-1,bosses:0,elites:0,kills:0,socialWins:0,escapes:0,phase:'nodes',current:null,nodeChoices:[],postPhases:[],recent:[],ended:false,knightGrowth:0,reviveReady:id==='undead',undeadKills:0,tyranny:0,corpses:0};
+  infiniteRun={version:1,runId:`inf_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`,rngState:seed||123456789,classId:id,classSkin:preferredClassSkin(id),floor:1,hp:grown.hp,maxHp:grown.hp,atk:grown.atk,social:grown.social,speed:grown.speed,gold:8,corruption:0,unbanked:0,secured:0,multiplier:1,runRecordTotal:0,carriedLogs:[],securedLogIds:[],relics:[],starterItem:starterId,starterItemUses:0,starterWardSector:-1,bossVisits:{},bosses:0,elites:0,kills:0,socialWins:0,escapes:0,phase:'nodes',current:null,nodeChoices:[],postPhases:[],recent:[],ended:false,knightGrowth:0,reviveReady:id==='undead',undeadKills:0,tyranny:0,corpses:0};
   infApplyStarterInitial(infiniteRun);infPrepareFloor();showScreen('infiniteGameScreen');
 }
 function openInfiniteSelection(){
