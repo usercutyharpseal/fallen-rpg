@@ -7,7 +7,7 @@ const META_KEY = 'fallen_meta_v1';
 const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
 const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
 const PVP_NICK_KEY = 'fallen_pvp_nickname';
-const GAME_VERSION = 135;
+const GAME_VERSION = 136;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5, godfather:7 };
 function loadMeta(){
@@ -2637,7 +2637,7 @@ function renderClasses() {
         <div class="stats-row">
           ${statBox('체력',grown.hp)}${statBox('공격',grown.atk)}${statBox('처세',grown.social)}${statBox('속도',grown.speed)}
         </div>
-        <div class="passive"><strong>${unlocked?cl.passive:'???'}</strong><br><span>${unlocked?`${cl.desc}${grown.bonus?` · ${classGrowthProgressText(id)}`:''}`:`노말 엔딩을 더 보면 기억이 열린다.`}</span></div>
+        <div class="passive"><strong>${unlocked?cl.passive:'???'}</strong><br><span>${unlocked?cl.desc:`노말 엔딩을 더 보면 기억이 열린다.`}</span></div>
       </div>
       <button class="btn ${unlocked?'primary':''}" ${unlocked?'':'disabled'} onclick="selectClass('${id}')">${unlocked?'이 직업으로 시작':'잠김'}</button>
     </article>`;
