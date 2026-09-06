@@ -453,3 +453,137 @@ button,input{font:inherit}button{color:inherit}button:disabled{opacity:.36}
   .inf-start-item-card span{padding:8px}
   .item-thumb{width:42px;height:42px;flex-basis:42px}
 }
+
+
+/* v0.9.50 · Infinite mode as THE FALLEN third mode */
+.infinite-mode-art{
+  position:relative;height:215px;border-radius:18px;border:1px solid #30343d;
+  overflow:hidden;background:#101217;box-shadow:0 20px 48px #0008;margin:8px 0 10px
+}
+.infinite-mode-art img{width:100%;height:100%;object-fit:cover;filter:saturate(.68) brightness(.66) contrast(1.08)}
+.infinite-mode-vignette{position:absolute;inset:0;background:linear-gradient(180deg,#0001,#090b0ec0 70%,#090b0ef2)}
+.infinite-mode-mark{position:absolute;left:16px;right:16px;bottom:13px;display:flex;align-items:center;gap:9px}
+.infinite-mode-mark span{font-family:Georgia,serif;font-size:25px;color:#ae9565}
+.infinite-mode-mark b{font-family:Georgia,"Noto Serif KR",serif;font-size:18px;color:#e7e1d6}
+.infinite-meta-strip{
+  display:flex!important;align-items:center;justify-content:center;gap:8px!important;
+  min-height:28px;margin:0 0 10px!important;padding:0!important;border:0!important;background:none!important
+}
+.infinite-meta-strip span{display:inline!important;color:#8d9096!important;font-size:9px!important}
+.infinite-meta-strip i{display:block;width:1px;height:10px;background:#343740}
+.infinite-meta-strip>div{display:none!important}
+
+.inf-start-item-grid{display:grid!important;grid-template-columns:1fr!important;gap:7px!important}
+.inf-start-item-card{
+  min-height:68px!important;padding:7px 10px 7px 7px!important;display:grid!important;
+  grid-template-columns:54px 1fr auto!important;align-items:center!important;gap:9px!important;
+  border-radius:11px!important;background:linear-gradient(#1a1d23,#101217)!important;
+  border-color:var(--line)!important
+}
+.inf-start-item-card img{width:54px!important;height:54px!important;aspect-ratio:auto!important;border-radius:8px;border:1px solid #393b42;object-fit:cover}
+.inf-start-item-card span{padding:0!important}
+.inf-start-item-card b{font-size:13px!important;color:#ddd8cf}
+.inf-start-item-card small{margin-top:3px!important;font-size:9px!important;color:#898c92!important}
+.inf-start-item-card>i{font-style:normal;color:#777c84}
+
+.infinite-game-screen{padding:0}
+.infinite-hud{align-items:flex-start}
+.infinite-hud .hud-stats{white-space:normal;line-height:1.45}
+.inf-corruption-line{position:relative;height:3px;background:#24262d;margin-top:4px;border-radius:99px;overflow:hidden}
+.inf-corruption-fill{position:absolute;inset:0 auto 0 0;width:0;background:#704046;transition:width .25s ease}
+
+#infiniteGameScreen .inf-stage{
+  min-height:470px;margin:0;
+  border-radius:18px;border:1px solid #30343d;background:#101217;box-shadow:0 24px 60px #0009
+}
+#infiniteGameScreen .inf-stage-art{position:absolute;inset:0 0 44%;height:auto;background:#16191f}
+#infiniteGameScreen .inf-stage-art img{width:100%;height:100%;object-fit:cover;object-position:center 34%;filter:saturate(.78) brightness(.69) contrast(1.07)}
+#infiniteGameScreen .inf-stage-art img.elite-art{filter:saturate(.84) brightness(.71) contrast(1.08)}
+#infiniteGameScreen .inf-stage-art img.boss-art{filter:saturate(.88) brightness(.73) contrast(1.1)}
+#infiniteGameScreen .scene-shade{position:absolute;inset:0;background:linear-gradient(180deg,transparent 0,#0b0d1190 38%,#0b0d11f6 58%,#0b0d11 100%)}
+#infiniteGameScreen .inf-stage-copy{min-height:470px;padding:16px}
+#infiniteGameScreen .inf-scene-heading{
+  margin-top:auto;margin-bottom:7px;font-family:Georgia,"Noto Serif KR",serif;font-size:25px;color:#eee8dc
+}
+#infiniteGameScreen .inf-stage-copy>.story{margin-top:auto}
+#infiniteGameScreen .inf-scene-heading:not(.hidden)+.story{margin-top:0}
+
+#infiniteGameScreen .inf-combat-panel{
+  margin-top:auto;margin-bottom:12px;border:0;border-left:2px solid #8e754c;border-radius:0;
+  background:#090a0db5;padding:8px 10px;backdrop-filter:blur(5px)
+}
+#infiniteGameScreen .inf-combat-panel .enemy-title-row h2{font-size:24px}
+#infiniteGameScreen .inf-combat-panel .enemy-stats{font-size:9px;margin-top:3px}
+.inf-combat-meters{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:4px;margin-top:7px}
+.inf-meter{height:4px;background:#272a30;border-radius:99px;overflow:hidden}
+.inf-meter i{display:block;height:100%;transition:width .35s ease}
+.inf-meter.hp i{background:#9b3940}
+.inf-meter.will i{background:#75618a}
+.inf-meter.escape i{background:#4e7868}
+.inf-intent-line{display:flex;align-items:baseline;gap:6px;margin-top:7px;min-width:0}
+.inf-intent-line span{font-size:8px;color:#a58d63}
+.inf-intent-line b{font-size:10px;color:#d6c8ad}
+.inf-intent-line small{font-size:8px;color:#898c91;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.inf-combat-effects{min-height:0;margin-top:4px;font-size:8px;color:#a47579}
+
+#infiniteGameScreen .inf-choice-grid{margin-top:10px}
+#infiniteGameScreen .choice-area.inf-choice-grid{display:grid;grid-template-columns:1fr;gap:8px}
+#infiniteGameScreen .action-grid.inf-choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#infiniteGameScreen .action-grid.inf-choice-grid .action-btn:last-child:nth-child(3){grid-column:1/-1}
+#infiniteGameScreen .inf-node{display:block;min-height:0;padding:13px 14px}
+#infiniteGameScreen .inf-node b{font-size:13px}
+#infiniteGameScreen .inf-node>span,#infiniteGameScreen .inf-node>i{display:none!important}
+#infiniteGameScreen .inf-relic-card{background:linear-gradient(#1a1d23,#101217);border-color:var(--line)}
+#infiniteGameScreen .inf-relic-card b{color:#ddd8cf}
+#infiniteGameScreen .inf-recent-log,
+#infiniteGameScreen .inf-resource-row,
+#infiniteGameScreen .inf-relic-strip,
+#infiniteGameScreen .inf-starter-chip{display:none!important}
+
+.inf-kit-section{border-top:1px solid #292c33;padding-top:10px;margin-top:10px}
+.inf-kit-section:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.inf-kit-section h3{font-size:10px;color:#a58d63;margin:0 0 7px}
+.inf-kit-item{display:grid;grid-template-columns:70px 1fr;gap:10px;align-items:center}
+.inf-kit-item img{width:70px;height:70px;object-fit:cover;border:1px solid #3b3e45;border-radius:9px}
+.inf-kit-item b{display:block;font-size:13px}
+.inf-kit-item small{display:block;color:#92959b;font-size:9px;line-height:1.5;margin-top:3px}
+.inf-kit-item em{display:block;color:#a88f63;font-style:normal;font-size:9px;margin-top:4px}
+.inf-kit-relic{padding:7px 0;border-bottom:1px solid #24272e}
+.inf-kit-relic:last-child{border-bottom:0}
+.inf-kit-relic b{display:block;font-size:11px}
+.inf-kit-relic small{display:block;color:#888b91;font-size:9px;margin-top:2px;line-height:1.45}
+.inf-kit-log{font-size:9px;color:#95979b;line-height:1.5;padding:4px 0;border-bottom:1px solid #24272e}
+
+@media(min-width:650px){
+  .infinite-mode-art{height:260px}
+  #infiniteGameScreen .inf-stage,#infiniteGameScreen .inf-stage-copy{min-height:540px}
+}
+@media(max-width:390px){
+  .infinite-mode-art{height:185px}
+  .infinite-mode-mark b{font-size:16px}
+  #infiniteGameScreen .action-grid.inf-choice-grid{grid-template-columns:1fr 1fr}
+}
+
+
+/* v0.9.51 · Normal PVP stability */
+#pvpMatchTimer{
+  border:1px solid #3c4149;border-radius:999px;padding:4px 7px;
+  min-width:46px;text-align:center;font-variant-numeric:tabular-nums;color:#c9c1b2
+}
+#pvpMatchTimer.urgent{border-color:#694048;color:#d49aa1}
+.pvp-rating-warning{color:#c58a91;font-size:9px}
+
+
+/* v0.9.52 · Infinite survival-turn combat */
+.inf-boss-gimmick{
+  margin-top:6px;padding:6px 8px;border-left:2px solid #9d7650;
+  background:#17120ddb;color:#cdb58d;font-size:9px;line-height:1.45
+}
+.inf-turn-track{display:flex;gap:5px;margin-top:8px}
+.inf-turn-track i{
+  display:block;height:5px;flex:1;border-radius:99px;background:#2b2e35;
+  border:1px solid #383c44;transition:background .24s ease,border-color .24s ease
+}
+.inf-turn-track i.done{background:#6e775c;border-color:#8b936f}
+.inf-turn-track i.current{background:#73513f;border-color:#a37759;box-shadow:0 0 0 1px #0005 inset}
+#infiniteGameScreen .inf-combat-panel .enemy-stats{color:#9c9fa5}

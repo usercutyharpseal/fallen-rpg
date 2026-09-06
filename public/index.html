@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <meta name="theme-color" content="#090a0d" />
   <title>몰락자</title>
-  <link rel="stylesheet" href="/style.css?v=0949" />
+  <link rel="stylesheet" href="/style.css?v=0952" />
 </head>
 <body>
   <main id="app">
@@ -22,7 +22,7 @@
         <button class="btn" data-action="leaderboard">통합 랭킹</button>
         <button class="btn" data-action="pvp-leaderboard">PVP 레이팅</button>
       </div>
-      <div class="version">THE FALLEN · v0.9.49</div>
+      <div class="version">THE FALLEN · v0.9.52</div>
       <div id="storageInfo" class="storage-info">랭킹 저장 상태 확인 중…</div>
       <div class="device-transfer">
         <div class="device-transfer-head">
@@ -115,7 +115,9 @@
         <span></span>
       </header>
       <div class="infinite-mode-art">
-        <img src="/assets/art/infinite_archive.webp?v=0941" alt="심연의 기록 보관소">
+        <img src="/assets/art/infinite_archive.webp?v=0950" alt="심연의 기록 보관소">
+        <div class="infinite-mode-vignette"></div>
+        <div class="infinite-mode-mark"><span>∞</span><b>심연 기록 보관소</b></div>
       </div>
       <div id="infiniteMetaStrip" class="infinite-meta-strip"></div>
       <div id="infiniteChoiceGrid" class="hard-choice-grid"></div>
@@ -127,48 +129,41 @@
         <div class="hud-left">
           <div class="hud-row"><b id="infClass">기록자</b><span id="infGold" class="gold">◆ 0</span></div>
           <div class="hp-shell"><div id="infHpBar" class="hp-bar"></div><span id="infHpText"></span></div>
-          <div class="inf-corruption-row"><span>오염</span><div class="inf-bar corrupt"><i id="infCorruptBar"></i></div><b id="infCorruptText"></b></div>
-          <div class="hud-stats"><span id="infFloor">1층</span><span id="infRunStats"></span></div>
+          <div class="inf-corruption-line"><div class="inf-corruption-fill" id="infCorruptBar"></div></div>
+          <div id="infHudStats" class="hud-stats"></div>
         </div>
-        <button class="bag-btn" data-action="infinite-save-exit">나가기</button>
+        <div class="hud-actions">
+          <button class="bag-btn" data-action="infinite-kit">소지품</button>
+          <button class="bag-btn save-exit-btn" data-action="infinite-save-exit">저장 후 나가기</button>
+        </div>
       </header>
-      <div class="inf-resource-row">
-        <div><small>보관</small><b id="infSecured">0</b></div>
-        <div><small>원본</small><b id="infLoose">0</b></div>
-        <div><small>배율</small><b id="infMult">×1.00</b></div>
-      </div>
-      <button id="infStarterItem" class="inf-starter-chip hidden" data-action="infinite-item"></button>
-      <div id="infRelics" class="inf-relic-strip"></div>
-      <section class="scene-card inf-stage">
-        <div class="scene-art inf-stage-art"><img id="infSceneArt" src="/assets/art/infinite_archive.webp?v=0947" alt="심연의 기록 보관소" decoding="async"><div class="scene-shade"></div></div>
+
+      <section id="infStage" class="scene-card inf-stage">
+        <div class="scene-art inf-stage-art"><img id="infSceneArt" src="/assets/art/infinite_archive.webp?v=0950" alt="심연의 기록 보관소" decoding="async"></div>
+        <div class="scene-shade"></div>
         <div class="scene-content inf-stage-copy">
-          <div id="infKicker" class="chapter">RECORD FLOOR</div>
-          <h2 id="infTitle" class="inf-scene-title">기록을 고른다</h2>
-          <p id="infBody" class="story"></p>
-          <div id="infCombatPanel" class="inf-combat-panel hidden">
-            <div class="inf-combat-head">
-              <div><span id="infEnemyRank">적</span><b id="infEnemyName">적</b></div>
-              <span id="infCombatRound">1턴</span>
+          <div id="infKicker" class="chapter">무한 기록</div>
+          <div id="infLocation" class="location"></div>
+
+          <div id="infCombatPanel" class="enemy-panel inf-combat-panel hidden">
+            <div class="enemy-title-row">
+              <h2 id="infEnemyName">적</h2>
+              <span id="infEnemyRank" class="rank">적</span>
             </div>
-            <div class="inf-enemy-mainbar">
-              <div class="inf-enemy-bar"><i id="infEnemyHpBar"></i><span id="infEnemyHpText">0/0</span></div>
-            </div>
-            <div class="inf-route-meters">
-              <div><span>의지</span><div class="inf-route-bar will"><i id="infEnemyWillBar"></i></div><b id="infEnemyWillText">0/0</b></div>
-              <div><span>거리</span><div class="inf-route-bar escape"><i id="infEnemyEscapeBar"></i></div><b id="infEnemyEscapeText">0/0</b></div>
-            </div>
-            <div class="inf-intent-box">
-              <span>다음 행동</span>
-              <b id="infEnemyIntent">주시</b>
-              <small id="infEnemyIntentDesc"></small>
-            </div>
+            <div id="infEnemyStats" class="enemy-stats"></div>
+            <div id="infBossGimmick" class="inf-boss-gimmick hidden"></div>
+            <div id="infTurnTrack" class="inf-turn-track"></div>
+            <div class="inf-intent-line"><span>조짐</span><b id="infEnemyIntent">주시</b><small id="infEnemyIntentDesc"></small></div>
             <div id="infCombatEffects" class="inf-combat-effects"></div>
           </div>
+
+          <div id="infSceneHeading" class="inf-scene-heading hidden"></div>
+          <p id="infBody" class="story"></p>
           <div id="infStatus" class="result-toast hidden"></div>
         </div>
       </section>
-      <div id="infChoices" class="inf-choice-grid"></div>
-      <div id="infRecent" class="inf-recent-log"></div>
+
+      <div id="infChoices" class="choice-area inf-choice-grid"></div>
     </section>
 
     <section id="developmentScreen" class="screen dev-screen">
@@ -197,7 +192,7 @@
       </header>
       <section id="pvpOpponentPanel" class="pvp-opponent-panel hidden">
         <div><span>PVP 상대</span><b id="pvpOpponentName">매칭 중</b><small id="pvpOpponentClass"></small></div>
-        <div class="pvp-live-stats"><span>점수 <b id="pvpOpponentScore">0</b></span><span>진행 <b id="pvpOpponentProgress">0</b></span><span id="pvpOpponentStatus">진행 중</span></div>
+        <div class="pvp-live-stats"><span>점수 <b id="pvpOpponentScore">0</b></span><span>진행 <b id="pvpOpponentProgress">0</b></span><span id="pvpMatchTimer">30:00</span><span id="pvpOpponentStatus">진행 중</span></div>
       </section>
 
       <section id="sceneCard" class="scene-card">
@@ -297,6 +292,6 @@
     });
   </script>
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/game.js?v=0949"></script>
+  <script src="/game.js?v=0952"></script>
 </body>
 </html>

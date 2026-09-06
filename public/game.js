@@ -8,7 +8,7 @@ const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
 const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
 const PVP_NICK_KEY = 'fallen_pvp_nickname';
 const INFINITE_SAVE_KEY = 'fallen_infinite_save_v1';
-const GAME_VERSION = 149;
+const GAME_VERSION = 152;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5, godfather:7 };
 function loadMeta(){
@@ -248,7 +248,7 @@ const CLASSES = {
   undead: {
     name: '언데드', hp: 10, atk: 7, social: 7, speed: 3, unlocked: true,
     passive: '죽지 못한 자',
-    desc: '행동이 실패할 상황에 1회 부활해 같은 조우의 시작으로 돌아간다. 적을 4번 처치할 때마다 부활 횟수가 다시 충전된다.'
+    desc: '행동이 실패할 상황에 1회 부활해 같은 조우의 시작으로 돌아간다. 적을 2번 처치할 때마다 부활 횟수가 다시 충전된다.'
   },
   gambler: {
     name: '도박꾼', hp: 5, atk: 4, social: 4, speed: 2, unlocked: false,
@@ -2890,7 +2890,7 @@ function openInfiniteStarterDraft(){
   $('infiniteClassLabel').textContent='시작 아이템 선택';
   $('infiniteMetaStrip').innerHTML='';
   $('infiniteChoiceGrid').classList.add('inf-start-item-grid');
-  $('infiniteChoiceGrid').innerHTML=picks.map(x=>`<button class="inf-start-item-card" data-inf-start-item="${x.id}"><img src="${x.art}" alt="${escapeAttr(x.name)}"><span><b>${escapeHtml(x.name)}</b><small>${escapeHtml(x.desc)}</small></span></button>`).join('');
+  $('infiniteChoiceGrid').innerHTML=picks.map(x=>`<button class="hard-choice inf-start-item-card" data-inf-start-item="${x.id}"><img src="${x.art}" alt=""><span><b>${escapeHtml(x.name)}</b><small>${escapeHtml(x.desc)}</small></span><i>›</i></button>`).join('');
   showScreen('infiniteModeScreen');
 }
 function infApplyStarterInitial(r){
@@ -2914,13 +2914,8 @@ function infTryMothRevive(){
   infAddRecent('나방 부적 · 죽음에서 빠져나왔다.');
   return true;
 }
-function openInfiniteItem(){
-  if(!infiniteRun)return;
-  const it=infStartItem();if(!it)return;
-  const active=it.kind==='active'&&infStarterUses()>0;
-  $('modal').innerHTML=`<div class="inf-item-modal"><img src="${it.art}" alt="${escapeAttr(it.name)}"><div><h2>${escapeHtml(it.name)}</h2><p>${escapeHtml(it.desc)}</p>${it.kind==='active'?`<small>남은 횟수 ${infStarterUses()}</small>`:''}</div></div>${active?`<button class="btn primary full" data-inf-use-start-item="${it.id}">사용</button>`:''}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;
-  showModal();
-}
+function openInfiniteItem(){openInfiniteKit();}
+
 function infUseStarterItem(id){
   if(!infiniteRun||infiniteBusy||infiniteRun.starterItem!==id||infStarterUses()<=0)return;
   if(id==='sanity_tonic'){
@@ -3096,14 +3091,18 @@ function infGainRecords(base,action='',nodeType=''){
 }
 function infApplyClassSuccess(action,nodeType){
   const r=infiniteRun;r.classMeter=Number(r.classMeter||0)+1;
-  if(nodeType!=='combat'&&r.classId==='knight'&&action==='attack'){
+  if(nodeType==='combat'){
+    if(r.classId==='merchant')r.gold+=Math.max(2,Math.ceil(r.maxHp/4));
+    return;
+  }
+  if(r.classId==='knight'&&action==='attack'){
     r.knightHits=Number(r.knightHits||0)+1;
-    if(r.knightHits%3===0&&r.knightGrowth<8){r.atk++;r.knightGrowth++;infAddRecent('기사 특성 · 공격 +1');}
+    if(r.knightHits%3===0&&r.knightGrowth<8){r.atk++;r.knightGrowth++;infAddRecent('기사 · 공격 성공 3회: 공격 +1');}
   }
   if(r.classId==='merchant')r.gold+=Math.max(2,Math.ceil(r.maxHp/4));
   if(r.classId==='dictator'&&(action==='attack'||action==='social')){
     r.tyranny=Number(r.tyranny||0)+1;
-    if(r.tyranny>=8){r.tyranny=0;r.atk++;r.social++;infAddRecent('독재자 · 공격/처세 +1');}
+    if(r.tyranny>=8){r.tyranny=0;r.atk++;r.social++;infAddRecent('독재자 · 공격/처세 성공 8회: 공격/처세 +1');}
   }
   if(r.classId==='godfather'&&action==='social'){r.atk+=4;infAddRecent('대부 · 처세 성공: 공격 +4');}
 }
@@ -3121,11 +3120,11 @@ const INFINITE_INTENTS={
   hunt:[
     {id:'slash',name:'급습',desc:'빠른 공격',kind:'hit',power:1},
     {id:'pounce',name:'도약',desc:'강한 공격',kind:'heavy',power:1.45},
-    {id:'track',name:'추적',desc:'거리를 다시 좁힌다',kind:'track',power:1}
+    {id:'track',name:'추적',desc:'도주 경로를 읽는다',kind:'track',power:1}
   ],
   archive:[
     {id:'scribe',name:'기록',desc:'오염을 밀어 넣는다',kind:'dread',power:1},
-    {id:'bind_name',name:'호명',desc:'의지를 압박한다',kind:'silence',power:1},
+    {id:'bind_name',name:'호명',desc:'처세를 흔든다',kind:'silence',power:1},
     {id:'cut',name:'절단',desc:'짧은 공격',kind:'hit',power:.9}
   ],
   guard:[
@@ -3140,7 +3139,7 @@ const INFINITE_INTENTS={
   ],
   aberration:[
     {id:'lash',name:'촉수 휘두르기',desc:'직접 공격',kind:'hit',power:1.1},
-    {id:'fold',name:'공간 접기',desc:'도주 거리 감소',kind:'track',power:1.4},
+    {id:'fold',name:'공간 접기',desc:'도주를 예측한다',kind:'track',power:1.4},
     {id:'horror',name:'형태 붕괴',desc:'오염 상승',kind:'dread',power:1.4}
   ]
 };
@@ -3159,117 +3158,132 @@ function infCombatTheme(entity){
   if(entity?.id==='faceless_prior'||entity?.id==='nameless_star'||entity?.id==='lord_behind_door')return 'cult';
   return 'aberration';
 }
-function infCombatMaxima(entity){
-  const f=Math.max(1,Number(infiniteRun?.floor||1)),tier=infCombatTier(entity);
-  const armor=entity?.trait==='중갑'||entity?.trait==='장막'?2:0;
-  let hp=5+Math.floor(f*.52)+tier*2+armor;
-  let will=4+Math.floor(f*.40)+tier*2;
-  let escape=4+Math.floor(f*.32)+tier*2;
-  if(tier===2){hp=Math.round(hp*1.35);will=Math.round(will*1.28);escape=Math.round(escape*1.18);}
-  if(tier===3){hp=Math.round(hp*1.75);will=Math.round(will*1.55);escape=Math.round(escape*1.35);}
-  return {hp:Math.max(5,hp),will:Math.max(4,will),escape:Math.max(4,escape)};
+function infCombatRounds(entity){
+  return entity?.type==='enemy'?2:3;
 }
-function infCombatPlayerPower(action){
-  const stat=action==='attack'?infEffectiveStat('atk'):action==='social'?infEffectiveStat('social'):infEffectiveStat('speed');
-  if(action==='attack')return Math.max(1,1+Math.floor(stat/5));
-  if(action==='social')return Math.max(1,1+Math.floor(stat/6));
-  return Math.max(1,1+Math.floor(stat/6));
+function infBossGimmick(entity){
+  if(entity?.type!=='boss')return '';
+  if(entity.id==='reader_below')return '침수 봉쇄 · 도망 불가';
+  if(entity.id==='yellow_scribe')return '거짓 기록 · 표시되는 성공 확률이 실제와 다르다';
+  if(entity.id==='nameless_star')return '불완전한 탄생 · 공격 성공 시 다음 행동이 크게 약화된다';
+  if(entity.id==='lord_behind_door')return '문턱 봉쇄 · 직전에 쓴 행동이 다음 턴 봉인된다';
+  return '';
 }
 function infCombatChance(entity,action){
   const c=entity?.combat||{},tier=infCombatTier(entity);
+  if(entity?.id==='reader_below'&&action==='speed')return 0;
+  if(c.sealedAction===action)return 0;
+
   let extra=Number(entity?.mods?.[action]||0)+(tier===2?1:tier===3?2:0);
   const p=infBossPattern(entity);
   if(tier>1)extra+=Number(p?.mods?.[action]||0);
+
   if(c.intent?.kind==='guard'&&action==='attack')extra+=2;
   if(c.intent?.kind==='silence'&&action==='social')extra+=3;
   if(c.intent?.kind==='track'&&action==='speed')extra+=2;
   if(c.weakenSocial>0&&action==='social')extra+=2;
   if(c.weakenSpeed>0&&action==='speed')extra+=2;
   if(entity?.predict&&c.lastAction===action)extra+=3+Math.min(4,c.repeatAction||0);
-  if(entity?.id==='lord_behind_door'&&c.sealedAction===action)extra+=8;
+  if(entity?.trait==='중갑'&&action==='attack')extra+=1;
+  if(entity?.trait==='추적'&&action==='speed')extra+=1;
+
   return infChance(action,extra);
 }
+function infFakeChanceOffset(entity,action){
+  if(entity?.id!=='yellow_scribe')return 0;
+  const round=Math.max(1,Number(entity?.combat?.round||1));
+  const table={
+    attack:[18,-16,22],
+    social:[-19,17,-14],
+    speed:[13,21,-18]
+  };
+  return Number(table[action]?.[(round-1)%3]||0);
+}
+function infDisplayedCombatChance(entity,action){
+  const actual=infCombatChance(entity,action);
+  if(entity?.id!=='yellow_scribe')return actual;
+  return Math.round(infClamp(actual+infFakeChanceOffset(entity,action),8,95));
+}
 function infCombatPreview(entity,action){
-  const c=entity?.combat;if(!c)return '';
-  const p=infCombatPlayerPower(action);
-  if(action==='attack'){
-    let lo=Math.max(1,p-(entity?.trait==='중갑'?1:0));
-    let hi=Math.max(lo,p+1+(infEffectiveStat('atk')>=12?1:0));
-    return `명중 ${infCombatChance(entity,action)}% · 피해 ${lo}~${hi}`;
-  }
-  if(action==='social'){
-    const lo=Math.max(1,p-(c.intent?.kind==='silence'?1:0));
-    return `성공 ${infCombatChance(entity,action)}% · 동요 ${lo}~${p+1}`;
-  }
-  return `성공 ${infCombatChance(entity,action)}% · 거리 ${p}~${p+1}`;
+  if(entity?.id==='reader_below'&&action==='speed')return '침수 봉쇄 · 사용할 수 없다';
+  if(entity?.combat?.sealedAction===action)return '문턱에 봉인됨';
+  const shown=infDisplayedCombatChance(entity,action);
+  const prefix=entity?.id==='yellow_scribe'?'기록된 성공':'성공';
+  if(action==='attack')return `${prefix} ${shown}% · 적 행동 약화`;
+  if(action==='social')return `${prefix} ${shown}% · 공격/오염 흔들기`;
+  return `${prefix} ${shown}% · 직접 공격 회피`;
 }
 function infMakeIntent(entity){
-  const c=entity?.combat||{},tier=infCombatTier(entity);
+  const c=entity?.combat||{},tier=infCombatTier(entity),round=Math.max(1,Number(c.round||1));
   if(tier>1){
     const p=infBossPattern(entity);
-    const phase=(c.phase||1);
     if(entity.id==='reader_below'){
       const cycle=[
-        {id:'eye',name:'개안',desc:'오염과 피해',kind:'dread',power:1.3},
-        {id:'flood',name:'침수',desc:'거리 감소 + 피해',kind:'bash',power:1.25},
-        {id:'bite',name:'수면 아래의 이빨',desc:'큰 피해',kind:'heavy',power:1.55}
-      ]; return {...cycle[(c.round+phase-2)%cycle.length],phaseText:p?.text||''};
+        {id:'eye',name:'개안',desc:'시선이 정신을 파고든다',kind:'dread',power:1.25},
+        {id:'flood',name:'침수',desc:'검은 물이 몸을 밀어붙인다',kind:'bash',power:1.30},
+        {id:'bite',name:'수면 아래의 이빨',desc:'마지막으로 큰 피해를 노린다',kind:'heavy',power:1.55}
+      ];return {...cycle[(round-1)%cycle.length],phaseText:p?.text||''};
     }
     if(entity.id==='yellow_scribe'||entity.id==='red_indexer'){
       const cycle=[
-        {id:'redline',name:'붉은 교정',desc:'반복 행동을 처벌',kind:'predict',power:1.15},
-        {id:'erase',name:'문장 삭제',desc:'의지와 오염 압박',kind:'silence',power:1.1},
-        {id:'quill',name:'천 개의 펜촉',desc:'연속 피해',kind:'hit',power:1.15}
-      ]; return {...cycle[(c.round+phase-2)%cycle.length],phaseText:p?.text||''};
+        {id:'redline',name:'붉은 교정',desc:'반복 행동을 노린다',kind:'predict',power:1.15},
+        {id:'erase',name:'문장 삭제',desc:'처세를 흔들며 오염시킨다',kind:'silence',power:1.10},
+        {id:'quill',name:'천 개의 펜촉',desc:'직접 피해를 노린다',kind:'hit',power:1.18}
+      ];return {...cycle[(round-1)%cycle.length],phaseText:p?.text||''};
     }
     if(entity.id==='nameless_star'){
       const cycle=[
-        {id:'call',name:'호명',desc:'오염 상승',kind:'dread',power:1.4},
-        {id:'fall',name:'별의 낙하',desc:'큰 피해',kind:'heavy',power:1.5},
-        {id:'warp',name:'별자리 왜곡',desc:'도주 거리 감소',kind:'track',power:1.35}
-      ]; return {...cycle[(c.round+phase-2)%cycle.length],phaseText:p?.text||''};
+        {id:'call',name:'호명',desc:'이름을 불러 오염시킨다',kind:'dread',power:1.40},
+        {id:'fall',name:'별의 낙하',desc:'큰 피해를 노린다',kind:'heavy',power:1.50},
+        {id:'warp',name:'별자리 왜곡',desc:'도주 경로를 읽는다',kind:'track',power:1.35}
+      ];return {...cycle[(round-1)%cycle.length],phaseText:p?.text||''};
     }
     if(entity.id==='lord_behind_door'){
       const cycle=[
-        {id:'threshold',name:'문턱 봉쇄',desc:'직전 행동 봉인',kind:'seal',power:1},
-        {id:'hand',name:'문 너머의 손',desc:'강한 피해',kind:'heavy',power:1.65},
-        {id:'command',name:'무명의 명령',desc:'오염 상승',kind:'dread',power:1.55}
-      ]; return {...cycle[(c.round+phase-2)%cycle.length],phaseText:p?.text||''};
+        {id:'threshold',name:'문턱 봉쇄',desc:'이번에 쓴 행동을 다음 턴 봉인한다',kind:'seal',power:1},
+        {id:'hand',name:'문 너머의 손',desc:'강한 피해를 노린다',kind:'heavy',power:1.65},
+        {id:'command',name:'무명의 명령',desc:'강한 오염을 밀어 넣는다',kind:'dread',power:1.55}
+      ];return {...cycle[(round-1)%cycle.length],phaseText:p?.text||''};
     }
     if(entity.id==='bell_keeper'){
-      return c.round%2?{id:'bell',name:'첫 번째 종',desc:'오염 상승',kind:'dread',power:1.15,phaseText:p?.text||''}:{id:'water',name:'두 번째 종',desc:'거리 감소 + 피해',kind:'bash',power:1.25,phaseText:p?.text||''};
+      return round%2
+        ?{id:'bell',name:'첫 번째 종',desc:'오염을 밀어 넣는다',kind:'dread',power:1.15,phaseText:p?.text||''}
+        :{id:'water',name:'두 번째 종',desc:'몸을 밀어붙여 피해를 준다',kind:'bash',power:1.25,phaseText:p?.text||''};
     }
     if(entity.id==='bone_curator'){
-      return c.round%2?{id:'lock',name:'수장고 잠금',desc:'도주 방해',kind:'track',power:1.25,phaseText:p?.text||''}:{id:'club',name:'골격 분쇄',desc:'강한 피해',kind:'heavy',power:1.4,phaseText:p?.text||''};
+      return round%2
+        ?{id:'lock',name:'수장고 잠금',desc:'다음 도주를 읽는다',kind:'track',power:1.25,phaseText:p?.text||''}
+        :{id:'club',name:'골격 분쇄',desc:'강한 피해를 노린다',kind:'heavy',power:1.40,phaseText:p?.text||''};
     }
     if(entity.id==='faceless_prior'){
-      return c.round%2?{id:'order',name:'무명 명령',desc:'처세 약화',kind:'silence',power:1.2,phaseText:p?.text||''}:{id:'staff',name:'원장의 지팡이',desc:'직접 피해',kind:'hit',power:1.25,phaseText:p?.text||''};
+      return round%2
+        ?{id:'order',name:'무명 명령',desc:'다음 처세를 흔든다',kind:'silence',power:1.20,phaseText:p?.text||''}
+        :{id:'staff',name:'원장의 지팡이',desc:'직접 피해를 노린다',kind:'hit',power:1.25,phaseText:p?.text||''};
     }
   }
   const list=INFINITE_INTENTS[infCombatTheme(entity)]||INFINITE_INTENTS.hunt;
-  return infClone(list[(Math.max(1,c.round||1)-1)%list.length]);
+  return infClone(list[(round-1)%list.length]);
 }
 function infUpdateCombatPhase(entity){
   const c=entity?.combat;if(!c)return false;
-  const tiers=entity?.patterns?.length||1;
-  const progress=Math.max(1-c.hp/c.maxHp,1-c.will/c.maxWill,c.escape/c.escapeNeed);
-  const next=Math.min(tiers,1+Math.floor(progress*tiers));
-  if(next>(c.phase||1)){
-    c.phase=next;c.phaseChanged=true;return true;
-  }
-  return false;
+  const prev=Number(c.phase||1);
+  c.phase=Math.min(Math.max(1,Number(entity?.patterns?.length||1)),Math.max(1,Number(c.round||1)));
+  return c.phase!==prev;
 }
 function infEnsureCombat(entity){
   if(!entity||!['enemy','elite','boss'].includes(entity.type))return null;
-  if(entity.combat)return entity.combat;
-  const m=infCombatMaxima(entity);
+  // v0.9.51 이전 세이브의 hp/will/escape 전투는 새 생존형 전투로 즉시 마이그레이션.
+  if(entity.combat?.model==='survival_v2')return entity.combat;
+  const required=infCombatRounds(entity);
   entity.combat={
-    round:1,phase:1,hp:m.hp,maxHp:m.hp,will:m.will,maxWill:m.will,escape:0,escapeNeed:m.escape,
-    intent:null,lastAction:'',repeatAction:0,guard:0,bleed:0,weakenSocial:0,weakenSpeed:0,
-    exposed:0,disrupted:0,evade:0,sealedAction:'',phaseChanged:false
+    model:'survival_v2',
+    round:1,phase:1,survived:0,required,
+    intent:null,lastAction:'',lastSuccess:'',lastSuccessfulAction:'',
+    repeatAction:0,successes:{attack:0,social:0,speed:0},
+    cleanTurns:0,bleed:0,weakenSocial:0,weakenSpeed:0,disrupted:0,evade:0,
+    sealedAction:'',sealedUntilRound:0,flood:0,starWeak:0
   };
   entity.combat.intent=infMakeIntent(entity);
-  entity.combat.start={hp:m.hp,will:m.will,escape:0};
   return entity.combat;
 }
 function infCombatEffectsText(entity){
@@ -3278,130 +3292,184 @@ function infCombatEffectsText(entity){
   if(c.bleed>0)out.push(`출혈 ${c.bleed}`);
   if(c.disrupted>0)out.push('행동 흐트러짐');
   if(c.evade>0)out.push('회피 태세');
+  if(c.weakenSocial>0)out.push('처세 흔들림');
+  if(c.weakenSpeed>0)out.push('도주 읽힘');
   if(c.sealedAction)out.push(`${infCombatActionName(c.sealedAction)} 봉인`);
   if(entity?.id==='reader_below'&&c.flood>0)out.push(`침수 ${c.flood}`);
+  if(entity?.id==='nameless_star'&&c.starWeak>0)out.push('별의 형체 약화');
   return out.join(' · ');
 }
 function infResetCombatOnRevive(entity){
-  const c=entity?.combat;if(!c)return;
-  c.round=1;c.phase=1;c.hp=c.maxHp;c.will=c.maxWill;c.escape=0;c.guard=0;c.bleed=0;
-  c.weakenSocial=0;c.weakenSpeed=0;c.exposed=0;c.disrupted=0;c.evade=0;c.sealedAction='';
-  c.lastAction='';c.repeatAction=0;c.flood=0;c.intent=infMakeIntent(entity);
+  if(!entity)return;
+  entity.combat=null;
+  infEnsureCombat(entity);
 }
-function infCombatRoll(action){
-  const p=infCombatPlayerPower(action);
-  return p+infInt(0,1);
+function infCombatOutcomeMethod(entity){
+  const c=entity?.combat;if(!c)return 'survive';
+  const s=c.successes||{};
+  const max=Math.max(Number(s.attack||0),Number(s.social||0),Number(s.speed||0));
+  if(max<=0)return 'survive';
+  const tied=['attack','social','speed'].filter(k=>Number(s[k]||0)===max);
+  if(tied.includes(c.lastSuccess))return c.lastSuccess;
+  return tied[0]||'survive';
 }
-function infCombatAttackDamage(entity){
-  const c=entity.combat;let dmg=infCombatRoll('attack');
-  let crit=false;
-  const critChance=Math.min(28,7+infEffectiveStat('atk')*1.25);
-  if(infRng()*100<critChance){crit=true;dmg+=Math.max(1,Math.floor(dmg*.65));}
-  let armor=(entity.trait==='중갑'?1:0)+(entity.trait==='장막'&&c.round===1?1:0)+(c.intent?.kind==='guard'?1:0);
-  if(c.exposed>0)armor=Math.max(0,armor-1);
-  if(infHasStarter('ink_dagger')){dmg+=1;infAddCorruption(1);}return {damage:Math.max(1,dmg-armor),crit};
-}
-function infCombatSocialDamage(entity){
-  const c=entity.combat;let d=infCombatRoll('social');
-  if(c.intent?.kind==='silence'||c.weakenSocial>0)d=Math.max(1,d-1);
-  return d;
-}
-function infCombatEscapeGain(entity){
-  const c=entity.combat;let d=infCombatRoll('speed');
-  if(c.intent?.kind==='track'||c.weakenSpeed>0)d=Math.max(1,d-1);
-  if(infiniteRun.classId==='thief')d+=1;
-  return d;
-}
-function infCombatVictory(entity){
-  const c=entity?.combat;if(!c)return '';
-  if(c.hp<=0)return 'attack';
-  if(c.will<=0)return 'social';
-  if(c.escape>=c.escapeNeed)return 'speed';
-  return '';
+function infApplyCombatClassTurn(action,entity){
+  const r=infiniteRun,c=entity?.combat;if(!r||!c)return;
+
+  if(r.classId==='knight'&&action==='attack'){
+    r.knightHits=Number(r.knightHits||0)+1;
+    if(r.knightHits%3===0&&r.knightGrowth<8){
+      r.atk++;r.knightGrowth++;infAddRecent('기사 · 공격 성공 3회: 공격 +1');
+    }
+  }
+  if(r.classId==='dictator'&&(action==='attack'||action==='social')){
+    r.tyranny=Number(r.tyranny||0)+1;
+    if(r.tyranny>=8){
+      r.tyranny=0;r.atk++;r.social++;infAddRecent('독재자 · 압박 성공 8회: 공격/처세 +1');
+    }
+  }
+  if(r.classId==='godfather'&&action==='social'){
+    r.atk+=4;infAddRecent('대부 · 처세 성공: 공격 +4');
+  }
+  if(r.classId==='spellsword'){
+    if(c.lastSuccessfulAction&&c.lastSuccessfulAction!==action){
+      const before=r.hp;r.hp=Math.min(r.maxHp,r.hp+1);
+      if(r.hp>before)infAddRecent('마검사 · 성공 방식 전환: HP +1');
+    }
+    c.lastSuccessfulAction=action;
+  }
 }
 function infCombatReward(entity,method){
   const r=infiniteRun,tier=infCombatTier(entity);
   let base=(34+r.floor*7)*(tier===1?1:tier===2?2.05:3.35)*Number(entity.reward||1);
+
   if(method==='attack')base*=1.15;
-  if(method==='social')base*=1.08;
-  if(method==='speed')base*=.55;
-  const amount=infGainRecords(base,method,'combat');
-  const recChance=method==='speed'?.35:tier===3?1:.72;
+  else if(method==='social')base*=1.08;
+  else if(method==='speed')base*=.72;
+  else base*=.58;
+
+  const rewardAction=method==='survive'?'':method;
+  const amount=infGainRecords(base,rewardAction,'combat');
+  const recChance=method==='survive'?.25:method==='speed'?.45:tier===3?1:.72;
   const rec=infRng()<recChance?infAcquireRecord(tier===3?5:tier===2?3:Number(entity.record||2)):null;
+
   if(method==='attack'){
     infRegisterCombatKill('attack');
     if(r.classId==='necromancer'){
       r.corpses=Number(r.corpses||0)+1;
-      if(r.corpses>=3){r.corpses-=3;r.hp=Math.min(r.maxHp,r.hp+3);infAddRecent('강령술사 · 시체 3개를 소모해 HP +3');}
+      infAddRecent('강령술사 · 시체 +1');
+      if(r.corpses>=3){
+        r.corpses-=3;
+        const before=r.hp;r.hp=Math.min(r.maxHp,r.hp+3);
+        if(r.hp>before)infAddRecent(`강령술사 · 시체 3개: HP +${r.hp-before}`);
+      }
     }
   }
   if(method==='social'){
     r.socialWins=Number(r.socialWins||0)+1;
     r.corruption=Math.max(0,r.corruption-(tier===3?4:2));
   }
-  if(method==='speed'){
-    r.escapes=Number(r.escapes||0)+1;
-    if(tier>1){
-      const lost=Math.floor(r.unbanked*(tier===3?.12:.06));
-      r.unbanked=Math.max(0,r.unbanked-lost);
-      if(lost)infAddRecent(`도주 대가 · 미보관 기록 ${lost} 소실`);
-    }
-  }
+  if(method==='speed')r.escapes=Number(r.escapes||0)+1;
+
+  // 상인은 조우를 넘길 때 수익. 기타 전투 패시브는 성공 턴에서 이미 처리했다.
   infApplyClassSuccess(method,'combat');
   infGainGold();
-  if(tier===2&&method!=='speed')r.elites=Number(r.elites||0)+1;
-  if(tier===3&&method!=='speed')r.bosses=Number(r.bosses||0)+1;
-  if(tier>1&&method!=='speed')r.gold+=tier===3?12:7;
+
+  if(tier===2)r.elites=Number(r.elites||0)+1;
+  if(tier===3)r.bosses=Number(r.bosses||0)+1;
+  if(tier>1)r.gold+=tier===3?12:7;
   if(rec)infAddRecent(`${tier===3?'보스':tier===2?'엘리트':'전투'} 기록 · ${rec.title}`);
+
   return {amount,rec};
 }
 function infCombatEnemyBaseDamage(entity){
   const tier=infCombatTier(entity),f=Number(infiniteRun.floor||1);
   return Math.max(1,Math.round(1+f*.13)+(tier-1)+Number(entity.damage||0));
 }
-function infCombatEnemyTurn(entity){
+function infCombatEnemyTurn(entity,action,succeeded){
   const c=entity.combat,intent=c.intent||{kind:'hit',power:1,name:'공격'};
-  const disrupted=c.disrupted>0?1:0;
-  let damage=0,corrupt=0,note='';
+  let damage=0,corrupt=0,note='',specialBlocked=false;
   const base=infCombatEnemyBaseDamage(entity);
-  if(intent.kind==='guard'){
-    c.guard=1;note='적이 자세를 굳혔다.';
-  }else if(intent.kind==='track'){
-    const cut=Math.max(1,Math.ceil(c.escapeNeed*.18*Number(intent.power||1)));
-    c.escape=Math.max(0,c.escape-cut);c.weakenSpeed=1;note=`거리가 ${cut} 줄었다.`;
-  }else if(intent.kind==='dread'){
-    corrupt=Math.max(2,Math.round((3+infCombatTier(entity)+Number(entity.corrupt||0))*Number(intent.power||1)));
-    note=`오염 +${corrupt}`;
-  }else if(intent.kind==='silence'){
-    c.weakenSocial=1;
-    corrupt=Math.max(1,Math.round((1+infCombatTier(entity)+Number(entity.corrupt||0)*.5)*Number(intent.power||1)));
-    note=`처세가 흔들린다 · 오염 +${corrupt}`;
-  }else if(intent.kind==='seal'){
-    c.sealedAction=c.lastAction||'attack';note=`${infCombatActionName(c.sealedAction)}이 봉인됐다.`;
-  }else{
-    damage=Math.max(1,Math.round(base*Number(intent.power||1))-disrupted);
-    if(intent.kind==='bash'){
-      const cut=Math.max(1,Math.floor(c.escapeNeed*.15));
-      c.escape=Math.max(0,c.escape-cut);note=`거리 -${cut}`;
+
+  // 성공한 선택은 '별도 게이지'를 올리는 게 아니라 이번 턴의 적 행동을 버티는 방식이다.
+  let damageCut=0,corruptCut=0;
+  if(succeeded&&action==='attack'){
+    damageCut=2;corruptCut=1;c.disrupted=Math.max(c.disrupted,1);
+    if(entity.id==='nameless_star'){
+      c.starWeak=1;damageCut+=3;corruptCut+=3;
+      note='공격이 별의 형체를 찢어 다음 행동을 크게 약화시켰다.';
     }
-    if(c.evade>0)damage=Math.max(0,damage-1);
+  }else if(succeeded&&action==='social'){
+    damageCut=1;corruptCut=3;c.disrupted=Math.max(c.disrupted,1);
+    if(['dread','silence','predict'].includes(intent.kind))specialBlocked=true;
+  }else if(succeeded&&action==='speed'){
+    c.evade=1;
+    if(['hit','heavy','bash'].includes(intent.kind))specialBlocked=true;
+    if(intent.kind==='track')specialBlocked=true;
+    corruptCut=2;
   }
+
+  if(c.starWeak>0){
+    damageCut+=2;corruptCut+=2;
+    c.starWeak=0;
+  }
+
+  if(intent.kind==='guard'){
+    if(succeeded&&action==='attack'){note=note||'방어 자세를 무너뜨렸다.';}
+    else {c.weakenSocial=Math.max(c.weakenSocial,0);note=note||'적이 자세를 굳혔다.';}
+  }else if(intent.kind==='track'){
+    if(!specialBlocked){
+      c.weakenSpeed=1;
+      note=note||'도주 경로가 읽혔다. 다음 도주가 어려워진다.';
+    }else note=note||'추적선을 벗어났다.';
+  }else if(intent.kind==='dread'){
+    if(!specialBlocked){
+      corrupt=Math.max(2,Math.round((3+infCombatTier(entity)+Number(entity.corrupt||0))*Number(intent.power||1)));
+    }else note=note||'속삭임을 흩뜨렸다.';
+  }else if(intent.kind==='silence'){
+    if(!specialBlocked){
+      c.weakenSocial=1;
+      corrupt=Math.max(1,Math.round((1+infCombatTier(entity)+Number(entity.corrupt||0)*.5)*Number(intent.power||1)));
+    }else note=note||'침묵의 명령을 깨뜨렸다.';
+  }else if(intent.kind==='seal'){
+    // 문 뒤의 군주: 이번 행동을 다음 턴에 봉인.
+    c.sealedAction=action;c.sealedUntilRound=c.round+1;
+    note=`${infCombatActionName(action)}이 다음 턴 문턱에 봉인된다.`;
+  }else if(intent.kind==='predict'){
+    damage=Math.max(1,Math.round(base*Number(intent.power||1)));
+    if(entity.predict&&c.repeatAction>0)damage+=1;
+  }else if(!specialBlocked){
+    damage=Math.max(1,Math.round(base*Number(intent.power||1)));
+  }else{
+    note=note||'공격 궤적에서 벗어났다.';
+  }
+
+  if(intent.kind==='bash'&&!specialBlocked)c.weakenSpeed=1;
+
+  // 물 밑에서 읽는 자: 도망은 아예 막혀 있고 침수가 뒤로 갈수록 심해진다.
   if(entity.id==='reader_below'){
-    c.flood=Number(c.flood||0)+(c.round%2===0?1:0);
-    if(c.flood>0&&c.round%2===0)corrupt+=c.flood;
+    c.flood=Number(c.flood||0)+1;
+    if(c.round>=2)corrupt+=c.flood;
   }
-  if(entity.id==='nameless_star'&&c.round%3===0)corrupt+=2;
+  // 무명 별의 태아는 마지막 턴의 호명이 더 거칠다.
+  if(entity.id==='nameless_star'&&c.round>=3)corrupt+=2;
+
+  damage=Math.max(0,damage-damageCut);
+  corrupt=Math.max(0,corrupt-corruptCut);
+
   if(entity.trait==='기록 포식'&&damage>0&&infiniteRun.unbanked>0){
     const lost=Math.min(infiniteRun.unbanked,Math.max(2,Math.floor(infiniteRun.unbanked*.04)));
     infiniteRun.unbanked-=lost;infAddRecent(`잉크 포식자 · 원본 ${lost} 소실`);
   }
   if(entity.trait==='출혈'&&damage>0)c.bleed=Math.max(c.bleed,2);
+
   if(damage>0){
-    const got=infTakeDamage(damage,'');
+    const got=infTakeDamage(damage,action);
     if(got===-1)return {revived:true,damage:0,corrupt:0,note:'부활'};
     damage=got;
   }
   if(corrupt>0)infAddCorruption(corrupt);
+
   return {damage,corrupt,note};
 }
 function infCombatTick(entity){
@@ -3409,101 +3477,115 @@ function infCombatTick(entity){
   if(c.bleed>0&&!infiniteRun.ended){
     c.bleed--;
     const got=infTakeDamage(1,'');
+    if(got===-1)return;
     if(got>0)infAddRecent('출혈 · HP -1');
   }
   c.disrupted=Math.max(0,c.disrupted-1);
   c.evade=Math.max(0,c.evade-1);
   c.weakenSocial=Math.max(0,c.weakenSocial-1);
   c.weakenSpeed=Math.max(0,c.weakenSpeed-1);
-  if(c.guard>0)c.guard--;
-  if(entity.id==='lord_behind_door'&&c.round%3!==0)c.sealedAction='';
 }
-async function infResolveCombat(entity,method){
-  const tier=infCombatTier(entity);
+async function infResolveCombat(entity){
+  const tier=infCombatTier(entity),method=infCombatOutcomeMethod(entity);
   infSetBusy(true);
   const result=infCombatReward(entity,method);
-  const label=method==='attack'?'격파':method==='social'?(tier===3?'존재 반증':'의지 붕괴'):'도주 성공';
+  const methodLabel=method==='attack'?'공격으로 돌파':method==='social'?'처세로 돌파':method==='speed'?'도주로 돌파':'간신히 생존';
+  const label=tier===3?`3턴 생존 · ${methodLabel}`:tier===2?`3턴 통과 · ${methodLabel}`:`2턴 통과 · ${methodLabel}`;
   infiniteRun.status=`${label} · 기록 +${result.amount}${result.rec?` · ${result.rec.title}`:''}`;
   infRender();
-  if(tier>1&&method!=='speed'){
-    infStageClass('inf-boss-break',tier===3?980:720);infFlash('good');infFloat(tier===3?'보스 격파':'엘리트 격파');
-    await infWait(tier===3?900:650);
+
+  if(tier>1){
+    infStageClass('inf-boss-break',tier===3?900:680);infFlash('good');infFloat(tier===3?'보스 조우 통과':'엘리트 조우 통과');
+    await infWait(tier===3?820:620);
   }else{
-    await infResultBeat('good',label,620);
+    await infResultBeat('good','조우 통과',560);
   }
+
   infFinishFloor();infSetBusy(false);
 }
 async function infCombatTurn(action){
-  const entity=infiniteRun?.current;if(!entity||!['enemy','elite','boss'].includes(entity.type))return;
+  const entity=infiniteRun?.current;
+  if(!entity||!['enemy','elite','boss'].includes(entity.type))return;
   const c=infEnsureCombat(entity);
   if(infiniteBusy||!c)return;
-  if(entity.id==='lord_behind_door'&&c.sealedAction===action){
-    infiniteRun.status=`${infCombatActionName(action)}이 문턱에 봉인되어 있다.`;infRender();
-    await infResultBeat('bad','행동 봉인',420);return;
+
+  if(entity.id==='reader_below'&&action==='speed'){
+    infiniteRun.status='검은 물이 모든 출구를 잠갔다. 이 보스에게서는 도망칠 수 없다.';
+    infRender();await infResultBeat('bad','도망 불가',420);return;
   }
+  if(c.sealedAction===action&&c.round<=c.sealedUntilRound){
+    infiniteRun.status=`${infCombatActionName(action)}이 문턱에 봉인되어 있다.`;
+    infRender();await infResultBeat('bad','행동 봉인',420);return;
+  }
+
   await infBeforeRoll(action);
-  if(c.lastAction===action)c.repeatAction=Number(c.repeatAction||0)+1;else c.repeatAction=0;
-  c.lastAction=action;
-  const chance=infCombatChance(entity,action),hit=infRng()*100<chance;
-  let resultText='';
 
-  if(hit){
-    if(action==='attack'){
-      const hitInfo=infCombatAttackDamage(entity);
-      c.hp=Math.max(0,c.hp-hitInfo.damage);
-      if(hitInfo.crit){c.disrupted=Math.max(c.disrupted,1);resultText=`치명타 · ${hitInfo.damage} 피해`;}
-      else resultText=`${hitInfo.damage} 피해`;
-      if(hitInfo.damage>=3)c.exposed=1;
-      if(infiniteRun.classId==='knight'){
-        infiniteRun.knightHits=Number(infiniteRun.knightHits||0)+1;
-        if(infiniteRun.knightHits%3===0&&infiniteRun.knightGrowth<8){infiniteRun.atk++;infiniteRun.knightGrowth++;infAddRecent('기사 특성 · 공격 +1');}
-      }
-    }else if(action==='social'){
-      const d=infCombatSocialDamage(entity);c.will=Math.max(0,c.will-d);c.disrupted=Math.max(c.disrupted,1);resultText=`의지 -${d}`;
-    }else{
-      const d=infCombatEscapeGain(entity);c.escape=Math.min(c.escapeNeed,c.escape+d);c.evade=1;resultText=`거리 +${d}`;
-    }
-    if(infiniteRun.classId==='spellsword'&&c.previousAction&&c.previousAction!==action){
-      infiniteRun.hp=Math.min(infiniteRun.maxHp,infiniteRun.hp+1);infAddRecent('마검사 · 방식 전환: HP +1');
-    }
-    c.previousAction=action;
-    infUpdateCombatPhase(entity);
-    infiniteRun.status=`${infCombatActionName(action)} 성공 · ${resultText}`;
+  if(c.lastAction===action)c.repeatAction=Number(c.repeatAction||0)+1;
+  else c.repeatAction=0;
+  c.lastAction=action;
+
+  const chance=infCombatChance(entity,action);
+  const succeeded=infRng()*100<chance;
+
+  if(succeeded){
+    c.successes[action]=Number(c.successes[action]||0)+1;
+    c.lastSuccess=action;
+    infApplyCombatClassTurn(action,entity);
+    infiniteRun.status=`${infCombatActionName(action)} 성공 · 이번 턴의 위험을 줄였다.`;
     infRender();
-    await infResultBeat('good',resultText,480);
+    await infResultBeat('good',`${infCombatActionName(action)} 성공`,420);
   }else{
-    infiniteRun.status=`${infCombatActionName(action)} 실패`;
-    infRender();await infResultBeat('bad','빗나감',420);
+    infiniteRun.status=`${infCombatActionName(action)} 실패 · 적의 행동이 그대로 들어온다.`;
+    infRender();
+    await infResultBeat('bad','판정 실패',380);
   }
 
-  const victory=infCombatVictory(entity);
-  if(victory){await infResolveCombat(entity,victory);return;}
   if(infiniteRun.ended){infSetBusy(false);return;}
 
-  await infWait(220);
-  const enemyResult=infCombatEnemyTurn(entity);
+  await infWait(170);
+  const enemyResult=infCombatEnemyTurn(entity,action,succeeded);
+
   if(enemyResult.revived){
-    infResetCombatOnRevive(entity);infRender();await infResultBeat('good','부활 · 조우 재시작',760);infSetBusy(false);return;
+    infResetCombatOnRevive(entity);
+    infRender();
+    await infResultBeat('good','부활 · 조우 재시작',720);
+    infSetBusy(false);return;
   }
   if(infiniteRun.ended){infSetBusy(false);return;}
 
   if(enemyResult.damage>0||enemyResult.corrupt>0){
     infiniteRun.status=`${c.intent?.name||'적 행동'} · ${enemyResult.damage?`HP -${enemyResult.damage}`:''}${enemyResult.damage&&enemyResult.corrupt?' · ':''}${enemyResult.corrupt?`오염 +${enemyResult.corrupt}`:''}`;
-    infRender();await infResultBeat('bad',enemyResult.damage?`HP -${enemyResult.damage}`:`오염 +${enemyResult.corrupt}`,560);
+    infRender();
+    await infResultBeat('bad',enemyResult.damage?`HP -${enemyResult.damage}`:`오염 +${enemyResult.corrupt}`,500);
   }else if(enemyResult.note){
-    infiniteRun.status=`${c.intent?.name||'적 행동'} · ${enemyResult.note}`;infRender();await infWait(390);
+    infiniteRun.status=`${c.intent?.name||'적 행동'} · ${enemyResult.note}`;
+    infRender();await infWait(330);
+  }else{
+    infiniteRun.status='이번 턴을 무사히 넘겼다.';
+    infRender();await infWait(260);
   }
 
   if(infiniteRun.ended){infSetBusy(false);return;}
+
   infCombatTick(entity);
   if(infiniteRun.ended){infSetBusy(false);return;}
 
+  c.survived++;
+  if(enemyResult.damage===0&&enemyResult.corrupt===0)c.cleanTurns++;
+
+  if(c.survived>=c.required){
+    await infResolveCombat(entity);
+    return;
+  }
+
   c.round++;
-  c.exposed=Math.max(0,c.exposed-1);
+  c.phase=Math.max(1,c.round);
+  if(c.sealedAction&&c.round>c.sealedUntilRound){
+    c.sealedAction='';c.sealedUntilRound=0;
+  }
   c.intent=infMakeIntent(entity);
-  c.phaseChanged=false;
-  infSave();infRender();
-  infSetBusy(false);
+
+  infSave();infRender();infSetBusy(false);
 }
 
 function infHostileTheme(type){return ['hunt','archive','guard','cult','aberration'].includes(type);}
@@ -3521,27 +3603,25 @@ function infBossPattern(b){
   const list=Array.isArray(b?.patterns)?b.patterns:[];
   if(!list.length)return {text:'존재가 다음 움직임을 준비한다.',mods:{}};
   const c=b?.combat;
+  if(c?.model==='survival_v2'){
+    const required=Math.max(1,Number(c.required||3)),round=Math.max(1,Number(c.round||1));
+    const ratio=required<=1?0:(round-1)/(required-1);
+    const idx=Math.max(0,Math.min(list.length-1,Math.round(ratio*(list.length-1))));
+    return list[idx]||list[list.length-1];
+  }
   if(c){
     const idx=Math.max(0,Math.min(list.length-1,(c.phase||1)-1));
     return list[idx]||list[list.length-1];
   }
-  const n=Math.min(list.length-1,Math.max(0,Number(b.maxHp||1)-Number(b.hp||1)));
-  return list[n]||list[list.length-1];
+  return list[0];
 }
-function infBossChance(b,action){
-  if(b?.combat)return infCombatChance(b,action);
-  const p=infBossPattern(b);
-  let extra=(b.type==='elite'?2:4)+Number(b.mods?.[action]||0)+Number(p.mods?.[action]||0);
-  if(b.type==='boss'&&action==='social')extra-=Math.min(3,infDiversity()*.7);
-  if(b.predict&&b.lastAction===action)extra+=3;
-  return infChance(action,extra);
-}
+function infBossChance(b,action){return infCombatChance(b,action);}
 function infRegisterCombatKill(action){
   if(action!=='attack')return;
   const r=infiniteRun;r.kills=Number(r.kills||0)+1;
   if(r.classId==='undead'){
     r.undeadKills=Number(r.undeadKills||0)+1;
-    if(r.undeadKills>=4){r.undeadKills=0;r.reviveReady=true;infAddRecent('죽지 못한 자 · 4번째 처치로 부활 재충전');}
+    if(r.undeadKills>=2){r.undeadKills=0;r.reviveReady=true;infAddRecent('죽지 못한 자 · 2번째 처치로 부활 재충전');}
   }
 }
 function infNodeChoices(){
@@ -3590,7 +3670,7 @@ function openInfiniteSelection(){
   const cl=selectedClass();if(!cl){openModeSelection();return;}
   $('infiniteClassLabel').textContent=`${classSkinPresentation(pendingClassId,cl,preferredClassSkin(pendingClassId)).name} · ENDLESS`;
   $('infiniteChoiceGrid').classList.remove('inf-start-item-grid');
-  const m=infiniteMeta();$('infiniteMetaStrip').innerHTML=`<div><span>최고층</span><b>${m.bestFloor}F</b></div><div><span>최고 점수</span><b>${Number(m.bestScore).toLocaleString()}</b></div><div><span>수집 기록</span><b>${m.discoveredLogs.length}/${INFINITE_LOGS.length}</b></div>`;
+  const m=infiniteMeta();$('infiniteMetaStrip').innerHTML=`<span>최고 ${m.bestFloor}층</span><i></i><span>점수 ${Number(m.bestScore).toLocaleString()}</span><i></i><span>기록 ${m.discoveredLogs.length}/${INFINITE_LOGS.length}</span>`;
   const has=!!localStorage.getItem(INFINITE_SAVE_KEY);
   $('infiniteChoiceGrid').innerHTML=`<button class="hard-choice" data-infinite-id="solo"><span class="hard-choice-icon">◇</span><span><b>솔로</b></span><i>›</i></button>${has?`<button class="hard-choice" data-infinite-id="continue"><span class="hard-choice-icon">↺</span><span><b>이어하기</b></span><i>›</i></button>`:''}<button class="hard-choice pvp infinite-locked" disabled><span class="hard-choice-icon">⚔</span><span><b>PVP</b></span><i>×</i></button>`;
   showScreen('infiniteModeScreen');
@@ -3745,64 +3825,133 @@ function infEnd(reason,retired=false){
   if(!retired){infiniteRun.lostUnbanked=Number(infiniteRun.unbanked||0);infiniteRun.unbanked=0;infiniteRun.carriedLogs=[];}
   const score=infScore();const meta=loadMeta();meta.infinite ||= {bestFloor:0,bestScore:0,totalSecured:0,bosses:0,runs:0,discoveredLogs:[]};meta.infinite.bestFloor=Math.max(Number(meta.infinite.bestFloor||0),infiniteRun.floor);meta.infinite.bestScore=Math.max(Number(meta.infinite.bestScore||0),score);meta.infinite.bosses=Math.max(Number(meta.infinite.bosses||0),infiniteRun.bosses);meta.infinite.runs=Number(meta.infinite.runs||0)+1;saveMeta(meta);localStorage.removeItem(INFINITE_SAVE_KEY);infiniteRun.phase='ended';infRender();
 }
+function infDepthName(f=Number(infiniteRun?.floor||1)){
+  if(f<5)return '상층 서가';
+  if(f<10)return '침수 기록동';
+  if(f<20)return '봉인 회랑';
+  if(f<30)return '무명 수장고';
+  if(f<40)return '별빛 없는 관측층';
+  const band=Math.floor((f-40)/10)+1;
+  return `심층 기록구역 ${band}`;
+}
+function infNextLandmark(f=Number(infiniteRun?.floor||1)){
+  const nextBoss=Math.ceil((f+0.001)/10)*10;
+  const nextSeal=Math.ceil((f+0.001)/5)*5;
+  if(f%10===0)return '보스 기록';
+  if(f%5===0)return '봉인실';
+  return nextSeal<nextBoss?`${nextSeal}층 봉인실`:`${nextBoss}층 보스`;
+}
+function openInfiniteKit(){
+  if(!infiniteRun)return;
+  const item=infStartItem();
+  const relics=(infiniteRun.relics||[]).map(id=>INFINITE_RELICS.find(x=>x.id===id)).filter(Boolean);
+  const recent=infiniteRun.recent||[];
+  const active=item?.kind==='active'&&infStarterUses()>0;
+  $('modal').innerHTML=`
+    <h2>소지품</h2>
+    <div class="inf-kit-section">
+      ${item?`<div class="inf-kit-item"><img src="${item.art}" alt=""><div><b>${escapeHtml(item.name)}</b><small>${escapeHtml(item.desc)}</small>${item.kind==='active'?`<em>${infStarterUses()}회</em>`:''}</div></div>`:'<div class="modal-sub">시작 아이템 없음</div>'}
+      ${active?`<button class="btn primary full" data-inf-use-start-item="${item.id}">사용</button>`:''}
+    </div>
+    ${relics.length?`<div class="inf-kit-section"><h3>유물</h3>${relics.map(x=>`<div class="inf-kit-relic"><b>${escapeHtml(x.name)}</b><small>${escapeHtml(x.desc)}</small></div>`).join('')}</div>`:''}
+    ${recent.length?`<div class="inf-kit-section"><h3>최근 기록</h3>${recent.map(x=>`<div class="inf-kit-log">${escapeHtml(x)}</div>`).join('')}</div>`:''}
+    <button class="btn modal-close" onclick="closeModal()">닫기</button>`;
+  showModal();
+}
+
 function infCorruptionName(){const c=infiniteRun?.corruption||0;return c>=75?'비인간적 각성':c>=50?'겹친 문장':c>=25?'속삭임':'정상';}
 function infRender(){
-  if(!infiniteRun)return;showScreen('infiniteGameScreen');const r=infiniteRun;
-  $('infClass').textContent=`${CLASSES[r.classId]?.name||'기록자'}${r.classSkin==='elite'?' · ELITE':''}`;$('infFloor').textContent=`${r.floor}층`;$('infHpBar').style.width=`${infClamp(r.hp/r.maxHp*100,0,100)}%`;$('infHpText').textContent=`${r.hp}/${r.maxHp}`;$('infCorruptBar').style.width=`${r.corruption}%`;$('infCorruptText').textContent=`${r.corruption}%`;$('infSecured').textContent=r.secured.toLocaleString();$('infLoose').textContent=r.unbanked.toLocaleString();$('infMult').textContent=`×${r.multiplier.toFixed(2)}`;$('infGold').textContent=`◆ ${r.gold}`;
-  const runStats=$('infRunStats');if(runStats)runStats.textContent=`공격 ${infEffectiveStat('atk')} · 처세 ${infEffectiveStat('social')} · 속도 ${infEffectiveStat('speed')}`;
-  const starter=infStartItem();const starterEl=$('infStarterItem');if(starterEl&&starter){starterEl.classList.remove('hidden');starterEl.innerHTML=`<img src="${starter.art}" alt=""><span><b>${escapeHtml(starter.name)}</b>${starter.kind==='active'?`<small>${infStarterUses()}회</small>`:''}</span>`;}else starterEl?.classList.add('hidden');
-  $('infRelics').innerHTML=r.relics.length?r.relics.map(id=>{const x=INFINITE_RELICS.find(y=>y.id===id);return `<span title="${escapeAttr(x?.desc||'')}">${escapeHtml(x?.name||id)}</span>`}).join(''):'';
-  const statusEl=$('infStatus');statusEl.textContent=r.status||'';statusEl.classList.toggle('hidden',!r.status);
-  const choices=$('infChoices'),k=$('infKicker'),title=$('infTitle'),body=$('infBody');
-  const hostileArtEntity=((r.phase==='event'&&r.current?.type==='enemy')||r.phase==='elite'||r.phase==='boss')?r.current:null;
-  infSetSceneArt(hostileArtEntity);
+  if(!infiniteRun)return;
+  showScreen('infiniteGameScreen');
+  const r=infiniteRun;
+
+  $('infClass').textContent=`${CLASSES[r.classId]?.name||'기록자'}${r.classSkin==='elite'?' · ELITE':''}`;
+  $('infHpBar').style.width=`${infClamp(r.hp/r.maxHp*100,0,100)}%`;
+  $('infHpText').textContent=`${r.hp}/${r.maxHp}`;
+  $('infCorruptBar').style.width=`${r.corruption}%`;
+  $('infGold').textContent=`◆ ${r.gold}`;
+
+  const kitCount=(r.relics?.length||0)+(r.starterItem?1:0);
+  $('infHudStats').textContent=`${r.floor}층 · 오염 ${r.corruption}% · 보관 ${Number(r.secured||0).toLocaleString()} · 원본 ${Number(r.unbanked||0).toLocaleString()} · ×${Number(r.multiplier||1).toFixed(2)}${kitCount?` · 소지품 ${kitCount}`:''}`;
+
+  const statusEl=$('infStatus');
+  statusEl.textContent=r.status||'';
+  statusEl.classList.toggle('hidden',!r.status);
+
+  const choices=$('infChoices'),k=$('infKicker'),loc=$('infLocation'),heading=$('infSceneHeading'),body=$('infBody');
+  const hostile=((r.phase==='event'&&r.current?.type==='enemy')||r.phase==='elite'||r.phase==='boss');
+  const hostileEntity=hostile?r.current:null;
+  infSetSceneArt(hostileEntity);
+
   const combatPanel=$('infCombatPanel');
-  if(combatPanel)combatPanel.classList.add('hidden');
+  combatPanel?.classList.toggle('hidden',!hostile);
+  const bossGimmickEl=$('infBossGimmick');if(bossGimmickEl&&!hostile){bossGimmickEl.textContent='';bossGimmickEl.classList.add('hidden');}
+  heading.classList.add('hidden');
+  heading.textContent='';
+
+  k.textContent='무한 기록';
+  loc.textContent=`${r.floor}층 · ${infDepthName(r.floor)} · ${infNextLandmark(r.floor)}`;
+
+  choices.className='choice-area inf-choice-grid';
+
   if(r.phase==='nodes'){
-    k.textContent='기록층';title.textContent=`${r.floor}층 · 세 갈래 흔적`;body.textContent='어느 길에도 무언가 있다.';
-    choices.innerHTML=r.nodeChoices.map((n,idx)=>`<button class="inf-node choice-btn risk-${n.risk}" data-inf-node="${idx}"><span>${n.icon}</span><b>${escapeHtml(n.name)}</b><i>${n.risk?`위험 ${'◆'.repeat(n.risk)}`:'안전'}</i></button>`).join('');
+    body.textContent='앞쪽 기록층에서 세 갈래 흔적이 갈린다.';
+    choices.innerHTML=r.nodeChoices.map((n,idx)=>`<button class="choice-btn inf-node risk-${n.risk}" data-inf-node="${idx}"><b>${escapeHtml(n.name)}</b></button>`).join('');
   }
   else if(r.phase==='event'&&r.current?.type!=='enemy'){
-    const e=r.current;k.textContent='기록층';title.textContent=e.title;body.textContent=e.body;
-    choices.innerHTML=e.actions.map(a=>`<button class="inf-action action-btn" data-inf-action="${a[0]}"><b>${escapeHtml(a[1])}</b><small>${escapeHtml(a[2])}</small></button>`).join('');
+    const e=r.current;
+    heading.textContent=e.title;heading.classList.remove('hidden');
+    body.textContent=e.body;
+    choices.innerHTML=e.actions.map(a=>`<button class="choice-btn" data-inf-action="${a[0]}"><b>${escapeHtml(a[1])}</b><small>${escapeHtml(a[2])}</small></button>`).join('');
   }
-  else if((r.phase==='event'&&r.current?.type==='enemy')||r.phase==='elite'||r.phase==='boss'){
+  else if(hostile){
     const e=r.current,c=infEnsureCombat(e),tier=infCombatTier(e),pattern=tier>1?infBossPattern(e):null;
-    if(combatPanel){
-      combatPanel.classList.remove('hidden');
-      $('infEnemyRank').textContent=tier===3?'보스':tier===2?'엘리트':e.trait||'적';
-      $('infEnemyName').textContent=e.title;
-      $('infCombatRound').textContent=`${c.round}턴${tier>1?` · ${c.phase}페이즈`:''}`;
-      $('infEnemyHpBar').style.width=`${infClamp(c.hp/c.maxHp*100,0,100)}%`;
-      $('infEnemyHpText').textContent=`${c.hp}/${c.maxHp}`;
-      $('infEnemyWillBar').style.width=`${infClamp(c.will/c.maxWill*100,0,100)}%`;
-      $('infEnemyWillText').textContent=`${c.will}/${c.maxWill}`;
-      $('infEnemyEscapeBar').style.width=`${infClamp(c.escape/c.escapeNeed*100,0,100)}%`;
-      $('infEnemyEscapeText').textContent=`${c.escape}/${c.escapeNeed}`;
-      $('infEnemyIntent').textContent=c.intent?.name||'주시';
-      $('infEnemyIntentDesc').textContent=c.intent?.desc||'';
-      $('infCombatEffects').textContent=infCombatEffectsText(e);
-    }
-    k.textContent=tier===3?`보스 · ${r.floor}층`:tier===2?`엘리트 · ${r.floor}층`:`적 조우 · ${e.trait||'미확인'}`;
-    title.textContent=e.title;
+
+    $('infEnemyRank').textContent=tier===3?'보스':tier===2?'엘리트':e.trait||'적';
+    $('infEnemyName').textContent=e.title;
+    const gimmick=infBossGimmick(e),gimmickEl=$('infBossGimmick');
+    $('infEnemyStats').textContent=`${c.round}/${c.required}턴 · ${c.survived}턴 통과${tier>1?` · ${c.round}페이즈`:''}`;
+    if(gimmickEl){gimmickEl.textContent=gimmick;gimmickEl.classList.toggle('hidden',!gimmick);}
+    const turnTrack=$('infTurnTrack');
+    if(turnTrack)turnTrack.innerHTML=Array.from({length:c.required},(_,idx)=>`<i class="${idx<c.survived?'done':idx===c.survived?'current':''}"></i>`).join('');
+    $('infEnemyIntent').textContent=c.intent?.name||'주시';
+    $('infEnemyIntentDesc').textContent=c.intent?.desc||'';
+    $('infCombatEffects').textContent=infCombatEffectsText(e);
+
     body.textContent=tier>1&&pattern?.text?`${e.body}\n\n${pattern.text}`:e.body;
-    const socialLocked=r.classId==='spellsword';
-    const sealed=c.sealedAction||'';
+
+    const sealed=c.sealedAction&&c.round<=c.sealedUntilRound?c.sealedAction:'';
+    const escapeLocked=e.id==='reader_below';
+    choices.className='action-grid inf-choice-grid';
     choices.innerHTML=`
-      <button class="inf-action action-btn attack" data-inf-action="attack" ${sealed==='attack'?'disabled':''}>
-        <span class="action-icon">⚔</span><b>${e.verbs?.attack||'공격한다'}</b><small>${escapeHtml(infCombatPreview(e,'attack'))}</small>${sealed==='attack'?'<i>봉인</i>':''}
+      <button class="action-btn attack" data-inf-action="attack" ${sealed==='attack'?'disabled':''}>
+        <span class="action-icon">⚔</span><b>공격</b><small>${escapeHtml(infCombatPreview(e,'attack'))}</small>${sealed==='attack'?'<i>봉인</i>':''}
       </button>
-      <button class="inf-action action-btn social" data-inf-action="social" ${(socialLocked||sealed==='social')?'disabled':''}>
-        <span class="action-icon">◈</span><b>${socialLocked?'처세 불가':(e.verbs?.social||(tier===3?'존재를 반증한다':'처세한다'))}</b><small>${socialLocked?'마검사는 사용할 수 없다':escapeHtml(infCombatPreview(e,'social'))}</small>${sealed==='social'?'<i>봉인</i>':''}
+      <button class="action-btn social" data-inf-action="social" ${sealed==='social'?'disabled':''}>
+        <span class="action-icon">♢</span><b>처세</b><small>${escapeHtml(infCombatPreview(e,'social'))}</small>${sealed==='social'?'<i>봉인</i>':''}
       </button>
-      <button class="inf-action action-btn run" data-inf-action="speed" ${sealed==='speed'?'disabled':''}>
-        <span class="action-icon">↗</span><b>${e.verbs?.speed||(tier===3?'장막 밖으로 달린다':'도망친다')}</b><small>${escapeHtml(infCombatPreview(e,'speed'))}</small>${sealed==='speed'?'<i>봉인</i>':''}
+      <button class="action-btn run" data-inf-action="speed" ${(sealed==='speed'||escapeLocked)?'disabled':''}>
+        <span class="action-icon">➜</span><b>${escapeLocked?'도망 불가':'도망'}</b><small>${escapeHtml(infCombatPreview(e,'speed'))}</small>${sealed==='speed'?'<i>봉인</i>':''}
       </button>`;
   }
-  else if(r.phase==='relic'){k.textContent='유물';title.textContent='하나만 가져갈 수 있다';body.textContent='하나를 고른다.';choices.innerHTML=r.relicChoices.map(id=>{const x=INFINITE_RELICS.find(y=>y.id===id);return `<button class="inf-relic-card choice-btn" data-inf-relic="${id}"><b>${escapeHtml(x.name)}</b><small>${escapeHtml(x.desc)}</small></button>`}).join('');}
-  else if(r.phase==='checkpoint'){k.textContent='봉인실';title.textContent=`${r.floor}층 · 봉인실`;body.textContent=`미보관 원본 ${r.unbanked.toLocaleString()}`;choices.innerHTML=`<button class="inf-action action-btn safe" data-inf-checkpoint="secure"><b>봉인하고 계속</b><small>전부 보관 · 회복</small></button><button class="inf-action action-btn danger" data-inf-checkpoint="carry"><b>들고 내려간다</b><small>배율 +0.25 · 능력 +1 · 오염 +8</small></button><button class="inf-action action-btn" data-inf-checkpoint="retire"><b>귀환</b><small>전부 봉인</small></button>`;}
-  else if(r.phase==='ended'){k.textContent=r.retired?'귀환':'기록 소실';title.textContent=r.retired?'기록을 가지고 돌아왔다':'기록자가 기록이 되었다';body.textContent=`${r.endReason}\n\n도달 ${r.floor}층 · 엘리트 ${Number(r.elites||0)} · 보스 ${r.bosses} · 보관 기록 ${r.secured.toLocaleString()}${r.lostUnbanked?` · 소실 원본 ${r.lostUnbanked.toLocaleString()}`:''} · 최종 점수 ${infScore().toLocaleString()}`;choices.innerHTML=`<button class="inf-action action-btn safe" data-action="infinite-again"><b>새 탐사</b></button><button class="inf-action action-btn" data-action="infinite-back"><b>무한 기록 메뉴</b></button>`;}
-  $('infRecent').innerHTML=(r.recent||[]).length?`<b>최근 기록</b>${r.recent.map(x=>`<span>${escapeHtml(x)}</span>`).join('')}`:'';infSave();infMarkView(r);
+  else if(r.phase==='relic'){
+    heading.textContent='유물';heading.classList.remove('hidden');
+    body.textContent='하나만 가져갈 수 있다.';
+    choices.innerHTML=r.relicChoices.map(id=>{const x=INFINITE_RELICS.find(y=>y.id===id);return `<button class="choice-btn inf-relic-card" data-inf-relic="${id}"><b>${escapeHtml(x.name)}</b><small>${escapeHtml(x.desc)}</small></button>`}).join('');
+  }
+  else if(r.phase==='checkpoint'){
+    heading.textContent='봉인실';heading.classList.remove('hidden');
+    body.textContent=`미보관 원본 ${Number(r.unbanked||0).toLocaleString()}.`;
+    choices.innerHTML=`<button class="choice-btn growth-choice" data-inf-checkpoint="secure"><b>봉인하고 계속</b><small>원본을 보관하고 회복한다</small></button><button class="choice-btn" data-inf-checkpoint="carry"><b>들고 내려간다</b><small>배율과 능력을 올리고 오염을 감수한다</small></button><button class="choice-btn" data-inf-checkpoint="retire"><b>귀환</b><small>기록을 보관하고 탐사를 끝낸다</small></button>`;
+  }
+  else if(r.phase==='ended'){
+    heading.textContent=r.retired?'귀환':'기록 소실';heading.classList.remove('hidden');
+    body.textContent=`${r.endReason}\n\n도달 ${r.floor}층 · 엘리트 ${Number(r.elites||0)} · 보스 ${r.bosses} · 보관 ${Number(r.secured||0).toLocaleString()}${r.lostUnbanked?` · 소실 ${Number(r.lostUnbanked).toLocaleString()}`:''} · 점수 ${infScore().toLocaleString()}`;
+    choices.innerHTML=`<button class="choice-btn growth-choice" data-action="infinite-again"><b>새 탐사</b></button><button class="choice-btn" data-action="infinite-back"><b>무한 기록 메뉴</b></button>`;
+  }
+
+  infSave();
+  infMarkView(r);
 }
 function openInfiniteCodex(){const m=infiniteMeta();const found=new Set(m.discoveredLogs||[]);$('modal').innerHTML=`<h2>무한 기록 도감</h2><div class="modal-sub">수집 ${found.size}/${INFINITE_LOGS.length} · 누적 봉인 ${Number(m.totalSecured||0).toLocaleString()}</div>${INFINITE_LOGS.map(x=>`<div class="inf-codex-row ${found.has(x.id)?'':'locked'}"><b>${found.has(x.id)?escapeHtml(x.title):'미확인 기록'} <small>${found.has(x.id)?escapeHtml(x.cat):'?'}</small></b>${found.has(x.id)?`<p>${escapeHtml(x.text)}</p>`:''}</div>`).join('')}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;showModal();}
 
@@ -3905,72 +4054,291 @@ function showHardDevelopment(type){
 
 
 // ---------- Normal PVP: existing story, real-time score race ----------
-const pvpClient={socket:null,matchId:'',nickname:'',opponent:null,queueing:false,finished:false,result:null,lastSyncAt:0,resumeTried:false};
+const pvpClient={
+  socket:null,matchId:'',resumeToken:'',nickname:'',opponent:null,
+  queueing:false,queueRequestPending:false,queuePayload:null,
+  finished:false,result:null,lastSyncAt:0,limitEndsAt:0,timerId:null
+};
 function isPvpMode(){return state?.flags?.gameMode==='normal'&&state?.flags?.gameVariant==='pvp'&&!!pvpClient.matchId;}
+function resetPvpClient(keepSocket=true){
+  if(pvpClient.timerId){clearInterval(pvpClient.timerId);pvpClient.timerId=null;}
+  const sock=keepSocket?pvpClient.socket:null;
+  Object.assign(pvpClient,{socket:sock,matchId:'',resumeToken:'',nickname:'',opponent:null,queueing:false,queueRequestPending:false,queuePayload:null,finished:false,result:null,lastSyncAt:0,limitEndsAt:0,timerId:null});
+}
 function pvpSocket(){
   if(pvpClient.socket)return pvpClient.socket;
   if(typeof io!=='function')return null;
-  const sock=io({transports:['websocket','polling']});pvpClient.socket=sock;
-  sock.on('connect',()=>{const sess=loadPvpSession();if(sess?.matchId&&!pvpClient.resumeTried){pvpClient.resumeTried=true;sock.emit('pvp:resume',sess);}});
-  sock.on('pvp:queue',d=>{pvpClient.queueing=true;const e=$('pvpQueueStatus');if(e){e.textContent=`상대를 찾는 중 · 대기 ${Number(d?.position||1)}번째`;e.className='pvp-queue-status searching';}});
+  const sock=io({transports:['websocket','polling'],reconnection:true,reconnectionAttempts:Infinity,reconnectionDelay:600,reconnectionDelayMax:2500});
+  pvpClient.socket=sock;
+
+  sock.on('connect',()=>{
+    const sess=loadPvpSession();
+    if(sess?.matchId){
+      pvpClient.matchId=String(sess.matchId||pvpClient.matchId||'');
+      pvpClient.resumeToken=String(sess.resumeToken||pvpClient.resumeToken||'');
+      sock.emit('pvp:resume',{matchId:pvpClient.matchId,playerId:getPlayerId(),resumeToken:pvpClient.resumeToken});
+      const e=$('pvpOpponentStatus');if(e&&isPvpMode())e.textContent='재접속 확인 중';
+      return;
+    }
+    if(pvpClient.queueing&&pvpClient.queuePayload){
+      pvpClient.queueRequestPending=true;
+      sock.emit('pvp:queue',pvpClient.queuePayload);
+    }
+  });
+
+  sock.on('pvp:queue',d=>{
+    pvpClient.queueRequestPending=false;pvpClient.queueing=true;
+    const e=$('pvpQueueStatus');if(e){e.textContent=`상대를 찾는 중 · 대기 ${Number(d?.position||1)}번째`;e.className='pvp-queue-status searching';}
+    const btn=$('pvpQueueBtn');if(btn){btn.disabled=false;btn.textContent='매칭 취소';}
+  });
+
+  sock.on('pvp:cancelled',()=>{
+    pvpClient.queueRequestPending=false;pvpClient.queueing=false;pvpClient.queuePayload=null;
+    const btn=$('pvpQueueBtn');if(btn){btn.disabled=false;btn.textContent='매칭 시작';}
+    const st=$('pvpQueueStatus');if(st){st.textContent='매칭을 취소했습니다.';st.className='pvp-queue-status';}
+  });
+
   sock.on('pvp:match',d=>startPvpMatch(d));
   sock.on('pvp:opponent',d=>{pvpClient.opponent=d;renderPvpOpponent();});
   sock.on('pvp:result',d=>showPvpResult(d));
-  sock.on('pvp:error',d=>{const e=$('pvpQueueStatus');if(e){e.textContent=d?.message||'매칭 서버 오류';e.className='pvp-queue-status';}});
-  sock.on('disconnect',()=>{if(isPvpMode()){const e=$('pvpOpponentStatus');if(e)e.textContent='연결 복구 중';}});
+
+  sock.on('pvp:error',d=>{
+    const code=String(d?.code||'');
+    if(code==='MATCH_EXPIRED'||code==='RESUME_DENIED'){
+      clearPvpSession();resetPvpClient(true);
+      const e=$('pvpQueueStatus');if(e){e.textContent=d?.message||'이전 PVP 경기를 복구할 수 없습니다.';e.className='pvp-queue-status';}
+      if(state?.flags?.gameVariant==='pvp'){
+        $('modal').innerHTML=`<h2>PVP 연결 종료</h2><p class="modal-sub">${escapeHtml(d?.message||'이 경기는 더 이상 복구할 수 없습니다.')}</p><button class="btn primary full" onclick="closeModal();openPvpLobby()">PVP 로비로</button><button class="btn full" onclick="closeModal();showScreen('menuScreen')">메인으로</button>`;
+        showModal();
+      }
+      return;
+    }
+    pvpClient.queueRequestPending=false;
+    if(!pvpClient.matchId){
+      pvpClient.queueing=false;pvpClient.queuePayload=null;
+      const btn=$('pvpQueueBtn');if(btn){btn.disabled=false;btn.textContent='매칭 시작';}
+    }
+    const e=$('pvpQueueStatus');if(e){e.textContent=d?.message||'매칭 서버 오류';e.className='pvp-queue-status';}
+  });
+
+  sock.on('disconnect',()=>{
+    if(isPvpMode()){
+      const e=$('pvpOpponentStatus');if(e)e.textContent='연결 복구 중';
+    }else if(pvpClient.queueing){
+      const e=$('pvpQueueStatus');if(e){e.textContent='매칭 서버 재연결 중';e.className='pvp-queue-status searching';}
+    }
+  });
   return sock;
 }
 function loadPvpSession(){try{return JSON.parse(localStorage.getItem(PVP_SESSION_KEY)||'null');}catch{return null;}}
-function savePvpSession(){if(!pvpClient.matchId)return;localStorage.setItem(PVP_SESSION_KEY,JSON.stringify({matchId:pvpClient.matchId,playerId:getPlayerId(),nickname:pvpClient.nickname,classId:state.classId}));}
+function savePvpSession(){
+  if(!pvpClient.matchId)return;
+  localStorage.setItem(PVP_SESSION_KEY,JSON.stringify({
+    matchId:pvpClient.matchId,playerId:getPlayerId(),nickname:pvpClient.nickname,
+    classId:state.classId,resumeToken:pvpClient.resumeToken,finished:!!pvpClient.finished,
+    limitEndsAt:Number(pvpClient.limitEndsAt||0)
+  }));
+}
 function clearPvpSession(){localStorage.removeItem(PVP_SESSION_KEY);localStorage.removeItem(PVP_SAVE_KEY);}
+function startPvpTimer(endsAt){
+  pvpClient.limitEndsAt=Math.max(Date.now(),Number(endsAt||0));
+  if(pvpClient.timerId)clearInterval(pvpClient.timerId);
+  const tick=()=>{
+    const el=$('pvpMatchTimer');if(!el)return;
+    const left=Math.max(0,Math.ceil((pvpClient.limitEndsAt-Date.now())/1000));
+    const mm=String(Math.floor(left/60)).padStart(2,'0'),ss=String(left%60).padStart(2,'0');
+    el.textContent=`${mm}:${ss}`;
+    el.classList.toggle('urgent',left<=60);
+    if(left<=0){el.textContent='정산 중';if(pvpClient.timerId){clearInterval(pvpClient.timerId);pvpClient.timerId=null;}}
+  };
+  tick();pvpClient.timerId=setInterval(tick,1000);
+}
 async function loadPvpProfile(){
   const rating=$('pvpRatingValue');if(rating)rating.textContent='…';
-  try{const r=await fetchTimed(`/api/pvp/profile/${encodeURIComponent(getPlayerId())}?t=${Date.now()}`,{cache:'no-store'},5000);const d=await r.json();if(r.ok&&d.ok&&rating)rating.textContent=Number(d.rating||1000).toLocaleString();else if(rating)rating.textContent='1000';}catch{if(rating)rating.textContent='1000';}
+  try{
+    const r=await fetchTimed(`/api/pvp/profile/${encodeURIComponent(getPlayerId())}?t=${Date.now()}`,{cache:'no-store'},5000);
+    const d=await r.json();
+    if(r.ok&&d.ok&&rating)rating.textContent=Number(d.rating||1000).toLocaleString();
+    else if(rating)rating.textContent='1000';
+  }catch{if(rating)rating.textContent='1000';}
 }
 function openPvpLobby(){
   const cl=selectedClass();if(!cl){openNormalSelection();return;}
   $('pvpClassLabel').textContent=`${cl.name} · NORMAL PVP`;
   const input=$('pvpNickname');if(input&&!input.value)input.value=localStorage.getItem(PVP_NICK_KEY)||'';
-  const st=$('pvpQueueStatus');if(st){st.textContent='대기 중인 상대를 실시간으로 찾습니다.';st.className='pvp-queue-status';}
-  const btn=$('pvpQueueBtn');if(btn){btn.disabled=false;btn.textContent='매칭 시작';}
-  showScreen('pvpLobbyScreen');loadPvpProfile();
+  const st=$('pvpQueueStatus');
+  if(st){
+    st.textContent=pvpClient.queueing?'상대를 찾는 중입니다.':'대기 중인 상대를 실시간으로 찾습니다.';
+    st.className=pvpClient.queueing?'pvp-queue-status searching':'pvp-queue-status';
+  }
+  const btn=$('pvpQueueBtn');
+  if(btn){btn.disabled=!!pvpClient.queueRequestPending;btn.textContent=pvpClient.queueing?'매칭 취소':'매칭 시작';}
+  showScreen('pvpLobbyScreen');loadPvpProfile();pvpSocket();
 }
 function startPvpQueue(){
+  if(pvpClient.queueing||pvpClient.queueRequestPending)return;
   const cl=selectedClass();if(!cl)return openNormalSelection();
   const input=$('pvpNickname');const nick=String(input?.value||'').trim();
-  if(!nicknameAllowed(nick)){if(input)input.classList.add('nickname-invalid');const st=$('pvpQueueStatus');if(st)st.textContent='사용할 수 없는 이름입니다.';return;}
-  const nickname=nick||`몰락자${Math.floor(1000+Math.random()*9000)}`;localStorage.setItem(PVP_NICK_KEY,nickname);
-  const sock=pvpSocket();if(!sock){const st=$('pvpQueueStatus');if(st)st.textContent='실시간 서버를 불러오지 못했습니다.';return;}
-  pvpClient.nickname=nickname;pvpClient.queueing=true;
-  const btn=$('pvpQueueBtn');if(btn){btn.disabled=false;btn.textContent='매칭 취소';}
-  sock.emit('pvp:queue',{playerId:getPlayerId(),nickname,classId:pendingClassId,className:cl.name});
+  if(!nicknameAllowed(nick)){
+    if(input)input.classList.add('nickname-invalid');
+    const st=$('pvpQueueStatus');if(st)st.textContent='사용할 수 없는 이름입니다.';
+    return;
+  }
+  const nickname=nick||`몰락자${Math.floor(1000+Math.random()*9000)}`;
+  localStorage.setItem(PVP_NICK_KEY,nickname);
+  const sock=pvpSocket();
+  if(!sock){const st=$('pvpQueueStatus');if(st)st.textContent='실시간 서버를 불러오지 못했습니다.';return;}
+  pvpClient.nickname=nickname;pvpClient.queueing=true;pvpClient.queueRequestPending=true;
+  pvpClient.queuePayload={playerId:getPlayerId(),nickname,classId:pendingClassId};
+  const btn=$('pvpQueueBtn');if(btn){btn.disabled=true;btn.textContent='매칭 연결 중';}
+  const st=$('pvpQueueStatus');if(st){st.textContent='매칭 서버에 등록 중';st.className='pvp-queue-status searching';}
+  if(sock.connected)sock.emit('pvp:queue',pvpClient.queuePayload);
 }
-function cancelPvpQueue(){if(pvpClient.socket)pvpClient.socket.emit('pvp:cancel');pvpClient.queueing=false;const btn=$('pvpQueueBtn');if(btn){btn.disabled=false;btn.textContent='매칭 시작';}const st=$('pvpQueueStatus');if(st){st.textContent='매칭을 취소했습니다.';st.className='pvp-queue-status';}}
+function cancelPvpQueue(silent=false){
+  if(pvpClient.matchId)return;
+  if(pvpClient.socket?.connected)pvpClient.socket.emit('pvp:cancel');
+  pvpClient.queueRequestPending=false;pvpClient.queueing=false;pvpClient.queuePayload=null;
+  const btn=$('pvpQueueBtn');if(btn){btn.disabled=false;btn.textContent='매칭 시작';}
+  const st=$('pvpQueueStatus');if(st&&!silent){st.textContent='매칭을 취소했습니다.';st.className='pvp-queue-status';}
+}
 function startPvpMatch(d){
-  const cl=CLASSES[d?.you?.classId||pendingClassId];if(!cl)return;
-  pvpClient.matchId=String(d.matchId||'');pvpClient.nickname=String(d.you?.nickname||pvpClient.nickname||'몰락자');pvpClient.opponent=d.opponent||null;pvpClient.queueing=false;pvpClient.finished=false;pvpClient.result=null;
-  state=freshState();state.classId=d.you?.classId||pendingClassId;state.p={className:cl.name,maxHp:cl.hp,hp:cl.hp,atk:cl.atk,social:cl.social,speed:cl.speed,gold:10};state.flags.classSkin=preferredClassSkin(state.classId);state.flags.gameMode='normal';state.flags.gameVariant='pvp';state.flags.pvpMatchId=pvpClient.matchId;state.sceneId='intro';
-  savePvpSession();save();showScreen('gameScreen');enter('intro');renderPvpOpponent();
+  const matchId=String(d?.matchId||'');if(!matchId)return;
+  const ownClassId=String(d?.you?.classId||pendingClassId||'');
+  const cl=CLASSES[ownClassId];if(!cl)return;
+  const resumed=!!d.resumed;
+
+  pvpClient.matchId=matchId;
+  pvpClient.resumeToken=String(d?.resumeToken||loadPvpSession()?.resumeToken||pvpClient.resumeToken||'');
+  pvpClient.nickname=String(d?.you?.nickname||pvpClient.nickname||'몰락자');
+  pvpClient.opponent=d.opponent||null;
+  pvpClient.queueing=false;pvpClient.queueRequestPending=false;pvpClient.queuePayload=null;
+  pvpClient.result=null;
+  if(Number(d?.endsAt||0)>0)startPvpTimer(Number(d.endsAt));
+  else if(Number(d?.limitSeconds||0)>0)startPvpTimer(Date.now()+Number(d.limitSeconds)*1000);
+
+  if(resumed){
+    let restored=state?.flags?.gameVariant==='pvp'&&String(state?.flags?.pvpMatchId||'')===matchId&&!!state?.p;
+    if(!restored){
+      try{
+        const raw=localStorage.getItem(PVP_SAVE_KEY);
+        const loaded=raw?normalizeLoadedState(JSON.parse(raw)):null;
+        if(loaded?.p&&String(loaded?.flags?.pvpMatchId||'')===matchId){state=loaded;restored=true;}
+      }catch{}
+    }
+    if(!restored){
+      pvpClient.socket?.emit('pvp:forfeit',{matchId});
+      clearPvpSession();resetPvpClient(true);
+      $('modal').innerHTML='<h2>PVP 복구 실패</h2><p class="modal-sub">이 기기에 경기 진행 저장본이 없어 안전하게 복구할 수 없습니다. 경기는 기권 처리됩니다.</p><button class="btn primary full" onclick="closeModal();openPvpLobby()">PVP 로비로</button>';
+      showModal();return;
+    }
+    pendingClassId=state.classId;
+    pvpClient.finished=!!d?.you?.finished||!!state.ended;
+    savePvpSession();
+    if(state.ended){
+      showScreen('endScreen');
+      if(!$('pvpEndPanel')||$('pvpEndPanel').classList.contains('hidden'))finishLoaded();
+      if(!d?.you?.finished)pvpFinish(true);
+    }else{
+      showScreen('gameScreen');enter(state.sceneId);renderPvpOpponent();schedulePvpSync(true);
+    }
+    return;
+  }
+
+  pvpClient.finished=false;
+  state=freshState();state.classId=ownClassId;
+  // PVP는 영구 성장치를 배제하고 직업 기본 능력치로 통일한다.
+  state.p={className:cl.name,maxHp:cl.hp,hp:cl.hp,atk:cl.atk,social:cl.social,speed:cl.speed,gold:10};
+  state.flags.classGrowthBonus=0;
+  state.flags.classSkin=preferredClassSkin(state.classId);
+  if(state.classId==='undead')state.flags.undeadReviveReady=true;
+  state.flags.gameMode='normal';state.flags.gameVariant='pvp';state.flags.pvpMatchId=matchId;state.sceneId='intro';
+  savePvpSession();save();showScreen('gameScreen');enter('intro');renderPvpOpponent();schedulePvpSync(true);
 }
-function pvpSnapshot(){return {stats:{...state.stats,goldHeld:state.p?.gold||0},hp:state.p?.hp||0,gold:state.p?.gold||0,progress:state.stats?.progress||0,className:state.p?.className||'',ended:!!state.ended,ending:state.stats?.ending||''};}
+function pvpSnapshot(){
+  return {
+    stats:{...state.stats,goldHeld:state.p?.gold||0},
+    hp:state.p?.hp||0,gold:state.p?.gold||0,progress:state.stats?.progress||0,
+    className:state.p?.className||'',ended:!!state.ended,ending:state.stats?.ending||''
+  };
+}
 function schedulePvpSync(force=false){
-  if(!isPvpMode()||!pvpClient.socket||pvpClient.finished)return;const now=Date.now();if(!force&&now-pvpClient.lastSyncAt<850)return;pvpClient.lastSyncAt=now;pvpClient.socket.emit('pvp:update',{matchId:pvpClient.matchId,playerId:getPlayerId(),...pvpSnapshot()});
+  if(!isPvpMode()||!pvpClient.socket||pvpClient.finished)return;
+  const now=Date.now();if(!force&&now-pvpClient.lastSyncAt<850)return;
+  pvpClient.lastSyncAt=now;
+  pvpClient.socket.emit('pvp:update',{matchId:pvpClient.matchId,...pvpSnapshot()});
 }
 function renderPvpOpponent(){
-  const panel=$('pvpOpponentPanel');if(!panel)return;panel.classList.toggle('hidden',!isPvpMode());if(!isPvpMode())return;const o=pvpClient.opponent||{};$('pvpOpponentName').textContent=o.nickname||'상대';$('pvpOpponentClass').textContent=o.className||'';$('pvpOpponentScore').textContent=Number(o.score||0).toLocaleString();$('pvpOpponentProgress').textContent=Number(o.progress||0);$('pvpOpponentStatus').textContent=o.finished?'기록 완료':o.connected===false?'재접속 대기':'진행 중';
+  const panel=$('pvpOpponentPanel');if(!panel)return;
+  panel.classList.toggle('hidden',!isPvpMode());if(!isPvpMode())return;
+  const o=pvpClient.opponent||{};
+  $('pvpOpponentName').textContent=o.nickname||'상대';
+  $('pvpOpponentClass').textContent=o.className||'';
+  $('pvpOpponentScore').textContent=Number(o.score||0).toLocaleString();
+  $('pvpOpponentProgress').textContent=Number(o.progress||0);
+  $('pvpOpponentStatus').textContent=o.finished?'기록 완료':o.connected===false?'재접속 대기':'진행 중';
 }
-function pvpFinish(){if(!isPvpMode()||pvpClient.finished)return;pvpClient.finished=true;save();pvpClient.socket?.emit('pvp:finish',{matchId:pvpClient.matchId,playerId:getPlayerId(),...pvpSnapshot()});const panel=$('pvpEndPanel');if(panel){panel.classList.remove('hidden');$('pvpEndTitle').textContent='상대 기록을 기다리는 중';$('pvpEndBody').textContent='당신의 최종 점수는 서버에 도착했습니다. 상대가 끝나면 승패와 레이팅이 확정됩니다.';}}
+function pvpFinish(resend=false){
+  if(!isPvpMode())return;
+  if(pvpClient.finished&&!resend)return;
+  pvpClient.finished=true;savePvpSession();save();
+  pvpClient.socket?.emit('pvp:finish',{matchId:pvpClient.matchId,...pvpSnapshot()});
+  const panel=$('pvpEndPanel');
+  if(panel){
+    panel.classList.remove('hidden');
+    $('pvpEndTitle').textContent='상대 기록을 기다리는 중';
+    $('pvpEndTitle').className='';
+    $('pvpEndBody').textContent='최종 점수를 전송했습니다. 상대가 끝나거나 제한 시간이 지나면 결과가 확정됩니다.';
+  }
+}
+function pvpResultReason(reason){
+  return reason==='forfeit'?'상대 기권':reason==='disconnect'?'상대 연결 종료':reason==='timeout'?'제한 시간 종료':reason==='disconnect_both'?'양쪽 연결 종료':'기록 완료';
+}
 function showPvpResult(d){
-  pvpClient.result=d;const panel=$('pvpEndPanel');if(panel)panel.classList.remove('hidden');const mine=d.you||{},opp=d.opponent||{},result=mine.result||'draw';const title=result==='win'?'승리':result==='loss'?'패배':'무승부';$('pvpEndTitle').textContent=title;$('pvpEndTitle').className=result==='win'?'pvp-result-win':result==='loss'?'pvp-result-loss':'pvp-result-draw';$('pvpEndBody').innerHTML=`내 점수 <b>${Number(mine.score||0).toLocaleString()}</b> · 상대 <b>${Number(opp.score||0).toLocaleString()}</b><br>레이팅 <b>${Number(mine.oldRating||1000)}</b> → <b>${Number(mine.newRating||1000)}</b> (${Number(mine.delta||0)>=0?'+':''}${Number(mine.delta||0)})`;
+  if(!d||String(d.matchId||'')!==pvpClient.matchId)return;
+  pvpClient.result=d;pvpClient.finished=true;
+  if(pvpClient.timerId){clearInterval(pvpClient.timerId);pvpClient.timerId=null;}
+  const panel=$('pvpEndPanel');if(panel)panel.classList.remove('hidden');
+  const mine=d.you||{},opp=d.opponent||{},result=mine.result||'draw';
+  const title=result==='win'?'승리':result==='loss'?'패배':'무승부';
+  $('pvpEndTitle').textContent=title;
+  $('pvpEndTitle').className=result==='win'?'pvp-result-win':result==='loss'?'pvp-result-loss':'pvp-result-draw';
+  const persist=d.ratingSaved===false?'<br><span class="pvp-rating-warning">레이팅 서버 저장은 확인되지 않았습니다.</span>':'';
+  $('pvpEndBody').innerHTML=`${escapeHtml(pvpResultReason(d.reason))}<br>내 점수 <b>${Number(mine.score||0).toLocaleString()}</b> · 상대 <b>${Number(opp.score||0).toLocaleString()}</b><br>레이팅 <b>${Number(mine.oldRating||1000)}</b> → <b>${Number(mine.newRating||1000)}</b> (${Number(mine.delta||0)>=0?'+':''}${Number(mine.delta||0)})${persist}`;
   clearPvpSession();
 }
-function confirmPvpForfeit(){closeModal();pvpClient.socket?.emit('pvp:forfeit',{matchId:pvpClient.matchId,playerId:getPlayerId()});clearPvpSession();pvpClient.matchId='';pvpClient.finished=true;showScreen('menuScreen');updateMenuSaveInfo();}
+function confirmPvpForfeit(){
+  closeModal();
+  if(pvpClient.matchId)pvpClient.socket?.emit('pvp:forfeit',{matchId:pvpClient.matchId});
+  clearPvpSession();resetPvpClient(true);
+  showScreen('menuScreen');updateMenuSaveInfo();
+}
 async function showPvpLeaderboard(){
   $('modal').innerHTML='<h2>PVP 레이팅</h2><div class="modal-sub">실시간 대전 레이팅 TOP 50을 불러오는 중...</div>';showModal();
-  try{const r=await fetchTimed(`/api/pvp/leaderboard?t=${Date.now()}`,{cache:'no-store'},7000);const rows=await r.json();if(!r.ok||!Array.isArray(rows))throw new Error('PVP_RANK');$('modal').innerHTML=`<h2>PVP 레이팅</h2><div class="modal-sub">노말 PVP · Elo 레이팅 TOP 50</div>${rows.length?rows.map((x,i)=>`<div class="rank-row ${x.playerId===getPlayerId()?'mine':''}"><div class="rank-num">${i+1}</div><div><b>${escapeHtml(x.nickname)}${x.playerId===getPlayerId()?' · 나':''}</b><div class="rank-meta">${escapeHtml(x.className||'')} · ${Number(x.wins||0)}승 ${Number(x.losses||0)}패 ${Number(x.draws||0)}무</div></div><div class="rank-score">${Number(x.rating||1000)}</div></div>`).join(''):'<p class="modal-sub">아직 PVP 기록이 없습니다.</p>'}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;}catch{$('modal').innerHTML='<h2>PVP 레이팅</h2><p class="modal-sub">PVP 랭킹을 불러오지 못했습니다.</p><button class="btn modal-close" onclick="closeModal()">닫기</button>';}
+  try{
+    const r=await fetchTimed(`/api/pvp/leaderboard?t=${Date.now()}`,{cache:'no-store'},7000);
+    const rows=await r.json();if(!r.ok||!Array.isArray(rows))throw new Error('PVP_RANK');
+    $('modal').innerHTML=`<h2>PVP 레이팅</h2><div class="modal-sub">노말 PVP · Elo 레이팅 TOP 50</div>${rows.length?rows.map((x,i)=>`<div class="rank-row ${x.playerId===getPlayerId()?'mine':''}"><div class="rank-num">${i+1}</div><div><b>${escapeHtml(x.nickname)}${x.playerId===getPlayerId()?' · 나':''}</b><div class="rank-meta">${escapeHtml(x.className||'')} · ${Number(x.wins||0)}승 ${Number(x.losses||0)}패 ${Number(x.draws||0)}무</div></div><div class="rank-score">${Number(x.rating||1000)}</div></div>`).join(''):'<p class="modal-sub">아직 PVP 기록이 없습니다.</p>'}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;
+  }catch{
+    $('modal').innerHTML='<h2>PVP 레이팅</h2><p class="modal-sub">PVP 랭킹을 불러오지 못했습니다.</p><button class="btn modal-close" onclick="closeModal()">닫기</button>';
+  }
 }
 function maybeRestorePvp(){
-  const sess=loadPvpSession();if(!sess?.matchId)return;try{const raw=localStorage.getItem(PVP_SAVE_KEY);if(!raw)return;state=normalizeLoadedState(JSON.parse(raw));if(!state?.p||state.ended)return;pvpClient.matchId=sess.matchId;pvpClient.nickname=sess.nickname||'';pendingClassId=state.classId;showScreen('gameScreen');enter(state.sceneId);pvpSocket();}catch{}
+  const sess=loadPvpSession();if(!sess?.matchId)return;
+  try{
+    const raw=localStorage.getItem(PVP_SAVE_KEY);if(!raw){clearPvpSession();return;}
+    state=normalizeLoadedState(JSON.parse(raw));
+    if(!state?.p||String(state?.flags?.pvpMatchId||'')!==String(sess.matchId)){clearPvpSession();return;}
+    pvpClient.matchId=String(sess.matchId);
+    pvpClient.resumeToken=String(sess.resumeToken||'');
+    pvpClient.nickname=String(sess.nickname||'');
+    pvpClient.finished=!!sess.finished||!!state.ended;
+    pvpClient.limitEndsAt=Number(sess.limitEndsAt||0);
+    pendingClassId=state.classId;
+    if(state.ended){showScreen('endScreen');finishLoaded();}
+    else{showScreen('gameScreen');enter(state.sceneId);}
+    pvpSocket();
+    if(pvpClient.limitEndsAt>0)startPvpTimer(pvpClient.limitEndsAt);
+  }catch{clearPvpSession();resetPvpClient(true);}
 }
 
 const CLASS_ART_FILES = {
@@ -4029,7 +4397,7 @@ function render() {
   $('hudGold').textContent = `◆ ${state.p.gold}`;
   $('hpText').textContent = `${state.p.hp} / ${state.p.maxHp}`;
   $('hpBar').style.width = `${Math.max(0, Math.min(100, state.p.hp/state.p.maxHp*100))}%`;
-  const classExtra=state.classId==='necromancer'?` · 시체 ${state.stats.corpses||0}`:state.classId==='dictator'?` · 독재 ${state.stats.tyranny||0}/8`:state.classId==='merchant'?` · 장사 ${state.stats.merchantIncome||0}`:state.classId==='gambler'?` · 강화 눈 ${(state.stats.gamblerFaces||[]).length?(state.stats.gamblerFaces||[]).join('·'):'없음'}`:state.classId==='undead'?` · 부활 ${state.flags.undeadReviveReady===false?'소모':'준비'} · 충전 ${state.stats.undeadKillsSinceReset||0}/4`:state.classId==='godfather'?` · 영입 ${state.stats.godfatherSocialBoosts||0}`:'';
+  const classExtra=state.classId==='necromancer'?` · 시체 ${state.stats.corpses||0}`:state.classId==='dictator'?` · 독재 ${state.stats.tyranny||0}/8`:state.classId==='merchant'?` · 장사 ${state.stats.merchantIncome||0}`:state.classId==='gambler'?` · 강화 눈 ${(state.stats.gamblerFaces||[]).length?(state.stats.gamblerFaces||[]).join('·'):'없음'}`:state.classId==='undead'?` · 부활 ${state.flags.undeadReviveReady===false?'소모':'준비'} · 충전 ${state.stats.undeadKillsSinceReset||0}/2`:state.classId==='godfather'?` · 영입 ${state.stats.godfatherSocialBoosts||0}`:'';
   $('hudStats').textContent = `처세 ${state.p.social} · 속도 ${state.p.speed} · 진행 ${state.stats.progress}${classExtra}`;
 
   $('chapter').textContent = sc.chapter || '';
@@ -4486,11 +4854,11 @@ function applyClassKillReward(){
     gainTyranny('kill');
   }else if(state.classId==='undead'){
     state.stats.undeadKillsSinceReset=Number(state.stats.undeadKillsSinceReset||0)+1;
-    if(state.stats.undeadKillsSinceReset>=4){
+    if(state.stats.undeadKillsSinceReset>=2){
       state.stats.undeadKillsSinceReset=0;
       state.flags.undeadReviveReady=true;
       floatText('부활 충전');
-      state.lastToast='네 번째 적이 쓰러졌다. 죽지 못한 자의 부활 횟수가 다시 1회로 초기화됐다.';
+      state.lastToast='두 번째 적이 쓰러졌다. 죽지 못한 자의 부활이 다시 충전됐다.';
     }
   }
 }
@@ -4795,11 +5163,13 @@ function finish(name) {
   state.ended=true; state.stats.ending=name;
   state.stats.survivors = ['merchantAlive','gangsterPeace'].filter(f=>state.flags[f]).length + (!state.flags.citizenKilled?1:0) + (!state.flags.captainKilled?1:0);
   const e=endingProfile(name);
+  const pvpMode=isPvpMode();
   state.stats.prideKept=!!state.flags.prideKept;
   state.stats.endingBonus=Math.floor(Number(e.bonus||0)*(state.flags.prideKept?1.5:1));
-  const skinUnlockResult=recordHiddenSkinClear(name,e);
-  const newlyUnlocked=recordClearForUnlock(name,e);
-  const classGrowthResult=recordClassGrowth(e);
+  // PVP는 경쟁 기록만 남기며 노말 엔딩/직업 성장/ELITE 해금 진행도를 올리지 않는다.
+  const skinUnlockResult=pvpMode?{unlockedNow:false}:recordHiddenSkinClear(name,e);
+  const newlyUnlocked=pvpMode?[]:recordClearForUnlock(name,e);
+  const classGrowthResult=pvpMode?null:recordClassGrowth(e);
   state.flags.newClassUnlocks=newlyUnlocked;
   state.flags.skinUnlockResult=skinUnlockResult;
   state.flags.classGrowthResult=classGrowthResult;
@@ -4810,7 +5180,7 @@ function finish(name) {
   $('playStyle').textContent=`플레이 스타일 · ${playStyle()}`;
   $('endScore').textContent=clientScore().toLocaleString();
   const deathBlock=e.bad&&state.flags.deathReason?`<b>최후의 순간</b> · ${escapeHtml(state.flags.deathReason)}<br><b>사망 장소</b> · ${escapeHtml(SCENES[state.flags.deathScene]?.location||'알 수 없는 장소')}<br><br><br>`:'';
-  $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>협상 수익 <b>◆ ${state.stats.socialIncome||0}</b> · 고난도 협상 <b>${state.stats.riskySocial||0}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 과대화 <b>${state.stats.overTalks||0}</b> · 진영 전환 <b>${state.stats.teamSwitches||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>${state.classId==='merchant'?`<br>장사 수익 <b>${state.stats.merchantIncome||0}</b> · 새 조우 <b>${state.stats.merchantDeals||0}</b>`:state.classId==='gambler'?`<br>강화한 눈 <b>${(state.stats.gamblerFaces||[]).length?(state.stats.gamblerFaces||[]).join(' · '):'없음'}</b> · 강화 역전 <b>${state.stats.gamblerFaceHits||0}</b> · 중복 꽝 <b>${state.stats.gamblerDuplicates||0}</b>`:state.classId==='undead'?`<br>부활 사용 <b>${state.stats.undeadRevives||0}</b> · 다음 충전 <b>${state.stats.undeadKillsSinceReset||0}/4</b>`:state.classId==='godfather'?`<br>처세 영입 <b>${state.stats.godfatherSocialBoosts||0}</b> · 패시브 공격 증가 <b>+${(state.stats.godfatherSocialBoosts||0)*4}</b>`:''}`;
+  $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>협상 수익 <b>◆ ${state.stats.socialIncome||0}</b> · 고난도 협상 <b>${state.stats.riskySocial||0}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 과대화 <b>${state.stats.overTalks||0}</b> · 진영 전환 <b>${state.stats.teamSwitches||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>${state.classId==='merchant'?`<br>장사 수익 <b>${state.stats.merchantIncome||0}</b> · 새 조우 <b>${state.stats.merchantDeals||0}</b>`:state.classId==='gambler'?`<br>강화한 눈 <b>${(state.stats.gamblerFaces||[]).length?(state.stats.gamblerFaces||[]).join(' · '):'없음'}</b> · 강화 역전 <b>${state.stats.gamblerFaceHits||0}</b> · 중복 꽝 <b>${state.stats.gamblerDuplicates||0}</b>`:state.classId==='undead'?`<br>부활 사용 <b>${state.stats.undeadRevives||0}</b> · 다음 충전 <b>${state.stats.undeadKillsSinceReset||0}/2</b>`:state.classId==='godfather'?`<br>처세 영입 <b>${state.stats.godfatherSocialBoosts||0}</b> · 패시브 공격 증가 <b>+${(state.stats.godfatherSocialBoosts||0)*4}</b>`:''}`;
   if(name==='팬텀'&&state.flags.phantomOriginalEnding){
     $('endStats').innerHTML+=`<br><br><b>팬텀 생환</b> · 원래 도달한 결말 <b>${escapeHtml(state.flags.phantomOriginalEnding)}</b>`;
   }
@@ -4818,9 +5188,8 @@ function finish(name) {
     $('endStats').innerHTML+=`<br><br><b>ELITE 스킨 해금 · 기사 / 귀족 / 도둑</b>`;
   }
   const meta=loadMeta();
-  const pvpMode=isPvpMode();
   const hardMode=isHardMode();
-  if(!e.bad&&!hardMode){
+  if(!e.bad&&!hardMode&&!pvpMode){
     const unlockLine=state.flags.newClassUnlocks?.length?`<br><br><b>새 직업 해금 · ${state.flags.newClassUnlocks.map(escapeHtml).join(' / ')}</b>`:`<br><br>노말 정상엔딩 <b>${meta.normalClears}회</b> · 하드 정상엔딩 <b>${meta.hardClears||0}회</b>`;
     $('endStats').innerHTML+=unlockLine;
   }
@@ -5368,21 +5737,22 @@ function escapeAttr(v){return escapeHtml(v);}
 // ---------- Events ----------
 document.addEventListener('click',e=>{
   const act=e.target.closest('[data-action]')?.dataset.action;
-  if(act==='new-game'){pendingClassId=null;pendingNormalType=null;pendingHardType=null;for(const k of Object.keys(CLASS_SKIN_PREVIEW))delete CLASS_SKIN_PREVIEW[k];renderClasses();showScreen('classScreen');}
+  if(act==='new-game'){cancelPvpQueue(true);if(pvpClient.result)resetPvpClient(true);pendingClassId=null;pendingNormalType=null;pendingHardType=null;for(const k of Object.keys(CLASS_SKIN_PREVIEW))delete CLASS_SKIN_PREVIEW[k];renderClasses();showScreen('classScreen');}
   if(act==='continue')continueGame();
   if(act==='leaderboard')showLeaderboard();
   if(act==='pvp-leaderboard')showPvpLeaderboard();
   if(act==='transfer-create')createDeviceTransferKey();
   if(act==='transfer-load')loadDeviceTransferKey();
   if(act==='pvp-queue'){pvpClient.queueing?cancelPvpQueue():startPvpQueue();}
-  if(act==='back-menu'){closeModal();pendingHardType=null;showScreen('menuScreen');updateMenuSaveInfo();}
+  if(act==='back-menu'){closeModal();cancelPvpQueue(true);if(pvpClient.result)resetPvpClient(true);pendingHardType=null;showScreen('menuScreen');updateMenuSaveInfo();}
   if(act==='back-classes'){renderClasses();showScreen('classScreen');}
-  if(act==='back-mode')openModeSelection();
-  if(act==='back-normal')openNormalSelection();
+  if(act==='back-mode'){cancelPvpQueue(true);openModeSelection();}
+  if(act==='back-normal'){cancelPvpQueue(true);openNormalSelection();}
   if(act==='back-hard')openHardSelection();
   if(act==='infinite-codex')openInfiniteCodex();
   if(act==='infinite-save-exit')infSaveExit();
-  if(act==='infinite-item')openInfiniteItem();
+  if(act==='infinite-item')openInfiniteKit();
+  if(act==='infinite-kit')openInfiniteKit();
   if(act==='infinite-again'){pendingClassId=infiniteRun?.classId||pendingClassId;openInfiniteStarterDraft();}
   if(act==='infinite-back')openInfiniteSelection();
   if(act==='bag')openBag();
@@ -5404,7 +5774,7 @@ document.addEventListener('click',e=>{
   const ga=e.target.closest('[data-game-action]')?.dataset.gameAction;
   if(ga)gameAction(ga);
 });
-window.openInfiniteItem=openInfiniteItem;window.openHardRouteShop=openHardRouteShop;window.openHardFrontierShop=openHardFrontierShop;window.selectClass=selectClass;window.confirmPvpForfeit=confirmPvpForfeit;window.recoverFromAnomaly=recoverFromAnomaly;window.summonWraith=summonWraith;window.openShop=openShop;window.openBag=openBag;window.openEncounterItems=openEncounterItems;window.closeModal=closeModal;window.continueOutcome=continueOutcome;window.saveAndExit=saveAndExit;
+window.openInfiniteItem=openInfiniteItem;window.openInfiniteKit=openInfiniteKit;window.openHardRouteShop=openHardRouteShop;window.openHardFrontierShop=openHardFrontierShop;window.selectClass=selectClass;window.confirmPvpForfeit=confirmPvpForfeit;window.recoverFromAnomaly=recoverFromAnomaly;window.summonWraith=summonWraith;window.openShop=openShop;window.openBag=openBag;window.openEncounterItems=openEncounterItems;window.closeModal=closeModal;window.continueOutcome=continueOutcome;window.saveAndExit=saveAndExit;
 const nicknameInput=$('nickname');if(nicknameInput)nicknameInput.addEventListener('input',refreshNicknameValidation);
 const pvpNicknameInput=$('pvpNickname');if(pvpNicknameInput)pvpNicknameInput.addEventListener('input',()=>pvpNicknameInput.classList.toggle('nickname-invalid',!nicknameAllowed(pvpNicknameInput.value)));
 const transferCodeInput=$('transferCodeInput');if(transferCodeInput)transferCodeInput.addEventListener('input',()=>{transferCodeInput.value=transferCodeInput.value.replace(/\D/g,'').slice(0,4);});
