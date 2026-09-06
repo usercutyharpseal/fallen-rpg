@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <meta name="theme-color" content="#090a0d" />
   <title>몰락자</title>
-  <link rel="stylesheet" href="/style.css?v=0947" />
+  <link rel="stylesheet" href="/style.css?v=0948" />
 </head>
 <body>
   <main id="app">
@@ -22,7 +22,7 @@
         <button class="btn" data-action="leaderboard">통합 랭킹</button>
         <button class="btn" data-action="pvp-leaderboard">PVP 레이팅</button>
       </div>
-      <div class="version">THE FALLEN · v0.9.47</div>
+      <div class="version">THE FALLEN · v0.9.48</div>
       <div id="storageInfo" class="storage-info">랭킹 저장 상태 확인 중…</div>
       <div class="device-transfer">
         <div class="device-transfer-head">
@@ -137,6 +137,7 @@
         <div><small>원본</small><b id="infLoose">0</b></div>
         <div><small>배율</small><b id="infMult">×1.00</b></div>
       </div>
+      <button id="infStarterItem" class="inf-starter-chip hidden" data-action="infinite-item"></button>
       <div id="infRelics" class="inf-relic-strip"></div>
       <section class="scene-card inf-stage">
         <div class="scene-art inf-stage-art"><img id="infSceneArt" src="/assets/art/infinite_archive.webp?v=0947" alt="심연의 기록 보관소" decoding="async"><div class="scene-shade"></div></div>
@@ -296,6 +297,6 @@
     });
   </script>
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/game.js?v=0947"></script>
+  <script src="/game.js?v=0948"></script>
 </body>
 </html>

@@ -417,3 +417,39 @@ button,input{font:inherit}button{color:inherit}button:disabled{opacity:.36}
   #infiniteGameScreen .inf-stage-art img.inf-art-enter,
   #infiniteGameScreen .inf-stage.inf-hit .inf-stage-art img{animation:none!important}
 }
+
+
+/* v0.9.48 item artwork + infinite starter draft */
+.inf-start-item-grid{display:grid!important;grid-template-columns:1fr 1fr;gap:9px}
+.inf-start-item-card{
+  border:1px solid #343740;border-radius:13px;background:#0c0e12;padding:0;overflow:hidden;
+  text-align:left;color:#ddd8cf;box-shadow:0 8px 24px #0007;
+}
+.inf-start-item-card img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:#08090c}
+.inf-start-item-card span{display:block;padding:9px 10px 11px}
+.inf-start-item-card b{display:block;font-size:12px}
+.inf-start-item-card small{display:block;margin-top:4px;color:#92959b;font-size:9px;line-height:1.45}
+.inf-start-item-card:active{transform:scale(.985);border-color:#8d7449}
+.inf-starter-chip{
+  width:100%;display:flex;align-items:center;gap:8px;border:1px solid #343740;border-radius:10px;
+  background:#0a0c10;color:#d8d3ca;padding:6px 8px;margin:0 0 8px;text-align:left;
+}
+.inf-starter-chip img{width:36px;height:36px;object-fit:cover;border-radius:7px;border:1px solid #4a4439}
+.inf-starter-chip span{display:flex;align-items:center;gap:7px;min-width:0}
+.inf-starter-chip b{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inf-starter-chip small{font-size:8px;color:#a88f63}
+.inf-item-modal{display:grid;grid-template-columns:92px 1fr;gap:12px;align-items:center;margin-bottom:12px}
+.inf-item-modal img{width:92px;height:92px;object-fit:cover;border-radius:10px;border:1px solid #484139}
+.inf-item-modal h2{margin:0 0 5px!important;font-size:18px}
+.inf-item-modal p{margin:0;color:#a3a4a6;font-size:11px;line-height:1.6}
+.inf-item-modal small{display:block;margin-top:5px;color:#b49a68;font-size:9px}
+.item-thumb{
+  width:48px;height:48px;flex:0 0 48px;object-fit:cover;border-radius:8px;
+  border:1px solid #373a42;background:#08090c;
+}
+.shop-row .item-copy,.bag-row .item-copy{flex:1;min-width:0}
+@media(max-width:370px){
+  .inf-start-item-grid{grid-template-columns:1fr 1fr;gap:7px}
+  .inf-start-item-card span{padding:8px}
+  .item-thumb{width:42px;height:42px;flex-basis:42px}
+}

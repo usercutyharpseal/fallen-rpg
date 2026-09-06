@@ -8,7 +8,7 @@ const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
 const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
 const PVP_NICK_KEY = 'fallen_pvp_nickname';
 const INFINITE_SAVE_KEY = 'fallen_infinite_save_v1';
-const GAME_VERSION = 147;
+const GAME_VERSION = 148;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5, godfather:7 };
 function loadMeta(){
@@ -2829,6 +2829,88 @@ const INFINITE_RELICS=[
   {id:'zero_page',name:'0쪽',desc:'모든 능력치 +1 · 최대 HP +2',apply:r=>{r.atk++;r.social++;r.speed++;r.maxHp+=2;r.hp+=2;}},
   {id:'soft_cover',name:'사라지는 표지',desc:'우회 성공 보상 +25% · 도주 실패 피해 -1',mods:{speedReward:.25,escapeGuard:1}}
 ];
+const INFINITE_START_ITEMS=[
+  {id:'sealed_grimoire',name:'봉인된 고서',desc:'기록 보상 +12% · 오염 획득 +10%',art:'/assets/items/infinite/sealed_grimoire.webp?v=0948',kind:'passive'},
+  {id:'sanity_tonic',name:'이성의 영약',desc:'1회 사용 · 오염 -25',art:'/assets/items/infinite/sanity_tonic.webp?v=0948',kind:'active',uses:1},
+  {id:'salt_pouch',name:'소금 주머니',desc:'2회 사용 · 오염 -12 · 전투 방해 효과 해제',art:'/assets/items/infinite/salt_pouch.webp?v=0948',kind:'active',uses:2},
+  {id:'bone_key',name:'뼈 열쇠',desc:'봉인실 보관량 +20%',art:'/assets/items/infinite/bone_key.webp?v=0948',kind:'passive'},
+  {id:'old_lantern',name:'낡은 등불',desc:'속도 +1',art:'/assets/items/infinite/old_lantern.webp?v=0948',kind:'passive'},
+  {id:'ritual_candles',name:'의식용 초',desc:'최대 HP +2 · 봉인실 회복 강화',art:'/assets/items/infinite/ritual_candles.webp?v=0948',kind:'passive'},
+  {id:'protective_talisman',name:'보호 부적',desc:'5층 구간마다 첫 피해 -2',art:'/assets/items/infinite/protective_talisman.webp?v=0948',kind:'passive'},
+  {id:'ink_dagger',name:'먹빛 단검',desc:'공격 피해 +1 · 공격 적중 시 오염 +1',art:'/assets/items/infinite/ink_dagger.webp?v=0948',kind:'passive'},
+  {id:'abyss_compass',name:'심연 나침반',desc:'속도 +2',art:'/assets/items/infinite/abyss_compass.webp?v=0948',kind:'passive'},
+  {id:'blood_syringe',name:'혈액 주사기',desc:'2회 사용 · HP +4 · 오염 +3',art:'/assets/items/infinite/blood_syringe.webp?v=0948',kind:'active',uses:2},
+  {id:'forbidden_page',name:'금단의 찢긴 페이지',desc:'시작 배율 ×1.25 · 시작 오염 +10',art:'/assets/items/infinite/forbidden_page.webp?v=0948',kind:'passive'},
+  {id:'ward_medallion',name:'수호 각인 메달',desc:'처세 +2',art:'/assets/items/infinite/ward_medallion.webp?v=0948',kind:'passive'},
+  {id:'moth_charm',name:'나방 부적',desc:'사망 시 1회 HP 40%로 생존',art:'/assets/items/infinite/moth_charm.webp?v=0948',kind:'passive',uses:1},
+  {id:'dive_bell_fragment',name:'깨진 잠수종 파편',desc:'엘리트·보스에게 받는 피해 -1',art:'/assets/items/infinite/dive_bell_fragment.webp?v=0948',kind:'passive'},
+  {id:'black_pearl',name:'검은 진주',desc:'기록 보상 +15% · 오염 획득 +15%',art:'/assets/items/infinite/black_pearl.webp?v=0948',kind:'passive'},
+  {id:'archive_stamp',name:'기록 보관 인장',desc:'봉인실 보관량 +25%',art:'/assets/items/infinite/archive_stamp.webp?v=0948',kind:'passive'}
+];
+let pendingInfiniteItemChoices=[];
+function infStartItem(id=infiniteRun?.starterItem){return INFINITE_START_ITEMS.find(x=>x.id===id)||null;}
+function infStarterArt(id){return infStartItem(id)?.art||'';}
+function infStarterUses(){return Math.max(0,Number(infiniteRun?.starterItemUses||0));}
+function infHasStarter(id){return infiniteRun?.starterItem===id;}
+function openInfiniteStarterDraft(){
+  const cl=selectedClass();if(!cl){openModeSelection();return;}
+  const pool=[...INFINITE_START_ITEMS],picks=[];
+  while(picks.length<4&&pool.length){
+    const idx=Math.floor(Math.random()*pool.length);picks.push(pool.splice(idx,1)[0]);
+  }
+  pendingInfiniteItemChoices=picks.map(x=>x.id);
+  $('infiniteClassLabel').textContent='시작 아이템 선택';
+  $('infiniteMetaStrip').innerHTML='';
+  $('infiniteChoiceGrid').classList.add('inf-start-item-grid');
+  $('infiniteChoiceGrid').innerHTML=picks.map(x=>`<button class="inf-start-item-card" data-inf-start-item="${x.id}"><img src="${x.art}" alt="${escapeAttr(x.name)}"><span><b>${escapeHtml(x.name)}</b><small>${escapeHtml(x.desc)}</small></span></button>`).join('');
+  showScreen('infiniteModeScreen');
+}
+function infApplyStarterInitial(r){
+  if(!r)return;
+  if(r.starterItem==='ritual_candles'){r.maxHp+=2;r.hp+=2;}
+  if(r.starterItem==='forbidden_page'){r.multiplier=1.25;r.corruption=10;}
+  r.starterItemUses=Number(infStartItem(r.starterItem)?.uses||0);
+}
+function infStarterStatBonus(kind){
+  if(!infiniteRun)return 0;
+  if(kind==='speed'&&infHasStarter('old_lantern'))return 1;
+  if(kind==='speed'&&infHasStarter('abyss_compass'))return 2;
+  if(kind==='social'&&infHasStarter('ward_medallion'))return 2;
+  return 0;
+}
+function infTryMothRevive(){
+  if(!infHasStarter('moth_charm')||infStarterUses()<=0)return false;
+  infiniteRun.starterItemUses=0;
+  infiniteRun.hp=Math.max(1,Math.ceil(infiniteRun.maxHp*.4));
+  infiniteRun.corruption=Math.max(0,infiniteRun.corruption-10);
+  infAddRecent('나방 부적 · 죽음에서 빠져나왔다.');
+  return true;
+}
+function openInfiniteItem(){
+  if(!infiniteRun)return;
+  const it=infStartItem();if(!it)return;
+  const active=it.kind==='active'&&infStarterUses()>0;
+  $('modal').innerHTML=`<div class="inf-item-modal"><img src="${it.art}" alt="${escapeAttr(it.name)}"><div><h2>${escapeHtml(it.name)}</h2><p>${escapeHtml(it.desc)}</p>${it.kind==='active'?`<small>남은 횟수 ${infStarterUses()}</small>`:''}</div></div>${active?`<button class="btn primary full" data-inf-use-start-item="${it.id}">사용</button>`:''}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;
+  showModal();
+}
+function infUseStarterItem(id){
+  if(!infiniteRun||infiniteBusy||infiniteRun.starterItem!==id||infStarterUses()<=0)return;
+  if(id==='sanity_tonic'){
+    const before=infiniteRun.corruption;infiniteRun.corruption=Math.max(0,infiniteRun.corruption-25);
+    infiniteRun.starterItemUses--;infAddRecent(`이성의 영약 · 오염 -${before-infiniteRun.corruption}`);infFloat(`오염 -${before-infiniteRun.corruption}`);
+  }else if(id==='salt_pouch'){
+    const before=infiniteRun.corruption;infiniteRun.corruption=Math.max(0,infiniteRun.corruption-12);
+    const c=infiniteRun.current?.combat;if(c){c.weakenSocial=0;c.weakenSpeed=0;c.sealedAction='';c.disrupted=0;}
+    infiniteRun.starterItemUses--;infAddRecent(`소금 주머니 · 오염 -${before-infiniteRun.corruption}`);infFloat('정화');
+  }else if(id==='blood_syringe'){
+    const before=infiniteRun.hp;infiniteRun.hp=Math.min(infiniteRun.maxHp,infiniteRun.hp+4);
+    infiniteRun.corruption=Math.min(100,infiniteRun.corruption+3);
+    infiniteRun.starterItemUses--;infAddRecent(`혈액 주사기 · HP +${infiniteRun.hp-before} / 오염 +3`);infFloat(`HP +${infiniteRun.hp-before}`);
+    if(infiniteRun.corruption>=100)infEnd('혈액 속 속삭임에 잠식됐다.');
+  }else return;
+  closeModal();infSave();infRender();
+}
+
 const INFINITE_ENEMIES=[
   {id:'ink_hunter',theme:'hunt',min:1,name:'먹빛 사냥꾼',body:'먹물 같은 피부의 사냥꾼이 책장 위를 네 발로 달린다. 눈 대신 젖은 색인표가 얼굴을 덮고 있다.',trait:'추적',mods:{attack:0,social:2,speed:-2},damage:0,corrupt:1,reward:1.08,record:2,verbs:{attack:'정면에서 베어낸다',social:'사냥 규칙의 빈틈을 찌른다',speed:'서가 사이로 따돌린다'}},
   {id:'scale_archivist',theme:'archive',min:1,name:'물비늘 기록관',body:'젖은 장부를 품은 기록관의 목 아래에서 아가미가 열린다. 당신의 이름을 장부에 적으려 한다.',trait:'호명',mods:{attack:-1,social:-2,speed:2},damage:0,corrupt:2,reward:1.05,record:2,verbs:{attack:'장부째 끊어낸다',social:'잘못 기록된 이름을 역으로 읽는다',speed:'기록되기 전에 달아난다'}},
@@ -2949,7 +3031,7 @@ function infMods(){
   return m;
 }
 function infEffectiveStat(kind){
-  let v=Number(infiniteRun?.[kind]||0),m=infMods(),c=Number(infiniteRun?.corruption||0);
+  let v=Number(infiniteRun?.[kind]||0)+infStarterStatBonus(kind),m=infMods(),c=Number(infiniteRun?.corruption||0);
   if(c>=50&&(kind==='social'||kind==='speed'))v-=1;
   if(c>=75){if(kind==='atk')v+=3;if(kind==='social')v-=1;}
   if(kind==='social'&&m.whisper&&c>=50)v+=4;if(kind==='atk'&&m.scarlet&&c>=75)v+=4;return Math.max(0,v);
@@ -2965,14 +3047,14 @@ function infClassChance(action){
 function infChance(action,extra=0){const stat=action==='attack'?infEffectiveStat('atk'):action==='social'?infEffectiveStat('social'):infEffectiveStat('speed');return Math.round(infClamp(58+(stat-infDifficulty(extra))*6+infClassChance(action),8,95));}
 function infDiversity(){return new Set((infiniteRun.carriedLogs||[]).map(id=>INFINITE_LOGS.find(x=>x.id===id)?.cat).filter(Boolean)).size;}
 function infRewardMult(action,nodeType=''){
-  const m=infMods();let x=infiniteRun.multiplier*(1+infiniteRun.corruption*.004)*(1+m.reward);
+  const m=infMods();let x=infiniteRun.multiplier*(1+infiniteRun.corruption*.004)*(1+m.reward);if(infHasStarter('sealed_grimoire'))x*=1.12;if(infHasStarter('black_pearl'))x*=1.15;
   if(nodeType==='combat')x*=1+m.combatReward;if(action==='speed')x*=1+m.speedReward;
   const d=infDiversity();if(d>=5)x*=1.25;else if(d>=3)x*=1.10;
   if(infiniteRun.classId==='noble'&&action==='social')x*=1.15;
   if(infiniteRun.classId==='gambler'){const die=infInt(1,6);infiniteRun.lastGamble=die;x*=die===1?.55:die===6?1.8:1;}
   return x;
 }
-function infAddCorruption(v){const m=infMods();v=Math.max(0,Math.round((v+m.corruptFlat)*m.corruptMult));infiniteRun.corruption=infClamp(infiniteRun.corruption+v,0,100);if(infiniteRun.corruption>=100)infEnd('정신이 기록에 잠식됐다.');}
+function infAddCorruption(v){const m=infMods();let starterMult=1;if(infHasStarter('sealed_grimoire'))starterMult*=1.10;if(infHasStarter('black_pearl'))starterMult*=1.15;v=Math.max(0,Math.round((v+m.corruptFlat)*m.corruptMult*starterMult));infiniteRun.corruption=infClamp(infiniteRun.corruption+v,0,100);if(infiniteRun.corruption>=100)infEnd('정신이 기록에 잠식됐다.');}
 function infGainGold(){const m=infMods();if(!m.goldTick)return;infiniteRun.gold+=infInt(2,5);}
 function infAddRecent(text){infiniteRun.recent=Array.isArray(infiniteRun.recent)?infiniteRun.recent:[];infiniteRun.recent.unshift(text);infiniteRun.recent=infiniteRun.recent.slice(0,4);}
 function infAcquireRecord(power=1){
@@ -3000,8 +3082,11 @@ function infApplyClassSuccess(action,nodeType){
 function infTryUndeadRevive(){if(infiniteRun.classId!=='undead'||!infiniteRun.reviveReady)return false;infiniteRun.reviveReady=false;infiniteRun.hp=infiniteRun.maxHp;infiniteRun.corruption=Math.max(0,infiniteRun.corruption-20);if(infiniteRun.current){infiniteRun.current.failed=[];if(infiniteRun.current.combat)infResetCombatOnRevive(infiniteRun.current);}infAddRecent('죽지 못한 자 · 실패를 거부하고 조우가 되감겼다.');return true;}
 function infTakeDamage(v,action=''){
   const m=infMods();if(m.ward&&infiniteRun.wardFloor!==Math.floor(infiniteRun.floor/5)){infiniteRun.wardFloor=Math.floor(infiniteRun.floor/5);infAddRecent('멈춘 모래시계 · 이번 실패 피해 무효');return 0;}
+  const sector=Math.floor((infiniteRun.floor-1)/5);
+  if(infHasStarter('protective_talisman')&&infiniteRun.starterWardSector!==sector){infiniteRun.starterWardSector=sector;v=Math.max(0,v-2);infAddRecent('보호 부적 · 피해 -2');}
+  if(infHasStarter('dive_bell_fragment')&&['elite','boss'].includes(infiniteRun.current?.type))v=Math.max(0,v-1);
   if(action==='speed')v=Math.max(1,v-m.escapeGuard);if(infiniteRun.corruption>=75)v++;if(m.scarlet&&infiniteRun.corruption>=75)v++;
-  infiniteRun.hp=Math.max(0,infiniteRun.hp-v);if(infiniteRun.hp<=0){if(infTryUndeadRevive())return -1;infEnd('기록 보관소에서 더 이상 일어나지 못했다.');}return v;
+  infiniteRun.hp=Math.max(0,infiniteRun.hp-v);if(infiniteRun.hp<=0){if(infTryUndeadRevive())return -1;if(infTryMothRevive())return -1;infEnd('기록 보관소에서 더 이상 일어나지 못했다.');}return v;
 }
 
 const INFINITE_INTENTS={
@@ -3186,7 +3271,7 @@ function infCombatAttackDamage(entity){
   if(infRng()*100<critChance){crit=true;dmg+=Math.max(1,Math.floor(dmg*.65));}
   let armor=(entity.trait==='중갑'?1:0)+(entity.trait==='장막'&&c.round===1?1:0)+(c.intent?.kind==='guard'?1:0);
   if(c.exposed>0)armor=Math.max(0,armor-1);
-  return {damage:Math.max(1,dmg-armor),crit};
+  if(infHasStarter('ink_dagger')){dmg+=1;infAddCorruption(1);}return {damage:Math.max(1,dmg-armor),crit};
 }
 function infCombatSocialDamage(entity){
   const c=entity.combat;let d=infCombatRoll('social');
@@ -3464,17 +3549,19 @@ function infPrepareFloor(){
   }
   infSave();infRender();
 }
-function beginInfiniteSolo(classIdOverride=null){
+function beginInfiniteSolo(classIdOverride=null,starterId=null){
   const id=classIdOverride||pendingClassId||infiniteRun?.classId,cl=CLASSES[id];if(!id||!cl||!isClassUnlocked(id))return;
+  if(!starterId||!INFINITE_START_ITEMS.some(x=>x.id===starterId)){openInfiniteStarterDraft();return;}
   pendingClassId=id;
   const grown=classGrowthStats(id,cl);const seed=(Date.now()^(Math.random()*0xffffffff))>>>0;
-  infiniteRun={version:1,runId:`inf_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`,rngState:seed||123456789,classId:id,classSkin:preferredClassSkin(id),floor:1,hp:grown.hp,maxHp:grown.hp,atk:grown.atk,social:grown.social,speed:grown.speed,gold:8,corruption:0,unbanked:0,secured:0,multiplier:1,runRecordTotal:0,carriedLogs:[],securedLogIds:[],relics:[],bosses:0,elites:0,kills:0,socialWins:0,escapes:0,phase:'nodes',current:null,nodeChoices:[],postPhases:[],recent:[],ended:false,knightGrowth:0,reviveReady:id==='undead',undeadKills:0,tyranny:0,corpses:0};
-  infPrepareFloor();showScreen('infiniteGameScreen');
+  infiniteRun={version:1,runId:`inf_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`,rngState:seed||123456789,classId:id,classSkin:preferredClassSkin(id),floor:1,hp:grown.hp,maxHp:grown.hp,atk:grown.atk,social:grown.social,speed:grown.speed,gold:8,corruption:0,unbanked:0,secured:0,multiplier:1,runRecordTotal:0,carriedLogs:[],securedLogIds:[],relics:[],starterItem:starterId,starterItemUses:0,starterWardSector:-1,bosses:0,elites:0,kills:0,socialWins:0,escapes:0,phase:'nodes',current:null,nodeChoices:[],postPhases:[],recent:[],ended:false,knightGrowth:0,reviveReady:id==='undead',undeadKills:0,tyranny:0,corpses:0};
+  infApplyStarterInitial(infiniteRun);infPrepareFloor();showScreen('infiniteGameScreen');
 }
 function openInfiniteSelection(){
   infPreloadEntityArt();
   const cl=selectedClass();if(!cl){openModeSelection();return;}
   $('infiniteClassLabel').textContent=`${classSkinPresentation(pendingClassId,cl,preferredClassSkin(pendingClassId)).name} · ENDLESS`;
+  $('infiniteChoiceGrid').classList.remove('inf-start-item-grid');
   const m=infiniteMeta();$('infiniteMetaStrip').innerHTML=`<div><span>최고층</span><b>${m.bestFloor}F</b></div><div><span>최고 점수</span><b>${Number(m.bestScore).toLocaleString()}</b></div><div><span>수집 기록</span><b>${m.discoveredLogs.length}/${INFINITE_LOGS.length}</b></div>`;
   const has=!!localStorage.getItem(INFINITE_SAVE_KEY);
   $('infiniteChoiceGrid').innerHTML=`<button class="hard-choice" data-infinite-id="solo"><span class="hard-choice-icon">◇</span><span><b>솔로</b></span><i>›</i></button>${has?`<button class="hard-choice" data-infinite-id="continue"><span class="hard-choice-icon">↺</span><span><b>이어하기</b></span><i>›</i></button>`:''}<button class="hard-choice pvp infinite-locked" disabled><span class="hard-choice-icon">⚔</span><span><b>PVP</b></span><i>×</i></button>`;
@@ -3601,10 +3688,10 @@ async function infCheckpoint(action){
   const r=infiniteRun,m=infMods();
 
   if(action==='secure'||action==='retire'){
-    const bonus=Math.round(r.unbanked*m.secure),moved=r.unbanked+bonus;
+    let secureBonus=m.secure;if(infHasStarter('bone_key'))secureBonus+=.20;if(infHasStarter('archive_stamp'))secureBonus+=.25;const bonus=Math.round(r.unbanked*secureBonus),moved=r.unbanked+bonus;
     r.secured+=moved;r.unbanked=0;r.multiplier=1;
     r.corruption=Math.max(0,r.corruption-(action==='retire'?18:10));
-    const heal=Math.ceil(r.maxHp*(.22+m.checkpointHeal));r.hp=Math.min(r.maxHp,r.hp+heal);
+    const heal=Math.ceil(r.maxHp*(.22+m.checkpointHeal+(infHasStarter('ritual_candles')?.12:0)));r.hp=Math.min(r.maxHp,r.hp+heal);
     infCommitLogs();infAddRecent(`기록 봉인 · ${moved.toLocaleString()}`);
     r.status=`기록 봉인 · ${moved.toLocaleString()}`;infRender();
     await infResultBeat('good',`봉인 +${moved}`,760);
@@ -3635,6 +3722,7 @@ function infRender(){
   if(!infiniteRun)return;showScreen('infiniteGameScreen');const r=infiniteRun;
   $('infClass').textContent=`${CLASSES[r.classId]?.name||'기록자'}${r.classSkin==='elite'?' · ELITE':''}`;$('infFloor').textContent=`${r.floor}층`;$('infHpBar').style.width=`${infClamp(r.hp/r.maxHp*100,0,100)}%`;$('infHpText').textContent=`${r.hp}/${r.maxHp}`;$('infCorruptBar').style.width=`${r.corruption}%`;$('infCorruptText').textContent=`${r.corruption}%`;$('infSecured').textContent=r.secured.toLocaleString();$('infLoose').textContent=r.unbanked.toLocaleString();$('infMult').textContent=`×${r.multiplier.toFixed(2)}`;$('infGold').textContent=`◆ ${r.gold}`;
   const runStats=$('infRunStats');if(runStats)runStats.textContent=`공격 ${infEffectiveStat('atk')} · 처세 ${infEffectiveStat('social')} · 속도 ${infEffectiveStat('speed')}`;
+  const starter=infStartItem();const starterEl=$('infStarterItem');if(starterEl&&starter){starterEl.classList.remove('hidden');starterEl.innerHTML=`<img src="${starter.art}" alt=""><span><b>${escapeHtml(starter.name)}</b>${starter.kind==='active'?`<small>${infStarterUses()}회</small>`:''}</span>`;}else starterEl?.classList.add('hidden');
   $('infRelics').innerHTML=r.relics.length?r.relics.map(id=>{const x=INFINITE_RELICS.find(y=>y.id===id);return `<span title="${escapeAttr(x?.desc||'')}">${escapeHtml(x?.name||id)}</span>`}).join(''):'';
   const statusEl=$('infStatus');statusEl.textContent=r.status||'';statusEl.classList.toggle('hidden',!r.status);
   const choices=$('infChoices'),k=$('infKicker'),title=$('infTitle'),body=$('infBody');
@@ -4766,6 +4854,25 @@ function shopPrice(base){
 }
 
 // ---------- Inventory / shop ----------
+const ADVENTURE_ITEM_ART={
+  '붕대':'/assets/items/adventure/healing_potion.webp?v=0948',
+  '고급 붕대':'/assets/items/adventure/repair_kit.webp?v=0948',
+  '상인의 물약':'/assets/items/infinite/sanity_tonic.webp?v=0948',
+  '철제 부적':'/assets/items/adventure/holy_emblem.webp?v=0948',
+  '강심제':'/assets/items/infinite/blood_syringe.webp?v=0948',
+  '은빛 브로치':'/assets/items/adventure/signet_ring.webp?v=0948',
+  '경량 장화끈':'/assets/items/adventure/speed_boots.webp?v=0948',
+  '연막탄':'/assets/items/adventure/smoke_bomb.webp?v=0948',
+  '독병':'/assets/items/adventure/poison_vial.webp?v=0948',
+  '관찰자의 렌즈':'/assets/items/adventure/mirror_shard.webp?v=0948',
+  '행운의 동전':'/assets/items/adventure/cursed_coin.webp?v=0948',
+  '뇌물 봉투':'/assets/items/adventure/coin_pouch.webp?v=0948',
+  '든든한 식사':'/assets/items/adventure/healing_potion.webp?v=0948',
+  '숫돌':'/assets/items/adventure/repair_kit.webp?v=0948'
+};
+function adventureItemArt(name){return ADVENTURE_ITEM_ART[name]||'/assets/items/adventure/travel_torch.webp?v=0948';}
+function itemThumb(name){return `<img class="item-thumb" src="${adventureItemArt(name)}" alt="">`;}
+
 const ITEMS = {
   '붕대':{heal:3,kind:'회복',desc:'체력 3 회복.'},
   '고급 붕대':{heal:5,kind:'회복',desc:'체력 5 회복.'},
@@ -4788,20 +4895,20 @@ const SHOP = [
 ];
 function openShop(){
   const discount=state.classId==='merchant'?'<div class="modal-sub">장사꾼의 재능 · 모든 가격 25% 할인</div>':'';
-  $('modal').innerHTML=`<h2>상점</h2><div class="modal-sub">◆ ${state.p.gold}</div>${discount}${SHOP.map((x,i)=>{const price=shopPrice(x.cost);return `<div class="shop-row"><div class="item-copy"><b>${x.name}${ITEMS[x.name]?`<span class="item-kind">${ITEMS[x.name].kind}</span>`:''}</b><small>${x.desc||ITEMS[x.name]?.desc||''}</small></div><button class="shop-btn" data-buy="${i}">◆ ${price}${price<x.cost?` <s>${x.cost}</s>`:''}</button></div>`;}).join('')}<button class="btn modal-close" onclick="closeModal()">나간다</button>`;
+  $('modal').innerHTML=`<h2>상점</h2><div class="modal-sub">◆ ${state.p.gold}</div>${discount}${SHOP.map((x,i)=>{const price=shopPrice(x.cost);return `<div class="shop-row">${itemThumb(x.name)}<div class="item-copy"><b>${x.name}${ITEMS[x.name]?`<span class="item-kind">${ITEMS[x.name].kind}</span>`:''}</b><small>${x.desc||ITEMS[x.name]?.desc||''}</small></div><button class="shop-btn" data-buy="${i}">◆ ${price}${price<x.cost?` <s>${x.cost}</s>`:''}</button></div>`;}).join('')}<button class="btn modal-close" onclick="closeModal()">나간다</button>`;
   showModal();document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const x=SHOP[Number(b.dataset.buy)];const price=shopPrice(x.cost);if(!spendGold(price)){toast('골드가 부족하다.','bad');return;}if(x.buy)x.buy();else addItem(x.name);save();openShop();render();});
 }
 function openHardFrontierShop(){
   if(state.flags.hardShopRobbed){toast('이미 약탈한 장터다. 더 살 물건은 남지 않았다.','bad');return;}
   const stock=SHOP.filter(x=>['붕대','고급 붕대','강심제','은빛 브로치','경량 장화끈','뇌물 봉투'].includes(x.name));
   const discount=state.classId==='merchant'?'<div class="modal-sub">장사꾼의 재능 · 모든 가격 25% 할인</div>':'';
-  $('modal').innerHTML=`<h2>북부 경계 상점</h2><div class="modal-sub">현재 자금 ◆ ${state.p.gold} · 첫 구매 이후 약탈 불가</div>${discount}${stock.map((x,i)=>{const price=shopPrice(x.cost);return `<div class="shop-row"><div class="item-copy"><b>${x.name}<span class="item-kind">${ITEMS[x.name]?.kind||''}</span></b><small>${x.desc||ITEMS[x.name]?.desc||''}</small></div><button class="shop-btn" data-hard-buy="${i}">◆ ${price}</button></div>`;}).join('')}<button class="btn modal-close" onclick="closeModal()">나간다</button>`;
+  $('modal').innerHTML=`<h2>북부 경계 상점</h2><div class="modal-sub">현재 자금 ◆ ${state.p.gold} · 첫 구매 이후 약탈 불가</div>${discount}${stock.map((x,i)=>{const price=shopPrice(x.cost);return `<div class="shop-row">${itemThumb(x.name)}<div class="item-copy"><b>${x.name}<span class="item-kind">${ITEMS[x.name]?.kind||''}</span></b><small>${x.desc||ITEMS[x.name]?.desc||''}</small></div><button class="shop-btn" data-hard-buy="${i}">◆ ${price}</button></div>`;}).join('')}<button class="btn modal-close" onclick="closeModal()">나간다</button>`;
   showModal();document.querySelectorAll('[data-hard-buy]').forEach(b=>b.onclick=()=>{const x=stock[Number(b.dataset.hardBuy)];const price=shopPrice(x.cost);if(!spendGold(price)){toast('골드가 부족하다.','bad');return;}state.flags.hardShopBought=true;if(x.buy)x.buy();else addItem(x.name);save();openHardFrontierShop();render();});
 }
 function inventoryCounts(){const counts={};for(const x of state.inventory)counts[x]=(counts[x]||0)+1;return counts;}
 function openBag(){
   const rows=Object.entries(inventoryCounts());
-  $('modal').innerHTML=`<h2>가방</h2>${rows.length?rows.map(([nm,count])=>{const it=ITEMS[nm];const can=!!(it?.heal||it?.persistent);return `<div class="bag-row ${can?'':'item-disabled'}"><div class="item-copy"><b>${nm} × ${count}${it?`<span class="item-kind">${it.kind}</span>`:''}</b><small>${itemDesc(nm)}</small></div><button class="shop-btn" data-use="${escapeAttr(nm)}" ${can?'':'disabled'}>${can?'사용':'조우용'}</button></div>`}).join(''):'<p class="modal-sub">아무것도 없다.</p>'}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;
+  $('modal').innerHTML=`<h2>가방</h2>${rows.length?rows.map(([nm,count])=>{const it=ITEMS[nm];const can=!!(it?.heal||it?.persistent);return `<div class="bag-row ${can?'':'item-disabled'}">${itemThumb(nm)}<div class="item-copy"><b>${nm} × ${count}${it?`<span class="item-kind">${it.kind}</span>`:''}</b><small>${itemDesc(nm)}</small></div><button class="shop-btn" data-use="${escapeAttr(nm)}" ${can?'':'disabled'}>${can?'사용':'조우용'}</button></div>`}).join(''):'<p class="modal-sub">아무것도 없다.</p>'}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;
   showModal();document.querySelectorAll('[data-use]').forEach(b=>b.onclick=()=>useItem(b.dataset.use,false));
 }
 function openEncounterItems(){
@@ -4809,7 +4916,7 @@ function openEncounterItems(){
   const sc=SCENES[state.sceneId],enemy=getEnemy(sc);if(!enemy)return;
   const rows=Object.entries(inventoryCounts()).filter(([nm])=>{const it=ITEMS[nm];return it&&(it.encounter||it.heal||it.persistent);});
   const m=encMod();
-  $('modal').innerHTML=`<h2>조우 아이템</h2><div class="modal-sub">${escapeHtml(enemy.name)}</div>${rows.length?rows.map(([nm,count])=>{const it=ITEMS[nm];return `<div class="bag-row encounter-usable"><div class="item-copy"><b>${nm} × ${count}<span class="item-kind">${it.kind}</span></b><small>${it.desc}</small></div><button class="shop-btn" data-enc-use="${escapeAttr(nm)}">사용</button></div>`}).join(''):'<p class="modal-sub">이 조우에서 사용할 물품이 없다.</p>'}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;
+  $('modal').innerHTML=`<h2>조우 아이템</h2><div class="modal-sub">${escapeHtml(enemy.name)}</div>${rows.length?rows.map(([nm,count])=>{const it=ITEMS[nm];return `<div class="bag-row encounter-usable">${itemThumb(nm)}<div class="item-copy"><b>${nm} × ${count}<span class="item-kind">${it.kind}</span></b><small>${it.desc}</small></div><button class="shop-btn" data-enc-use="${escapeAttr(nm)}">사용</button></div>`}).join(''):'<p class="modal-sub">이 조우에서 사용할 물품이 없다.</p>'}<button class="btn modal-close" onclick="closeModal()">닫기</button>`;
   showModal();document.querySelectorAll('[data-enc-use]').forEach(b=>b.onclick=()=>useItem(b.dataset.encUse,true));
 }
 function itemDesc(nm){return ITEMS[nm]?.desc||'특수 물품';}
@@ -5213,7 +5320,8 @@ document.addEventListener('click',e=>{
   if(act==='back-hard')openHardSelection();
   if(act==='infinite-codex')openInfiniteCodex();
   if(act==='infinite-save-exit')infSaveExit();
-  if(act==='infinite-again')beginInfiniteSolo(infiniteRun?.classId||pendingClassId);
+  if(act==='infinite-item')openInfiniteItem();
+  if(act==='infinite-again'){pendingClassId=infiniteRun?.classId||pendingClassId;openInfiniteStarterDraft();}
   if(act==='infinite-back')openInfiniteSelection();
   if(act==='bag')openBag();
   if(act==='encounter-items')openEncounterItems();
@@ -5224,7 +5332,9 @@ document.addEventListener('click',e=>{
   const modeId=e.target.closest('[data-mode-id]')?.dataset.modeId;if(modeId)enterGameMode(modeId);
   const normalId=e.target.closest('[data-normal-id]')?.dataset.normalId;if(normalId)enterNormalVariant(normalId);
   const hardId=e.target.closest('[data-hard-id]')?.dataset.hardId;if(hardId)enterHardVariant(hardId);
-  const infiniteId=e.target.closest('[data-infinite-id]')?.dataset.infiniteId;if(infiniteId==='solo')beginInfiniteSolo();else if(infiniteId==='continue')continueInfinite();
+  const infiniteId=e.target.closest('[data-infinite-id]')?.dataset.infiniteId;if(infiniteId==='solo')openInfiniteStarterDraft();else if(infiniteId==='continue')continueInfinite();
+  const startItem=e.target.closest('[data-inf-start-item]')?.dataset.infStartItem;if(startItem)beginInfiniteSolo(null,startItem);
+  const useStartItem=e.target.closest('[data-inf-use-start-item]')?.dataset.infUseStartItem;if(useStartItem)infUseStarterItem(useStartItem);
   const infNode=e.target.closest('[data-inf-node]')?.dataset.infNode;if(infNode!==undefined)infChooseNode(Number(infNode));
   const infAction=e.target.closest('[data-inf-action]')?.dataset.infAction;if(infAction)infDoAction(infAction);
   const infRelic=e.target.closest('[data-inf-relic]')?.dataset.infRelic;if(infRelic)infPickRelic(infRelic);
@@ -5232,7 +5342,7 @@ document.addEventListener('click',e=>{
   const ga=e.target.closest('[data-game-action]')?.dataset.gameAction;
   if(ga)gameAction(ga);
 });
-window.openHardFrontierShop=openHardFrontierShop;window.selectClass=selectClass;window.confirmPvpForfeit=confirmPvpForfeit;window.recoverFromAnomaly=recoverFromAnomaly;window.summonWraith=summonWraith;window.openShop=openShop;window.openBag=openBag;window.openEncounterItems=openEncounterItems;window.closeModal=closeModal;window.continueOutcome=continueOutcome;window.saveAndExit=saveAndExit;
+window.openInfiniteItem=openInfiniteItem;window.openHardFrontierShop=openHardFrontierShop;window.selectClass=selectClass;window.confirmPvpForfeit=confirmPvpForfeit;window.recoverFromAnomaly=recoverFromAnomaly;window.summonWraith=summonWraith;window.openShop=openShop;window.openBag=openBag;window.openEncounterItems=openEncounterItems;window.closeModal=closeModal;window.continueOutcome=continueOutcome;window.saveAndExit=saveAndExit;
 const nicknameInput=$('nickname');if(nicknameInput)nicknameInput.addEventListener('input',refreshNicknameValidation);
 const pvpNicknameInput=$('pvpNickname');if(pvpNicknameInput)pvpNicknameInput.addEventListener('input',()=>pvpNicknameInput.classList.toggle('nickname-invalid',!nicknameAllowed(pvpNicknameInput.value)));
 const transferCodeInput=$('transferCodeInput');if(transferCodeInput)transferCodeInput.addEventListener('input',()=>{transferCodeInput.value=transferCodeInput.value.replace(/\D/g,'').slice(0,4);});
