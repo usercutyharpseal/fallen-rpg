@@ -7,7 +7,7 @@ const META_KEY = 'fallen_meta_v1';
 const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
 const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
 const PVP_NICK_KEY = 'fallen_pvp_nickname';
-const GAME_VERSION = 139;
+const GAME_VERSION = 140;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5, godfather:7 };
 function loadMeta(){
@@ -318,6 +318,10 @@ const ENDINGS = {
   '검은 왕관의 몰락': { icon:'♜', kind:'HARD END · LORD ALGON', bonus:45000, art:'hard_algon', epilogue:'폐쇄성의 종이 멎었다.\n검은 장부가 불길 속에서 뒤틀리고, 살아 있는 자와 죽은 자의 이름을 가르던 선도 함께 사라졌다.\n당신은 왕좌를 차지하지 않았다. 대신 누구도 다시 그 문을 닫지 못하게 만들었다.' },
   '이름을 돌려준 자': { icon:'◇', kind:'HARD SECRET END · LORD ALGON', bonus:56000, art:'hard_throne', epilogue:'세 개의 봉인이 동시에 깨지자 성채 아래에서 수천 개의 이름이 되돌아왔다.\n죽었다고 기록된 자, 추방되었다고 지워진 자, 명령 한 줄로 사람이 아니게 된 자들의 기록이 다시 세상 위로 올라왔다.\n아르벤이 없애려 했던 장부와 레오른이 거부했던 명령은 결국 당신의 손에서 끝났다.' },
   '닫힌 성채의 새 주인': { icon:'♛', kind:'HARD HIDDEN END · LORD ALGON', bonus:50000, art:'hard_algon', epilogue:'알곤은 쓰러졌지만 왕좌는 비어 있었다.\n당신은 장부를 태우지 않았다. 사슬도 모두 풀지 않았다. 대신 가장 위에 있던 이름만 지우고 그 자리에 자신의 이름을 적었다.\n문은 다시 닫혔다. 이번에는 당신의 명령으로.' },
+  '열린 성채': { icon:'☼', kind:'HARD END · LORD ALGON · 해방', bonus:52000, art:'hard_throne', epilogue:'왕좌가 무너진 뒤 가장 먼저 열린 것은 정문이 아니었다. 세탁문, 감옥의 남쪽 통로, 하인실의 작은 창부터 하나씩 열렸다.\n\n731번은 더 이상 번호로 불리지 않았고, 하인들은 서로의 이름을 큰 소리로 확인했다. 로드릭은 문을 지키는 대신 밖으로 나가는 사람을 세었고, 카르센은 무명군의 마지막 명령을 취소했다.\n\n폐쇄성은 처음으로 사람을 가두는 성이 아니라 사람들이 빠져나오는 성이 되었다. 북부 사람들은 그날을 왕이 죽은 날이 아니라 문이 열린 날로 기억했다.' },
+  '마지막 봉인자': { icon:'◈', kind:'HARD END · LORD ALGON · 개혁', bonus:54000, art:'hard_throne', epilogue:'당신은 알곤의 제도를 부쉈지만 균열까지 외면하지는 않았다.\n\n사람의 이름을 못처럼 박아두던 봉인은 해체되고, 세 인장은 북부 지하의 붉은 균열을 감싸는 새로운 구조로 다시 놓였다. 누구의 이름도 필요하지 않은 봉인이었다.\n\n왕좌는 비었고 장부는 공개됐다. 그러나 가장 깊은 지하에는 한 사람의 감시가 남았다. 군주가 아니라, 마지막 봉인자라는 이름으로.' },
+  '북부의 새 서약': { icon:'✦', kind:'HARD SECRET END · LORD ALGON', bonus:64000, art:'hard_throne', epilogue:'세 봉인은 이름을 돌려주는 데 쓰였고, 남은 힘은 균열을 닫는 데 쓰였다.\n\n731번과 하인들, 이름을 되찾은 무명군, 검을 내린 로드릭과 카르센이 같은 홀에 섰다. 누구도 알곤의 자리를 차지하지 않았다. 대신 북부를 다시 닫으려면 서로 다른 사람들의 동의가 필요하도록 새 서약을 만들었다.\n\n첫 장에는 왕의 이름이 없었다. 가장 먼저 적힌 것은 오래전 첫 봉인에 희생된 리에나 알곤의 이름이었다. 그 아래로 지워졌던 이름들이 하나씩 돌아왔다.\n\n폐쇄령은 끝났고, 봉인은 남았다. 이번에는 사람을 지키기 위해서만.' },
+  '검은 섭정': { icon:'♚', kind:'HARD HIDDEN END · LORD ALGON · 계승', bonus:53000, art:'hard_algon', epilogue:'알곤의 이름이 지워진 자리에는 당신의 이름이 적혔다. 그러나 이번에는 왕좌만 바뀐 것이 아니었다.\n\n명령의 봉인을 쥔 순간 무명군이 동시에 무릎을 꿇었다. 장부는 태워지지 않았고 성문은 필요한 만큼만 열렸다. 사람들은 새 주인이 전보다 자비롭기를 바랐다.\n\n북부는 다시 조용해졌다. 다만 이제 사슬이 누구의 손에 들려 있는지 모두가 알고 있었다.' },
   '폐쇄령의 마지막 이름': { icon:'⛓', kind:'BAD END · LORD ALGON', bonus:5200, bad:true, art:'hard_algon', epilogue:'로드 알곤은 도망칠 길부터 없앴다.\n당신이 마지막으로 들은 것은 검이 아니라 장부를 넘기는 소리였다.\n다음 날, 폐쇄성의 기록에는 새 줄 하나가 생겼다. 이름, 출신, 그리고 단 한 단어. 처리 완료.' },
   '노예': { icon:'⛓', kind:'HIDDEN END · 계약', bonus:6500, bad:true, art:'slave', epilogue:'마지막 선택이 끝났다고 생각한 순간, 오래전 받아들인 계약이 이름을 되찾았다.\n당신이 얻은 힘은 선물이 아니었다. 빚이었다.\n왕국도 숲도 당신을 붙잡지 못했지만, 보이지 않는 사슬은 처음부터 당신의 그림자에 묶여 있었다.\n당신의 여정은 끝났고, 이제부터는 다른 존재의 여정이 시작된다. 당신을 데리고.' }
 };
@@ -1899,10 +1903,30 @@ ${state.flags.officer2Allied?'당신을 적으로 보지는 않지만 아직 완
 
   hardWardenAfter: scene('hardWardenAfter', {
     chapter:'LORD ALGON · II', location:'번호 감옥 · 열린 복도', art:'hard_throne',
-    text:()=>`중앙 열쇠를 손에 넣자 감옥의 구조가 한눈에 들어온다.\n\n${state.flags.hard731Freed?'731번 감방은 이미 비어 있다. 문 안쪽 벽에는 서툰 글씨로 자신의 이름을 다시 적어둔 흔적이 있다.':'731번을 포함해 아직 수십 개의 문이 닫혀 있다.'}\n\n가장 깊은 계단은 ‘서약로’라는 곳으로 이어진다.`,
+    text:()=>`중앙 열쇠를 손에 넣자 감옥의 구조가 한눈에 들어간다.\n\n${state.flags.hard731Freed?'731번 감방은 이미 비어 있다. 문 안쪽 벽에는 서툰 글씨로 자신의 이름을 다시 적어둔 흔적이 있다.':'731번을 포함해 아직 수십 개의 문이 닫혀 있다.'}\n\n가장 깊은 계단은 ‘서약로’라는 곳으로 이어진다.${state.flags.hardServantsWarned||state.flags.hard731Freed?'\n\n그런데 위층에서 조용한 발소리가 겹친다. 하인실과 감옥에서 움직이기 시작한 사람들이 서로를 찾고 있다.':''}`,
     choices:()=>[
-      !state.flags.hard731Freed&&state.flags.hardPrisoner731&&c('731번과 가까운 감방들을 연다','증거 +1 / 생존자 증가',()=>{state.flags.hard731Freed=true;state.flags.algonEvidencePrison=true;state.stats.secrets++;state.stats.survivors+=3;queueOutcome('열 수 있는 문부터 열었다. 죄수들은 남쪽 통로로 흩어진다.','hardOathForge');}),
-      c('서약로로 내려간다','두 번째 봉인을 찾는다.',()=>go('hardOathForge'))
+      !state.flags.hard731Freed&&state.flags.hardPrisoner731&&c('731번과 가까운 감방들을 연다','증거 +1 / 생존자 증가 / 하층 분기',()=>{state.flags.hard731Freed=true;state.flags.algonEvidencePrison=true;state.stats.secrets++;state.stats.survivors+=3;queueOutcome('열 수 있는 문부터 열었다. 죄수들은 남쪽 통로로 나오지만, 하인실 쪽에서 누군가 그들을 부르는 소리가 들린다.','hardLowerWardRising');}),
+      (state.flags.hard731Freed||state.flags.hardServantsWarned)&&c('하층에서 움직이는 사람들을 확인한다','구출·봉기 줄기',()=>go('hardLowerWardRising')),
+      c('서약로로 바로 내려간다','두 번째 봉인을 찾는다.',()=>go('hardOathForge'))
+    ].filter(Boolean)
+  }),
+
+  hardLowerWardRising: scene('hardLowerWardRising', {
+    chapter:'LORD ALGON · II · LOWER WARD', location:'폐쇄성 · 하층 연결통로', art:'hard_throne',
+    text:()=>`감옥에서 나온 사람들과 회색 옷의 하인들이 좁은 통로에서 마주친다. 서로를 처음 보는 사람도 많지만, 이상하게도 모두 같은 질문부터 한다.\n\n“이름이 뭐예요?”\n\n누군가 번호를 답하려다 멈춘다.${state.flags.hard731Freed?' 731번이 입을 열어 자신의 진짜 이름을 더듬으며 말하자 주변 사람들이 하나씩 따라 한다.':''}${state.flags.hardServantsWarned?' 하인들은 서쪽 세탁문이 비는 시간을 이미 알고 있다.':''}\n\n왕좌까지 가는 동안 이들을 어떻게 움직이게 할지 정해야 한다.`,
+    choices:()=>[
+      c('서쪽 세탁문으로 사람들을 빼낸다','대피 줄기 / 생존자 증가',()=>{
+        state.flags.algonEvacuation=true;state.stats.survivors+=5;
+        queueOutcome('싸우라고 하지 않았다. 열쇠와 통로만 알려주고 성 밖으로 빠져나가게 했다. 하층의 소음이 줄고 대신 바깥으로 이어지는 발자국이 늘어난다.','hardOathForge');
+      }),
+      state.flags.hard731Freed&&state.flags.hardServantsWarned&&c('번호가 아니라 서로의 이름을 확인하며 함께 움직이게 한다','민간 연대 형성 / 최종 해방 분기 강화',()=>{
+        state.flags.algonCivilNetwork=true;state.flags.algonEvacuation=true;state.stats.survivors+=7;state.stats.secrets++;
+        queueOutcome('731번과 어린 하인이 먼저 서로의 이름을 묻는다. 감옥 열쇠와 세탁문 교대표가 한 손에서 다른 손으로 넘어간다. 누가 지휘하지 않아도 사람들이 스스로 탈출선을 만든다.','hardOathForge');
+      }),
+      c('열쇠를 나눠주고 기록실을 점거하게 한다','하층 봉기 / 알곤의 병력 분산',()=>{
+        state.flags.algonLowerRevolt=true;state.stats.secrets++;
+        queueOutcome('죄수들은 장부부터 찢지 않았다. 먼저 닫힌 서랍을 열어 자기 이름을 찾았다. 기록관들이 하층으로 몰리며 왕좌 쪽 경비가 조금 얇아진다.','hardOathForge');
+      })
     ].filter(Boolean)
   }),
 
@@ -1986,11 +2010,43 @@ ${state.flags.officer2Allied?'당신을 적으로 보지는 않지만 아직 완
 
   hardTransferLedger: scene('hardTransferLedger', {
     chapter:'LORD ALGON · IV', location:'비밀 기록실 · 이관 원장', art:'hard_throne',
-    text:`마지막 장부에는 노말에서 만났던 세력들이 한 줄씩 겹쳐 있다.\n\n상단 강제징발. 도적단 보급로 습격. 왕국 추방자 이관. 전사자 명부.\n\n각자 따로 싸우고 있다고 생각했지만, 북부 장부는 그 모든 손실을 한곳으로 모으고 있었다.`,
+    text:`마지막 장부에는 노말에서 만났던 세력들이 한 줄씩 겹쳐 있다.\n\n상단 강제징발. 도적단 보급로 습격. 왕국 추방자 이관. 전사자 명부.\n\n각자 따로 싸우고 있다고 생각했지만, 북부 장부는 그 모든 손실을 한곳으로 모으고 있었다.\n\n원장 맨 뒤에는 다른 장부와 재질이 다른 얇은 검은 봉투가 끼워져 있다. 알곤 개인 인장이 찍혀 있다.`,
     choices:()=>[
-      c('원장 일부를 찢어 챙긴다','최종 처세에 유리 / 비밀 +1',()=>{state.flags.algonEvidenceLedger=true;state.stats.secrets++;queueOutcome('알곤이 직접 승인한 명령들이 남아 있다. 말로 싸우게 된다면 가장 무거운 칼이 될 것이다.','hardInnerBridge');}),
-      c('더 늦기 전에 왕좌로 간다','내성 사슬문으로 이동한다.',()=>go('hardInnerBridge'))
+      c('원장 일부와 검은 봉투를 챙긴다','증거 +1 / 알곤 개인 기록 줄기',()=>{state.flags.algonEvidenceLedger=true;state.stats.secrets++;queueOutcome('알곤이 직접 승인한 명령과 개인 봉투를 함께 챙겼다. 왕좌 바로 아래에 “최초 봉인실”이라는 장소가 표시되어 있다.','hardRiftAntechamber');}),
+      c('개인 봉투만 확인한다','알곤의 최초 봉인 기록을 추적한다.',()=>go('hardRiftAntechamber')),
+      c('더 늦기 전에 왕좌로 간다','균열 관측실을 지나 내성으로 향한다.',()=>go('hardRiftObservatory'))
     ]
+  }),
+
+  hardRiftAntechamber: scene('hardRiftAntechamber', {
+    chapter:'LORD ALGON · IV · FIRST SEAL', location:'왕좌 아래 · 최초 봉인실', art:'hard_altar',
+    text:`검은 봉투 안에는 수십 년 전 날짜가 찍힌 실험 기록이 한 장뿐이다.\n\n‘균열 반응 대상 01. 리에나 알곤. 이름 고정 성공. 균열 축소 확인.’\n\n아래쪽에 알곤의 필체가 덧붙어 있다.\n“내 딸의 이름 하나로 문이 닫혔다. 다시는 누구의 딸도 필요하지 않게 하겠다.”\n\n그 다음 페이지부터 대상은 죄수, 추방자, 채무자, 병사로 늘어난다. 처음의 약속은 제도를 만들면서 정반대가 됐다.`,
+    choices:()=>[
+      c('리에나의 이름을 기억한다','결정적 증거 +1 / 알곤 개인 대화 해금',()=>{
+        state.flags.algonFirstNameKnown=true;state.flags.algonEvidenceFirstName=true;state.stats.secrets++;
+        queueOutcome('가장 오래된 금속판의 이름을 손으로 한 번 짚었다. 리에나 알곤. 알곤이 제도를 만든 이유이자, 제도가 처음 배신한 약속이다.','hardRiftObservatory');
+      }),
+      c('기록을 덮고 균열로 간다','균열의 실물을 확인한다.',()=>go('hardRiftObservatory'))
+    ]
+  }),
+
+  hardRiftObservatory: scene('hardRiftObservatory', {
+    chapter:'LORD ALGON · IV · THE RIFT', location:'왕좌 아래 · 균열 관측실', art:'hard_altar',
+    text:()=>`두꺼운 유리 아래로 붉은 균열이 실제로 숨 쉬고 있다. 알곤의 명분이 전부 거짓은 아니었다. 균열 가까이에서 이름표 하나를 놓자 글자가 검게 타들어 가며 틈이 아주 조금 넓어진다.\n\n벽의 장치에는 지금까지 본 세 봉인과 같은 홈이 있다. 이름을 사람에게서 떼어내는 방식이 아니라, 봉인 자체를 균열에 직접 걸 수도 있었던 흔적이다. 누군가 시도하다 포기한 설계도다.\n\n여기서부터 당신이 원하는 북부의 형태가 갈린다. 현재 봉인 ${algonSealCount()}개, 증거 ${hardEvidenceCount()}개.`,
+    choices:()=>[
+      c('균열과 이름 봉인 체계를 모두 끝낸다','노선 · 철폐 / 완전 해방을 노린다.',()=>{
+        state.flags.algonDoctrine='abolish';
+        queueOutcome('재앙을 막는다는 이유로 사람을 재료로 쓰는 장치라면 균열과 함께 끝내겠다고 정했다. 이후 선택은 “철폐” 노선으로 이어진다.','hardInnerBridge');
+      }),
+      algonSealCount()>=2&&c('봉인만 재배치해 사람의 이름 없이 균열을 막는다','노선 · 개혁 / 봉인 2개 이상 필요',()=>{
+        state.flags.algonDoctrine='reform';state.stats.secrets++;
+        queueOutcome('세 봉인의 힘을 사람에게서 떼어 균열 쪽으로 돌리는 방법을 기억했다. 제도를 없애되 방벽은 남기는 “개혁” 노선이다.','hardInnerBridge');
+      }),
+      c('왕좌가 봉인과 무명군을 제어하는 방식을 외운다','노선 · 계승 / 지배 엔딩 분기',()=>{
+        state.flags.algonDoctrine='inherit';
+        queueOutcome('장치를 부수기 전에 움직이는 순서를 외웠다. 알곤이 사라진 뒤 누군가는 이 힘을 잡게 된다. 그게 자신이어도 된다고 판단했다.','hardInnerBridge');
+      })
+    ].filter(Boolean)
   }),
 
   hardInnerBridge: scene('hardInnerBridge', {
@@ -2030,9 +2086,29 @@ ${state.flags.officer2Allied?'당신을 적으로 보지는 않지만 아직 완
     text:`카르센은 죽은 군대의 맨 앞에 서 있다. 투구 안에서는 푸른 불빛만 흔들린다.\n\n“내 이름은 기억나지 않는다. 하지만 마지막 명령은 기억한다. 누구도 군주에게 닿게 하지 마라.”`,
     talk(){const n=bumpTalk('hardGraveCaptain');if(n===1&&state.flags.algonSealName){encMod().socialPct+=8;toast('이름의 봉인을 보여주자 카르센의 푸른 불빛이 크게 흔들린다. 처세 확률이 오른다.');}else toast('카르센은 자신의 이름을 기억하지 못하지만 ‘카르센’이라는 소리에 반응한다.');save();render();},
     enemyMod(e){const seals=algonSealCount();e.atk-=Math.min(3,seals)+(state.flags.hardBellSabotaged?1:0);if(state.flags.hardBellSabotaged)e.social-=2;return e;},
-    attackWin(){resolve('attack','hardGraveAfter','카르센이 쓰러지자 뒤의 무명군도 한꺼번에 검끝을 내린다. 왕좌로 가는 계단이 열린다.');},
-    socialSuccess(){state.flags.hardKarsenRemembered=true;resolve('social','hardGraveAfter','당신은 그의 이름을 계속 부른다. 카르센은 마지막 명령보다 자신의 이름을 먼저 기억하고, 대열에서 비켜선다.');},
+    attackWin(){state.flags.hardKarsenFallen=true;resolve('attack','hardNamelessChoice','카르센이 쓰러지자 뒤의 무명군도 한꺼번에 검끝을 내린다. 그러나 명령의 봉인은 아직 그들 안에 남아 있다.');},
+    socialSuccess(){state.flags.hardKarsenRemembered=true;resolve('social','hardNamelessChoice','당신은 그의 이름을 계속 부른다. 카르센은 마지막 명령보다 자신의 이름을 먼저 기억하고, 뒤의 무명군을 돌아본다.');},
     socialFail(){damagePlayer(5,true);if(state.p.hp>0)queueOutcome('카르센의 창이 갑옷 틈을 찌른다. 체력 5를 잃었다.',null);}
+  }),
+
+  hardNamelessChoice: scene('hardNamelessChoice', {
+    chapter:'LORD ALGON · IV · NAMELESS ARMY', location:'왕좌 계단 · 멈춘 전열', art:'hard_lastbattle',
+    text:()=>`${state.flags.hardKarsenRemembered?'카르센은 자신의 이름을 되찾았지만 뒤의 병사들은 여전히 마지막 명령에 묶여 있다.':'카르센이 쓰러졌지만 무명군은 사라지지 않았다. 수백 개의 투구 속 푸른 불빛이 다음 명령을 기다린다.'}\n\n${state.flags.algonSealCommand?'명령의 봉인이 당신 손에 반응한다. 이제 이 군대를 풀 수도, 다른 명령을 줄 수도 있다.':'명령의 봉인이 없다. 완전히 끊어낼 수는 없지만 방향을 바꾸게 만들 여지는 있다.'}\n\n왕좌에 오르기 전 무명군의 운명을 정할 마지막 순간이다.`,
+    choices:()=>[
+      algonSealCount()>=2&&c('마지막 명령 자체를 끊는다','무명군 해방 / 최종 해방·비밀엔딩 강화',()=>{
+        state.flags.algonArmyFate='free';
+        queueOutcome('봉인의 결을 역으로 당기자 병사들이 하나씩 검을 떨어뜨린다. 누군가는 자기 이름을 기억하고, 누군가는 기억하지 못한 채 처음으로 명령 없는 침묵을 맞는다.','hardGraveAfter');
+      }),
+      (state.flags.hardKarsenRemembered||state.flags.algonEvacuation)&&c('성문과 대피로를 지키라고 부탁한다','무명군을 민간인 보호에 사용',()=>{
+        state.flags.algonArmyFate='guard';
+        queueOutcome('카르센은 “명령”이 아니라 “부탁”이라는 말을 한 번 되묻는다. 무명군은 왕좌가 아니라 아래쪽 열린 문으로 몸을 돌린다.','hardGraveAfter');
+      }),
+      state.flags.algonSealCommand&&c('명령의 봉인을 자신의 이름에 연결한다','무명군 통제권 획득 / 계승 히든 분기',()=>{
+        state.flags.algonArmyFate='bound';state.flags.algonCommandClaimed=true;
+        queueOutcome('검은 인장이 손목에 한 번 뜨겁게 박힌다. 수백 개의 투구가 동시에 당신 쪽으로 돌아선 뒤 무릎을 꿇는다. 알곤의 마지막 군대가 새 명령자를 인식했다.','hardGraveAfter');
+      }),
+      c('무명군을 그대로 두고 왕좌로 간다','군대의 문제를 뒤에 남긴다.',()=>{state.flags.algonArmyFate='unchanged';go('hardGraveAfter');})
+    ].filter(Boolean)
   }),
 
   hardGraveAfter: scene('hardGraveAfter', {
@@ -2052,7 +2128,7 @@ ${state.flags.officer2Allied?'당신을 적으로 보지는 않지만 아직 완
 
   hardThroneApproach: scene('hardThroneApproach', {
     chapter:'LORD ALGON · V', location:'폐쇄성 대왕좌', art:'hard_algon',
-    text:()=>`알곤은 군주라기보다 오래된 성의 일부처럼 왕좌에 앉아 있다.\n\n그의 뒤에는 검은 장부가 펼쳐져 있고, 양옆에는 이름 없는 기사들이 서 있다.\n\n“아르벤도 여기까지 왔고, 레오른도 문 앞까지는 왔다. 둘 다 왕국을 지키겠다는 이유로 돌아갔지. 넌 무엇 때문에 왔나?”\n\n당신이 모은 봉인은 ${algonSealCount()}개, 결정적인 증거는 ${hardEvidenceCount()}개다.`,
+    text:()=>`알곤은 군주라기보다 오래된 성의 일부처럼 왕좌에 앉아 있다.\n\n그의 뒤에는 검은 장부가 펼쳐져 있고, 양옆에는 이름 없는 기사들이 서 있다.\n\n“아르벤도 여기까지 왔고, 레오른도 문 앞까지는 왔다. 둘 다 왕국을 지키겠다는 이유로 돌아갔지. 넌 무엇 때문에 왔나?”\n\n당신이 모은 봉인은 ${algonSealCount()}개, 결정적인 증거는 ${hardEvidenceCount()}개다. 지금까지 선택한 북부의 노선은 ‘${algonDoctrineLabel()}’다.${state.flags.algonFirstNameKnown?'\n\n그리고 당신은 장부 맨 처음에 적힌 이름도 알고 있다. 리에나 알곤.':''}`,
     choices:()=>[
       c('알곤의 명분을 끝까지 듣는다','그가 무엇을 두려워하는지 확인한다.',()=>go('hardAudience')),
       c('장부를 가리키며 끝내자고 한다','즉시 마지막 대치로 들어간다.',()=>go('hardAlgonBoss'))
@@ -2061,9 +2137,21 @@ ${state.flags.officer2Allied?'당신을 적으로 보지는 않지만 아직 완
 
   hardAudience: scene('hardAudience', {
     chapter:'LORD ALGON · V', location:'폐쇄성 대왕좌', art:'hard_algon',
-    text:`알곤은 북부 지하의 균열과 알터닐을 말한다. 이름은 사람의 운명에 박힌 못이고, 그 못을 뽑아 보관하면 악마가 사람을 찾지 못한다고.\n\n“처음 천 명을 살리기 위해 열 명의 이름을 지웠다. 다음에는 만 명을 위해 백 명을. 숫자가 커질수록 계산은 쉬워졌다.”\n\n그는 자신이 틀렸다고 말하지 않는다. 다만 너무 오래 옳아야 했다고 말한다.`,
+    text:()=>`알곤은 북부 지하의 균열과 알터닐을 말한다. 이름은 사람의 운명에 박힌 못이고, 그 못을 뽑아 보관하면 악마가 사람을 찾지 못한다고.\n\n“처음 천 명을 살리기 위해 열 명의 이름을 지웠다. 다음에는 만 명을 위해 백 명을. 숫자가 커질수록 계산은 쉬워졌다.”\n\n그는 자신이 틀렸다고 말하지 않는다. 다만 너무 오래 옳아야 했다고 말한다.${state.flags.algonFirstNameKnown?'\n\n당신이 리에나의 이름을 입에 올리기 전까지는.':''}`,
     choices:()=>[
+      state.flags.algonFirstNameKnown&&c('“리에나 알곤.” 첫 번째 이름을 다시 부른다','알곤 개인 붕괴 / 최종 처세 크게 유리',()=>{
+        state.flags.algonPersonalBreak=true;state.flags.algonMoralBreak=true;state.stats.secrets++;
+        queueOutcome('알곤의 시선이 처음으로 장부가 아니라 바닥으로 떨어진다. “그 이름을 어디서…” 끝까지 말하지 못한다. 수십 년 동안 숫자로 바꿔온 희생이 다시 한 사람의 이름으로 돌아온다.','hardAlgonBoss');
+      }),
       state.flags.algonDemonHint&&c('알터닐을 막는 방식이 알터닐과 무엇이 다르냐고 묻는다','증거와 봉인에 따라 최종 처세 유리',()=>{state.flags.algonMoralBreak=true;state.stats.secrets++;queueOutcome('알곤의 손이 장부 위에서 멈춘다. 처음으로 대답이 바로 나오지 않는다.','hardAlgonBoss');}),
+      algonDoctrine()==='reform'&&c('균열은 남겨도 사람의 이름을 재료로 쓸 이유는 없다고 말한다','개혁 노선 전용 대사',()=>{
+        state.flags.algonMoralBreak=true;state.flags.algonReformDeclared=true;
+        queueOutcome('당신은 왕좌 아래에서 직접 본 설계도를 말한다. 봉인을 균열에 걸 수 있었다는 사실을 듣자 알곤은 그것이 “실패한 방식”이라고 반박하지만 목소리에 확신이 없다.','hardAlgonBoss');
+      }),
+      algonDoctrine()==='inherit'&&c('문제는 힘이 아니라 네가 그 힘을 쓴 방식이라고 말한다','계승 노선 / 알곤 격노',()=>{
+        state.flags.algonSuccessionDeclared=true;encMod().enemyAtk+=2;
+        queueOutcome('알곤이 처음으로 웃는다. “그래. 결국 넌 나를 죽이러 온 게 아니라 내 자리에 앉으러 왔군.” 왕좌의 사슬이 더 세게 울린다.','hardAlgonBoss');
+      }),
       c('희생을 숫자로 부르는 순간 이미 졌다고 말한다','최종 대치로 간다.',()=>{state.flags.algonMoralBreak=true;go('hardAlgonBoss');}),
       c('더 들을 필요 없다','검을 든다.',()=>go('hardAlgonBoss'))
     ].filter(Boolean)
@@ -2074,19 +2162,38 @@ ${state.flags.officer2Allied?'당신을 적으로 보지는 않지만 아직 완
     onFirstEnter(){showHardGimmick('algon','왕의 폐쇄령','왕좌의 모든 문이 잠긴다. 이 조우에서는 속도와 직업 능력에 관계없이 도망칠 수 없다.');},
     text:()=>`알곤이 왕좌에서 일어난다. 검이 바닥에서 빠져나오는 순간 성 전체의 사슬이 함께 울린다.\n\n“내 성에 들어온 이름은 내 허락 없이 나가지 않는다.”\n\n문이 닫힌다. 창문도, 비밀 통로도, 방금 지나온 계단도 검은 사슬에 묶인다.\n\n${algonSealCount()>=3?'당신이 모은 세 봉인이 서로 반응한다. 무명군의 속박이 느슨해지며 알곤의 힘 일부가 사라진다.':''}\n${hardEvidenceCount()>=3?'아르벤과 레오른, 이관 원장의 기록이 있다. 알곤의 명분을 말로 무너뜨릴 근거도 충분하다.':''}`,
     talk(){const n=bumpTalk('hardAlgonBoss');if(n===1){state.stats.talkInteractions++;encMod().socialPct+=hardEvidenceCount()*3;toast('알곤은 도망갈 곳이 없다는 걸 확인한 뒤에야 대화를 허락한다. 모은 증거가 처세에 힘을 더한다.');}else{encMod().enemyAtk+=1;toast('알곤은 같은 질문을 반복하지 않는다. 대화를 끌수록 검에 힘이 실린다.');}save();render();},
-    enemyMod(e){const seals=algonSealCount(),evi=hardEvidenceCount();e.hp=Math.max(28,e.hp-seals*3-(state.flags.algonDoorBroken?3:0));e.atk=Math.max(21,e.atk-seals-(state.flags.algonDoorBroken?1:0));e.social=Math.max(19,e.social-evi*2-(state.flags.algonMoralBreak?3:0)-(state.flags.hardServantsWarned?1:0));return e;},
+    enemyMod(e){
+      const seals=algonSealCount(),evi=hardEvidenceCount(),people=algonPeopleScore();
+      e.hp=Math.max(28,e.hp-seals*3-(state.flags.algonDoorBroken?3:0)-(state.flags.algonLowerRevolt?2:0)-(state.flags.algonArmyFate==='bound'?2:0));
+      e.atk=Math.max(21,e.atk-seals-(state.flags.algonDoorBroken?1:0)-(['free','guard'].includes(state.flags.algonArmyFate)?1:0)+(algonDoctrine()==='abolish'?1:0));
+      e.social=Math.max(17,e.social-evi*2-(state.flags.algonMoralBreak?3:0)-(state.flags.algonPersonalBreak?4:0)-Math.min(2,Math.floor(people/3)));
+      if(algonDoctrine()==='inherit')e.social+=2;
+      return e;
+    },
     attackWin(){state.flags.algonDefeated='battle';resolve('attack','hardAlgonAfter','알곤의 검이 왕좌 계단 아래로 떨어진다. 왕의 폐쇄령을 유지하던 사슬들이 하나씩 느슨해진다.');},
     socialSuccess(){state.flags.algonDefeated='social';state.stats.talkSolved++;resolve('social','hardAlgonAfter','당신은 그가 지키려던 사람들의 이름과, 그들을 지우기 위해 만든 희생의 숫자를 하나씩 되돌려 읽는다. 알곤은 끝내 다음 명령을 내리지 못한다.');},
     socialFail(){damagePlayer(6,true);if(state.p.hp>0){encMod().enemyAtk+=2;queueOutcome('알곤은 장부를 덮는다. “말로 끝낼 기회는 줬다.” 체력 6을 잃고 그의 공격이 더 거칠어진다.',null);}}
   }),
 
   hardAlgonAfter: scene('hardAlgonAfter', {
-    chapter:'LORD ALGON · EPILOGUE', location:'무너지는 폐쇄성 왕좌', art:'hard_algon',
-    text:()=>`로드 알곤은 더 이상 명령하지 못한다. 하지만 성은 아직 그의 명령을 기억한다.\n\n왕좌 옆에는 세 가지가 남아 있다. 검은 장부, 봉인을 조종하는 왕좌, 그리고 당신이 모아온 ${algonSealCount()}개의 봉인.${state.flags.hard731Freed?'\n\n아래 감옥에서는 731번과 풀려난 죄수들이 서로의 진짜 이름을 확인하고 있다.':''}${state.flags.hardServantsWarned?'\n\n서쪽 외성문은 열려 있다. 이름표 없는 하인들이 처음으로 성 밖에서 자기 이름을 말한다.':''}${state.flags.hardKarsenRemembered?'\n\n카르센은 무명군에게 마지막 명령을 반복하지 않는다. 대신 기억나는 이름부터 하나씩 묻고 있다.':''}\n\n알곤을 쓰러뜨리는 것만으로는 제도가 사라지지 않는다. 무엇을 남기고 무엇을 없앨지는 마지막으로 당신이 정해야 한다.`,
+    chapter:'LORD ALGON · AFTERMATH', location:'멈춘 폐쇄성 왕좌', art:'hard_algon',
+    text:()=>`로드 알곤은 더 이상 명령하지 못한다. 하지만 성은 아직 그의 명령을 기억한다.\n\n왕좌 옆에는 세 가지가 남아 있다. 검은 장부, 봉인을 조종하는 왕좌, 그리고 당신이 모아온 ${algonSealCount()}개의 봉인.\n\n아래쪽에서는 지금까지 건드린 사람들이 움직이고 있다. 하층 연대와 생존자 영향은 ${algonPeopleScore()}단계다.${state.flags.algonEvacuation?' 대피 행렬은 이미 외성문 쪽으로 빠지고 있다.':''}${state.flags.algonLowerRevolt?' 기록실 아래에서는 서랍을 여는 소리와 경비가 뛰어가는 소리가 섞인다.':''}${state.flags.algonArmyFate==='guard'?' 무명군은 왕좌가 아니라 열린 문을 지키고 있다.':''}${state.flags.algonArmyFate==='free'?' 무명군의 대열은 처음으로 명령 없이 흩어지고 있다.':''}${state.flags.algonArmyFate==='bound'?' 무명군은 당신의 다음 명령만 기다린다.':''}\n\n당신이 택한 노선은 ‘${algonDoctrineLabel()}’. 이제 그 노선을 실제 제도로 만들 차례다.`,
     choices:()=>[
+      c('왕좌 아래 홀로 내려간다','살아남은 사람들과 성의 최종 운명을 정한다.',()=>go('hardAlgonCouncil'))
+    ]
+  }),
+
+  hardAlgonCouncil: scene('hardAlgonCouncil', {
+    chapter:'LORD ALGON · FINAL CHOICE', location:'폐쇄성 · 열린 왕좌홀', art:'hard_throne',
+    text:()=>`${state.flags.hard731Freed?'731번은 더 이상 번호를 대답하지 않는다. ':''}${state.flags.hardRodricYielded?'로드릭은 검끝을 바닥에 둔 채 왕좌를 보지 않는다. ':''}${state.flags.hardKarsenRemembered?'카르센은 무명군 사이에서 기억나는 이름을 받아 적는다. ':''}${state.flags.hardMorgaDoubt?'모르가는 검은 못을 제단에 두고 내려왔다. ':''}\n\n누구도 같은 결론을 요구하지 않는다. 어떤 사람은 모든 봉인을 부수라고 하고, 어떤 사람은 아래 균열이 아직 살아 있다고 경고한다.\n\n장부와 왕좌, 세 봉인. 지금 무엇을 선택하느냐에 따라 알곤을 쓰러뜨린 의미도 달라진다.`,
+    choices:()=>[
+      algonDoctrine()==='abolish'&&algonPeopleScore()>=4&&c('왕좌를 부수고 모든 성문을 연다','HARD END · 열린 성채 / 해방 줄기',()=>finish('열린 성채')),
       c('검은 장부와 왕좌를 모두 불태운다','HARD END · 검은 왕관의 몰락',()=>finish('검은 왕관의 몰락')),
-      algonSealCount()>=3&&hardEvidenceCount()>=3&&c('세 봉인을 역으로 사용해 모든 이름을 돌려준다','HARD SECRET END · 가장 어려운 알곤 결말',()=>finish('이름을 돌려준 자')),
-      c('장부에서 알곤의 이름만 지우고 왕좌에 앉는다','HARD HIDDEN END · 새 군주',()=>finish('닫힌 성채의 새 주인'))
+      algonBestEndingReady()&&state.flags.algonFirstNameKnown&&c('모든 이름을 돌려주고 새 서약으로 균열을 봉인한다','HARD SECRET END · 북부의 새 서약 / 최상위 알곤 결말',()=>finish('북부의 새 서약')),
+      algonDoctrine()==='reform'&&algonSealCount()>=2&&state.flags.algonDemonHint&&c('사람의 이름을 빼고 봉인만 균열에 남긴다','HARD END · 마지막 봉인자',()=>finish('마지막 봉인자')),
+      algonSealCount()>=3&&hardEvidenceCount()>=3&&c('세 봉인을 역으로 사용해 모든 이름을 돌려준다','HARD SECRET END · 이름을 돌려준 자',()=>finish('이름을 돌려준 자')),
+      algonDoctrine()==='inherit'&&state.flags.algonArmyFate==='bound'&&c('무명군과 장부를 그대로 인계받는다','HARD HIDDEN END · 검은 섭정',()=>finish('검은 섭정')),
+      c('장부에서 알곤의 이름만 지우고 왕좌에 앉는다','HARD HIDDEN END · 닫힌 성채의 새 주인',()=>finish('닫힌 성채의 새 주인'))
     ].filter(Boolean)
   }),
 
@@ -2541,7 +2648,30 @@ function encounterStatusHtml(){ const sc=SCENES[state.sceneId]; if(sc?.runDisabl
 // ---------- Hard mode helpers ----------
 function isHardMode(){return state?.flags?.gameMode==='hard';}
 function algonSealCount(){return ['algonSealName','algonSealForge','algonSealCommand'].filter(k=>state?.flags?.[k]).length;}
-function hardEvidenceCount(){return ['algonEvidence1','algonEvidence2','algonEvidenceLeorn','algonEvidenceArven','algonEvidencePrison','algonEvidenceLedger'].filter(k=>state?.flags?.[k]).length;}
+function hardEvidenceCount(){return ['algonEvidence1','algonEvidence2','algonEvidenceLeorn','algonEvidenceArven','algonEvidencePrison','algonEvidenceLedger','algonEvidenceFirstName'].filter(k=>state?.flags?.[k]).length;}
+function algonPeopleScore(){
+  let n=0;
+  for(const k of ['hard731Freed','hardServantsWarned','hardHartRemembered','hardMorgaDoubt','hardRodricYielded','hardKarsenRemembered','algonEvacuation','algonCivilNetwork']){
+    if(state?.flags?.[k])n++;
+  }
+  if(['free','guard'].includes(String(state?.flags?.algonArmyFate||'')))n++;
+  return n;
+}
+function algonDoctrine(){return String(state?.flags?.algonDoctrine||'');}
+function algonDoctrineLabel(){
+  const d=algonDoctrine();
+  return d==='abolish'?'철폐':d==='reform'?'개혁':d==='inherit'?'계승':'미정';
+}
+function algonBestEndingReady(){
+  return algonDoctrine()==='reform'
+    && algonSealCount()>=3
+    && hardEvidenceCount()>=4
+    && algonPeopleScore()>=6
+    && !!state.flags.hardRodricYielded
+    && !!state.flags.hardKarsenRemembered
+    && ['free','guard'].includes(String(state.flags.algonArmyFate||''))
+    && state.flags.algonDefeated==='social';
+}
 function beginHardMode(){
   const id=pendingClassId,cl=selectedClass();if(!id||!cl||!isClassUnlocked(id)){renderClasses();showScreen('classScreen');return;}
   const grown=classGrowthStats(id,cl);
@@ -3979,7 +4109,7 @@ async function submitScore(){
 async function showLeaderboard(){
   $('modal').innerHTML='<h2>통합 랭킹</h2>';showModal();
   const playerId=getPlayerId();
-  const HARD_ENDINGS=new Set(['검은 왕관의 몰락','이름을 돌려준 자','닫힌 성채의 새 주인','폐쇄령의 마지막 이름','검은 밀랍의 첫 번째 이름','이름으로 낸 통행세','도둑에게 없는 퇴로','까마귀가 울린 뒤','빌린 이름의 끝','초대받지 못한 이름','거짓 허가의 종착지','손바닥에 남은 이름','732번','빈 감방의 대체자','화로 앞의 검은 재','하르트가 기억한 마지막 사람','봉인과 함께 꺼진 이름','검은 못의 성례','너무 늦은 고해','사슬문 아래','명령보다 늦은 의심','무명군의 새 병사','카르센이 기억한 마지막 이름','완벽한 폐쇄령','왕좌가 기억한 이름','말이 끝난 왕좌','세 봉인은 주인을 살리지 못했다']);
+  const HARD_ENDINGS=new Set(['검은 왕관의 몰락','열린 성채','마지막 봉인자','북부의 새 서약','검은 섭정','이름을 돌려준 자','닫힌 성채의 새 주인','폐쇄령의 마지막 이름','검은 밀랍의 첫 번째 이름','이름으로 낸 통행세','도둑에게 없는 퇴로','까마귀가 울린 뒤','빌린 이름의 끝','초대받지 못한 이름','거짓 허가의 종착지','손바닥에 남은 이름','732번','빈 감방의 대체자','화로 앞의 검은 재','하르트가 기억한 마지막 사람','봉인과 함께 꺼진 이름','검은 못의 성례','너무 늦은 고해','사슬문 아래','명령보다 늦은 의심','무명군의 새 병사','카르센이 기억한 마지막 이름','완벽한 폐쇄령','왕좌가 기억한 이름','말이 끝난 왕좌','세 봉인은 주인을 살리지 못했다']);
   const rankModeInfo=(row)=>{
     const rawMode=String(row?.gameMode||'').trim().toLowerCase();
     const rawRoute=String(row?.hardRoute||'').trim();

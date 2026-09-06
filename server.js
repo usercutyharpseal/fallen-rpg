@@ -23,7 +23,7 @@ const SUPABASE_PUBLIC_KEY=SUPABASE_KEY.startsWith('sb_publishable_')||SUPABASE_K
 const CLOUD_WRITABLE=CLOUD_CONFIGURED&&!SUPABASE_PUBLIC_KEY;
 const supabase = CLOUD_CONFIGURED ? createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { autoRefreshToken:false, persistSession:false, detectSessionInUrl:false },
-  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.39' } }
+  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.40' } }
 }) : null;
 
 function withTimeout(promise, ms = 6000, code = 'UPSTREAM_TIMEOUT') {
@@ -210,6 +210,10 @@ const ENDING_BONUS = {
   '끝없는 악몽': 2400,
   '노예': 6500,
   '검은 왕관의 몰락': 45000,
+  '열린 성채': 52000,
+  '마지막 봉인자': 54000,
+  '북부의 새 서약': 64000,
+  '검은 섭정': 53000,
   '이름을 돌려준 자': 56000,
   '닫힌 성채의 새 주인': 50000,
   '폐쇄령의 마지막 이름': 5200,
@@ -464,7 +468,7 @@ function mapCloudRow(x) {
   const meta=(x && typeof x.stats==='object' && x.stats) ? x.stats : {};
   const recordType=String(meta.recordType||'legacy');
   const ownerPlayerId=String(meta.ownerPlayerId||'');
-  const hardEndings=new Set(['검은 왕관의 몰락','이름을 돌려준 자','닫힌 성채의 새 주인','폐쇄령의 마지막 이름','검은 밀랍의 첫 번째 이름','이름으로 낸 통행세','도둑에게 없는 퇴로','까마귀가 울린 뒤','빌린 이름의 끝','초대받지 못한 이름','거짓 허가의 종착지','손바닥에 남은 이름','732번','빈 감방의 대체자','화로 앞의 검은 재','하르트가 기억한 마지막 사람','봉인과 함께 꺼진 이름','검은 못의 성례','너무 늦은 고해','사슬문 아래','명령보다 늦은 의심','무명군의 새 병사','카르센이 기억한 마지막 이름','완벽한 폐쇄령','왕좌가 기억한 이름','말이 끝난 왕좌','세 봉인은 주인을 살리지 못했다']);
+  const hardEndings=new Set(['검은 왕관의 몰락','열린 성채','마지막 봉인자','북부의 새 서약','검은 섭정','이름을 돌려준 자','닫힌 성채의 새 주인','폐쇄령의 마지막 이름','검은 밀랍의 첫 번째 이름','이름으로 낸 통행세','도둑에게 없는 퇴로','까마귀가 울린 뒤','빌린 이름의 끝','초대받지 못한 이름','거짓 허가의 종착지','손바닥에 남은 이름','732번','빈 감방의 대체자','화로 앞의 검은 재','하르트가 기억한 마지막 사람','봉인과 함께 꺼진 이름','검은 못의 성례','너무 늦은 고해','사슬문 아래','명령보다 늦은 의심','무명군의 새 병사','카르센이 기억한 마지막 이름','완벽한 폐쇄령','왕좌가 기억한 이름','말이 끝난 왕좌','세 봉인은 주인을 살리지 못했다']);
   const rawMode=String(meta.gameMode||'').trim().toLowerCase();
   const rawRoute=String(meta.hardRoute||'').trim();
   const ending=String(x.ending||'').trim();
@@ -760,11 +764,11 @@ app.post('/api/score', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.39' });
+  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.40' });
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n몰락자 v0.9.39`);
+  console.log(`\n몰락자 v0.9.40`);
   console.log(`http://localhost:${PORT}`);
   console.log(`랭킹 설정: ${CLOUD_CONFIGURED ? 'Supabase 환경변수 있음 (실연결은 /api/storage에서 검증)' : '로컬 파일'}\n`);
 });
