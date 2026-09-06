@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <meta name="theme-color" content="#090a0d" />
   <title>몰락자</title>
-  <link rel="stylesheet" href="/style.css?v=0940" />
+  <link rel="stylesheet" href="/style.css?v=0941" />
 </head>
 <body>
   <main id="app">
@@ -22,7 +22,7 @@
         <button class="btn" data-action="leaderboard">통합 랭킹</button>
         <button class="btn" data-action="pvp-leaderboard">PVP 레이팅</button>
       </div>
-      <div class="version">THE FALLEN · v0.9.40</div>
+      <div class="version">THE FALLEN · v0.9.41</div>
       <div id="storageInfo" class="storage-info">랭킹 저장 상태 확인 중…</div>
       <div class="device-transfer">
         <div class="device-transfer-head">
@@ -106,6 +106,47 @@
         <p>세 갈래 운명 중 로드 알곤 루트가 열렸습니다. 최후의 기사와 데몬 알터닐은 이후 개방됩니다.</p>
       </div>
       <div id="hardChoiceGrid" class="hard-choice-grid"></div>
+    </section>
+
+    <section id="infiniteModeScreen" class="screen setup-screen infinite-setup">
+      <header class="topbar">
+        <button class="icon-btn" data-action="back-mode">‹</button>
+        <div><b>무한 기록</b><small id="infiniteClassLabel">선택한 직업</small></div>
+        <span></span>
+      </header>
+      <div class="infinite-banner">
+        <img src="/assets/art/infinite_archive.webp?v=0941" alt="끝없이 이어지는 금단의 기록 보관소">
+        <div class="infinite-banner-shade"></div>
+        <div class="infinite-banner-copy"><span>ENDLESS ARCHIVE</span><h2>읽을수록 깊어지는 기록</h2><p>원본을 품고 더 깊이 내려갈지, 살아 있는 동안 봉인할지 선택한다.</p></div>
+      </div>
+      <div id="infiniteMetaStrip" class="infinite-meta-strip"></div>
+      <div id="infiniteChoiceGrid" class="hard-choice-grid"></div>
+      <button class="btn full infinite-codex-btn" data-action="infinite-codex">수집 기록 보기</button>
+    </section>
+
+    <section id="infiniteGameScreen" class="screen infinite-game-screen">
+      <header class="infinite-hud">
+        <div class="inf-hud-main"><span id="infClass">기록자</span><b id="infFloor">1층</b></div>
+        <div class="inf-hud-bars">
+          <div><span>HP</span><div class="inf-bar"><i id="infHpBar"></i></div><b id="infHpText"></b></div>
+          <div><span>오염</span><div class="inf-bar corrupt"><i id="infCorruptBar"></i></div><b id="infCorruptText"></b></div>
+        </div>
+        <button class="inf-exit" data-action="infinite-save-exit">저장 후 나가기</button>
+      </header>
+      <div class="inf-resource-row">
+        <div><small>보관 기록</small><b id="infSecured">0</b></div>
+        <div><small>미보관 원본</small><b id="infLoose">0</b></div>
+        <div><small>심연 배율</small><b id="infMult">×1.00</b></div>
+        <div><small>골드</small><b id="infGold">◆ 0</b></div>
+      </div>
+      <div id="infRelics" class="inf-relic-strip"></div>
+      <section class="inf-stage">
+        <div class="inf-stage-art"><img src="/assets/art/infinite_archive.webp?v=0941" alt="심연의 고서관"><div></div></div>
+        <div class="inf-stage-copy"><span id="infKicker">RECORD FLOOR</span><h2 id="infTitle">기록을 고른다</h2><p id="infBody"></p></div>
+      </section>
+      <div id="infStatus" class="inf-status"></div>
+      <div id="infChoices" class="inf-choice-grid"></div>
+      <div id="infRecent" class="inf-recent-log"></div>
     </section>
 
     <section id="developmentScreen" class="screen dev-screen">
@@ -234,6 +275,6 @@
     });
   </script>
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/game.js?v=0940"></script>
+  <script src="/game.js?v=0941"></script>
 </body>
 </html>

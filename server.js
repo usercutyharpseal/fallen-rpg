@@ -23,7 +23,7 @@ const SUPABASE_PUBLIC_KEY=SUPABASE_KEY.startsWith('sb_publishable_')||SUPABASE_K
 const CLOUD_WRITABLE=CLOUD_CONFIGURED&&!SUPABASE_PUBLIC_KEY;
 const supabase = CLOUD_CONFIGURED ? createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { autoRefreshToken:false, persistSession:false, detectSessionInUrl:false },
-  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.40' } }
+  global: { headers: { 'X-Client-Info': 'fallen-rpg-render-server/0.9.41' } }
 }) : null;
 
 function withTimeout(promise, ms = 6000, code = 'UPSTREAM_TIMEOUT') {
@@ -43,7 +43,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // ---------- v0.9.30 one-time 4-digit device transfer ----------
 const DEVICE_TRANSFER_TTL_MS=10*60*1000;
-const DEVICE_TRANSFER_MAX_BYTES=192*1024;
+const DEVICE_TRANSFER_MAX_BYTES=320*1024;
 const DEVICE_TRANSFER_LOAD_FAIL_LIMIT=12;
 const DEVICE_TRANSFER_CREATE_LIMIT=8;
 const deviceTransferCodes=new Map();
@@ -106,6 +106,7 @@ function normalizeDeviceTransferData(input){
     meta:str(input.meta,30000),
     pvpSave:str(input.pvpSave,30000),
     pvpNickname:str(input.pvpNickname,100),
+    infiniteSave:str(input.infiniteSave,120000),
     gameVersion:n(input.gameVersion,999999)
   };
   if(Buffer.byteLength(JSON.stringify(data),'utf8')>DEVICE_TRANSFER_MAX_BYTES)throw new Error('TRANSFER_TOO_LARGE');
@@ -764,11 +765,11 @@ app.post('/api/score', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.40' });
+  res.json({ ok:true, storage:CLOUD_CONFIGURED?'cloud-configured':'local', version:'0.9.41' });
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n몰락자 v0.9.40`);
+  console.log(`\n몰락자 v0.9.41`);
   console.log(`http://localhost:${PORT}`);
   console.log(`랭킹 설정: ${CLOUD_CONFIGURED ? 'Supabase 환경변수 있음 (실연결은 /api/storage에서 검증)' : '로컬 파일'}\n`);
 });
