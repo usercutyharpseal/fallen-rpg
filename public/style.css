@@ -593,3 +593,19 @@ button,input{font:inherit}button{color:inherit}button:disabled{opacity:.36}
 #infiniteGameScreen .inf-boss-gimmick{
   text-wrap:balance;
 }
+
+/* v0.9.54 growth-3 skin FX */
+.elite-skin-fx.elite-undead{background:radial-gradient(circle at 50% 50%,#e4efff38 0,#7897c122 20%,transparent 48%)}
+.elite-skin-fx.elite-undead:before{content:"";position:absolute;left:50%;top:50%;width:22vmin;height:22vmin;transform:translate(-50%,-50%) scale(.15);border:2px solid #edf6ff;border-radius:50%;box-shadow:0 0 20px #fff,0 0 70px #83a7d9;animation:undeadHeartbeat .76s ease-out both}
+.elite-skin-fx.elite-undead:after{content:"✦";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.3);color:#fff;font:12vmin Georgia,serif;text-shadow:0 0 10px #fff,0 0 32px #9bbce9;animation:undeadSigil .76s ease-out both}
+.elite-skin-fx.elite-undead i{left:50%;top:-10%;width:2px;height:120%;background:linear-gradient(transparent,#fff,#9fc4f5,transparent);transform:rotate(27deg);filter:drop-shadow(0 0 9px #d9ebff)}
+.elite-skin-fx.elite-dictator{background:radial-gradient(circle at 50% 48%,#94001e42 0,#45001025 30%,transparent 60%)}
+.elite-skin-fx.elite-dictator:before{content:"";position:absolute;left:50%;top:48%;width:44vmin;height:44vmin;transform:translate(-50%,-50%) rotate(45deg) scale(.15);border:3px double #d5a65e;box-shadow:0 0 0 5px #82123466,0 0 50px #bd003799,inset 0 0 45px #750020;animation:redDictatorSeal .78s ease-out both}
+.elite-skin-fx.elite-dictator:after{content:"♛";position:absolute;left:50%;top:48%;transform:translate(-50%,-50%) scale(.3);color:#e5bc71;font:15vmin Georgia,serif;text-shadow:0 0 12px #f0c27a,0 0 40px #9d002d;animation:redDictatorCrown .78s ease-out both}
+.elite-skin-fx.elite-dictator i,.elite-skin-fx.elite-dictator b{left:-12%;width:124%;height:4px;top:45%;background:linear-gradient(90deg,transparent,#780021,#ff315e,#e6be75,#780021,transparent);box-shadow:0 0 14px #d0003e;transform:rotate(-14deg) scaleX(.08);animation:redOrderSlash .58s ease-out both}
+.elite-skin-fx.elite-dictator b{top:57%;transform:rotate(11deg) scaleX(.08);animation-delay:.07s}
+@keyframes undeadHeartbeat{0%{opacity:0;transform:translate(-50%,-50%) scale(.12)}22%{opacity:1;transform:translate(-50%,-50%) scale(.56)}42%{transform:translate(-50%,-50%) scale(.38)}65%{transform:translate(-50%,-50%) scale(1.2)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.7)}}
+@keyframes undeadSigil{0%{opacity:0;transform:translate(-50%,-50%) scale(.2) rotate(-18deg)}35%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.3) rotate(8deg)}}
+@keyframes redDictatorSeal{0%{opacity:0;transform:translate(-50%,-50%) rotate(45deg) scale(.12)}40%{opacity:1;transform:translate(-50%,-50%) rotate(45deg) scale(.85)}70%{transform:translate(-50%,-50%) rotate(45deg) scale(.72)}100%{opacity:0;transform:translate(-50%,-50%) rotate(45deg) scale(1.35)}}
+@keyframes redDictatorCrown{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}40%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.15)}}
+@keyframes redOrderSlash{0%{opacity:0;transform:rotate(-14deg) scaleX(.08)}30%{opacity:1}100%{opacity:0;transform:rotate(-14deg) scaleX(1)}}

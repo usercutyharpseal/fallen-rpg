@@ -8,7 +8,7 @@ const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
 const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
 const PVP_NICK_KEY = 'fallen_pvp_nickname';
 const INFINITE_SAVE_KEY = 'fallen_infinite_save_v1';
-const GAME_VERSION = 153;
+const GAME_VERSION = 154;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5, godfather:7 };
 function loadMeta(){
@@ -39,7 +39,8 @@ function loadMeta(){
 }
 function saveMeta(meta){localStorage.setItem(META_KEY,JSON.stringify(meta));}
 
-const ELITE_SKIN_CLASSES=new Set(['knight','noble','thief']);
+const ELITE_SKIN_CLASSES=new Set(['knight','noble','thief','undead','dictator']);
+const GROWTH3_SKIN_CLASSES=new Set(['undead','dictator']);
 const ELITE_SKIN_REQUIRED_HIDDEN=3;
 const CLASS_SKIN_PREVIEW={};
 function hiddenSkinHistoricalFloor(meta=loadMeta()){
@@ -55,14 +56,23 @@ function hiddenSkinClearCount(meta=loadMeta()){
   return Math.max(Number(meta.hiddenSkinClears||0),hiddenSkinHistoricalFloor(meta));
 }
 function eliteSkinsUnlocked(meta=loadMeta()){return hiddenSkinClearCount(meta)>=ELITE_SKIN_REQUIRED_HIDDEN;}
+function classSpecialSkinUnlocked(id,meta=loadMeta()){
+  if(!ELITE_SKIN_CLASSES.has(id))return false;
+  if(GROWTH3_SKIN_CLASSES.has(id))return classGrowthLevel(id,meta)>=3;
+  return eliteSkinsUnlocked(meta);
+}
+function classSkinUnlockText(id,meta=loadMeta()){
+  if(GROWTH3_SKIN_CLASSES.has(id)){const n=classGrowthLevel(id,meta);return n>=3?'해금됨':`성장 ${n}/3`;}
+  const n=hiddenSkinClearCount(meta);return n>=ELITE_SKIN_REQUIRED_HIDDEN?'해금됨':`히든 엔딩 ${n}/${ELITE_SKIN_REQUIRED_HIDDEN}`;
+}
 function preferredClassSkin(id,meta=loadMeta()){
-  if(!ELITE_SKIN_CLASSES.has(id)||!eliteSkinsUnlocked(meta))return 'base';
+  if(!ELITE_SKIN_CLASSES.has(id)||!classSpecialSkinUnlocked(id,meta))return 'base';
   return meta.skinPrefs?.[id]==='elite'?'elite':'base';
 }
 function setPreferredClassSkin(id,skin){
   if(!ELITE_SKIN_CLASSES.has(id))return false;
   const meta=loadMeta();
-  if(skin==='elite'&&!eliteSkinsUnlocked(meta))return false;
+  if(skin==='elite'&&!classSpecialSkinUnlocked(id,meta))return false;
   meta.skinPrefs ||= {};
   meta.skinPrefs[id]=skin==='elite'?'elite':'base';
   saveMeta(meta);return true;
@@ -81,12 +91,15 @@ function recordHiddenSkinClear(name,e){
 }
 function activeClassSkin(){return state?.flags?.classSkin||'base';}
 function eliteSkinActive(id=state?.classId){return !!id&&ELITE_SKIN_CLASSES.has(id)&&activeClassSkin()==='elite';}
-function classSkinLabel(id,skin=preferredClassSkin(id)){return skin==='elite'?'ELITE':'기본';}
+function infiniteEliteSkinActive(id){return typeof infiniteRun!=='undefined'&&!!infiniteRun&&infiniteRun.classId===id&&infiniteRun.classSkin==='elite';}
+function classSkinLabel(id,skin=preferredClassSkin(id)){if(skin!=='elite')return '기본';if(id==='undead')return '생전';if(id==='dictator')return '붉은 독재자';return 'ELITE';}
 function classSkinPresentation(id,cl,skin=preferredClassSkin(id)){
   if(skin!=='elite')return {name:cl.name,passive:cl.passive,desc:cl.desc};
   if(id==='knight')return {name:`${cl.name} · ELITE`,passive:'황금 독수리는 물러서지 않는다',desc:'처세나 도망으로 사건을 끝내지 않을 때마다 공격력이 1 오른다. 물러서지 않는 순간 황금 방패의 검광이 번쩍인다.'};
   if(id==='noble')return {name:`${cl.name} · ELITE`,passive:'명령이 아니라 제안이지',desc:'처세 성공률이 상승하고 처세 보상이 더 커진다. 성공하는 순간 황실 인장이 짧게 드러난다.'};
   if(id==='thief')return {name:`${cl.name} · ELITE`,passive:'눈을 떼지 말았어야지',desc:'상대보다 느려도 33~50% 확률로 도망칠 수 있다. 불가능한 도주를 시도할 때 검은 잔영이 남는다.'};
+  if(id==='undead')return {name:'언데드 · 생전',passive:'아직 끝나지 않은 심장',desc:'적 조우를 어떤 방식으로든 2회 통과하면 부활이 재충전된다. 부활 순간 생전의 은빛 성광이 되살아난다.'};
+  if(id==='dictator')return {name:'독재자 · 붉은 독재자',passive:'붉은 명령은 철회되지 않는다',desc:'독재 누적 발동 순간 붉은 황권 인장과 명령선이 전장을 가른다.'};
   return {name:cl.name,passive:cl.passive,desc:cl.desc};
 }
 function eliteSkinTalkFlavor(){
@@ -96,8 +109,8 @@ function eliteSkinTalkFlavor(){
   if(state.classId==='thief')return '상대가 후드 아래 눈을 확인하려 하지만 시선이 자꾸 손끝의 단검으로 끌린다. “그 장비… 어디 소속이지?”';
   return '';
 }
-function eliteSkinFx(type){
-  if(!eliteSkinActive(type))return;
+function eliteSkinFx(type,force=false){
+  if(!force&&!eliteSkinActive(type))return;
   const el=document.createElement('div');
   el.className=`elite-skin-fx elite-${type}`;
   el.innerHTML='<i></i><b></b><span></span>';
@@ -121,10 +134,10 @@ function cycleClassSkin(id,dir=1,card=null){
 
   if(next==='elite'){
     CLASS_SKIN_PREVIEW[id]='elite';
-    if(eliteSkinsUnlocked(meta))setPreferredClassSkin(id,'elite');
+    if(classSpecialSkinUnlocked(id,meta))setPreferredClassSkin(id,'elite');
   }else{
     delete CLASS_SKIN_PREVIEW[id];
-    if(eliteSkinsUnlocked(meta))setPreferredClassSkin(id,'base');
+    if(classSpecialSkinUnlocked(id,meta))setPreferredClassSkin(id,'base');
   }
   renderClasses();
 }
@@ -248,7 +261,7 @@ const CLASSES = {
   undead: {
     name: '언데드', hp: 10, atk: 7, social: 7, speed: 3, unlocked: true,
     passive: '죽지 못한 자',
-    desc: '행동이 실패할 상황에 1회 부활해 같은 조우의 시작으로 돌아간다. 적을 2번 처치할 때마다 부활 횟수가 다시 충전된다.'
+    desc: '행동이 실패할 상황에 1회 부활해 같은 조우의 시작으로 돌아간다. 적 조우를 공격·처세·도망 어떤 방식으로든 2번 통과할 때마다 부활 횟수가 다시 충전된다.'
   },
   gambler: {
     name: '도박꾼', hp: 5, atk: 4, social: 4, speed: 2, unlocked: false,
@@ -2295,6 +2308,16 @@ const EARLY_CLASS_FLAVOR = {
     intro:'자리도 이름도 잃었지만 사람을 위아래로 나누던 습관은 사라지지 않았다. 이 골목에서도 누가 명령하고 누가 따르는지는 금세 보인다.',
     beggars:'세 사람 중 실제로 결정을 내리는 자는 하나뿐이다. 나머지는 그의 말을 반복한다. 작은 무리에도 권력은 있다.',
     gangster:'남자는 이 골목에서 자기 규칙이 통한다고 믿는다. 당신에게는 그 확신 자체가 도전처럼 느껴진다.'
+  },
+  undead:{
+    intro:'숨을 쉬지 않아도 가슴은 습관처럼 들썩인다. 차가운 돌바닥보다 더 차가운 것은 자신의 손끝이다. 이미 한 번 끝났다는 사실만 몸이 먼저 기억한다.',
+    beggars:'세 사람은 당신이 가까워지자 목소리를 낮춘다. 도움을 청하면서도 눈은 창백한 피부와 멎은 숨을 번갈아 확인한다.',
+    gangster:'남자는 주먹을 쥐었다가 잠깐 멈춘다. 당신에게서 사람의 체온이 느껴지지 않는다는 걸 깨달은 표정이다.'
+  },
+  godfather:{
+    intro:'몰락해도 사람을 읽는 법은 남는다. 이 골목에서 누가 빚을 지고, 누가 겁을 먹고, 누가 부탁 하나면 움직일지를 천천히 훑는다.',
+    beggars:'세 사람 모두 도움을 원하지만 원하는 대가는 조금씩 다르다. 당신은 부탁보다 관계를 먼저 계산한다.',
+    gangster:'남자는 힘으로 골목을 잡고 있다. 하지만 힘만으로 오래 버틴 조직은 없다. 누구와 연결돼 있는지가 더 궁금하다.'
   }
 };
 function earlyClassFlavor(part){return EARLY_CLASS_FLAVOR[state.classId]?.[part]||'';}
@@ -2308,7 +2331,9 @@ const CLASS_REACTIONS = {
     gambler:'경비병이 손가락 사이의 작은 주사위를 보고 인상을 찌푸린다. “성문 앞에서 판 벌일 생각은 접어. 운보다 통행증이 먼저다.”',
     spellsword:'경비병의 시선이 검에 오래 머문다. “그 물건, 칼집에서 꺼낼 생각은 하지 마.”',
     necromancer:'경비병이 이유도 모른 채 반걸음 물러난다. “이상하군. 네 주변만 유난히 찬 것 같은데.”',
-    dictator:'당신의 첫마디가 명령처럼 떨어지자 경비병의 턱이 굳는다. “여긴 네 부하가 지키는 문이 아니다.”'
+    dictator:'당신의 첫마디가 명령처럼 떨어지자 경비병의 턱이 굳는다. “여긴 네 부하가 지키는 문이 아니다.”',
+    undead:'경비병이 통행증보다 먼저 당신의 가슴을 본다. “잠깐… 숨을 안 쉬는 건가?”',
+    godfather:'경비병은 당신이 이름을 말하기도 전에 뒤쪽 사람들의 시선을 살핀다. “혼자 왔는데 왜 다들 네 눈치를 보지?”'
   },
   forestMerchant:{
     knight:'로벤은 당신의 손에 밴 굳은살을 보고 웃는다. “호위 출신이면 물건값보다 길값이 더 비싸다는 건 알겠네.”',
@@ -2318,7 +2343,9 @@ const CLASS_REACTIONS = {
     gambler:'로벤이 당신 손의 주사위를 힐끗 본다. “내 물건값을 운에 맡길 생각이면 관둬. 대신 네 목숨이라면 네 자유고.”',
     spellsword:'로벤은 검과 수레 사이 거리를 잰다. “물건은 부숴도 돈이 안 나와. 그 정도는 알지?”',
     necromancer:'로벤은 당신 뒤 빈 공간을 한 번 본다. “혼자 온 거 맞지? …됐다. 묻지 않는 것도 장사 수완이야.”',
-    dictator:'로벤은 명령조를 듣고도 웃는다. “왕도 외상은 안 돼. 돈 내는 사람만 손님이야.”'
+    dictator:'로벤은 명령조를 듣고도 웃는다. “왕도 외상은 안 돼. 돈 내는 사람만 손님이야.”',
+    undead:'로벤이 물약병을 들다 말고 당신 손을 본다. “맥박도 없는 손님한테 회복약을 팔아본 적은 없는데.”',
+    godfather:'로벤은 가격표를 뒤집는다. “당신은 물건보다 사람을 먼저 사는 쪽 같군.”'
   },
   captainEnraged:{
     knight:'레오른은 당신의 검을 보며 낮게 말한다. “배운 사람이니 더 잘 알겠지. 칼은 명령보다 오래 남는다.”',
@@ -2328,7 +2355,9 @@ const CLASS_REACTIONS = {
     gambler:'레오른이 손안의 주사위를 본다. “전장을 도박판으로 본다면 오래 못 산다. 다만 오늘은 네 운이 얼마나 남았는지 보겠군.”',
     spellsword:'레오른은 당신의 검에서 눈을 떼지 않는다. “말보다 파괴가 편한 인간은 결국 파괴될 곳을 찾더군.”',
     necromancer:'“죽은 자를 데리고 다닌다는 소문이 있더군.” 레오른의 목소리가 더 낮아진다. “오늘은 더 늘리지 마라.”',
-    dictator:'“명령할 사람을 찾는 눈이군.” 레오른이 검을 뽑는다. “여기엔 네 명령을 받을 사람이 없다.”'
+    dictator:'“명령할 사람을 찾는 눈이군.” 레오른이 검을 뽑는다. “여기엔 네 명령을 받을 사람이 없다.”',
+    undead:'레오른은 창백한 얼굴을 보고도 검끝을 내리지 않는다. “한 번 죽었다고 책임까지 끝난 건 아니겠지.”',
+    godfather:'레오른이 주변 골목을 훑는다. “네가 직접 칼을 안 들어도 사람이 움직인다는 소문이 있더군.”'
   },
   oldVeteran:{
     knight:'아르벤은 당신의 자세를 보고 아주 작게 고개를 끄덕인다. “기본은 배웠군. 그래서 더 위험하지. 배운 사람은 자기 실수를 실력으로 착각하거든.”',
@@ -2338,7 +2367,9 @@ const CLASS_REACTIONS = {
     gambler:'아르벤은 주사위를 보지도 않고 말한다. “운은 실력 없는 사람만 믿는 게 아니야. 실력 있는 사람도 마지막 한 번은 운에 빚지지.”',
     spellsword:'아르벤의 시선이 마검에 닿는다. “힘이 검에서 오는지, 네가 검에 빌려주는 건지부터 알아야 오래 산다.”',
     necromancer:'“죽은 사람에게 기대는 건 쉽다.” 노인이 말한다. “살아 있는 사람의 책임을 지는 게 더 어렵지.”',
-    dictator:'아르벤은 웃음기 없이 당신을 본다. “사람 위에 서고 싶다면 먼저 혼자 서는 법부터 보여라.”'
+    dictator:'아르벤은 웃음기 없이 당신을 본다. “사람 위에 서고 싶다면 먼저 혼자 서는 법부터 보여라.”',
+    undead:'아르벤은 오래 침묵한다. “죽은 사람이 걷는 건 놀랍지 않아. 왜 다시 걷는지가 더 중요하지.”',
+    godfather:'아르벤은 당신 뒤를 확인하고 고개를 젓는다. “혼자 왔는데 혼자 싸우는 사람의 눈은 아니군.”'
   },
   banditBossForest:{
     knight:'세리아가 당신의 자세를 훑는다. “왕국 기사랑 비슷한 냄새가 나네. 갑옷을 벗었다고 버릇까지 벗겨지진 않지.”',
@@ -2348,7 +2379,9 @@ const CLASS_REACTIONS = {
     gambler:'세리아가 웃으며 손을 내민다. “주사위 굴리는 사람인가? 좋아. 다만 여기선 네 목숨까지 판돈에 올라가.”',
     spellsword:'“칼로 다 해결하는 사람은 협상하기 편해.” 세리아가 단검을 든다. “원하는 게 뻔하거든.”',
     necromancer:'세리아가 당신 뒤를 바라본다. “죽은 놈들이 네 편이면, 산 놈들한테는 뭘 줄 건데?”',
-    dictator:'“왕 하나도 벅찬데 또 왕 노릇 할 사람이 왔네.” 세리아의 미소가 얇아진다.'
+    dictator:'“왕 하나도 벅찬데 또 왕 노릇 할 사람이 왔네.” 세리아의 미소가 얇아진다.',
+    undead:'세리아가 숨 없는 가슴을 보고 웃음을 멈춘다. “죽어서도 여기까지 온 거야? 그 집념은 조금 마음에 드네.”',
+    godfather:'세리아가 지도에서 손을 뗀다. “숲에서 사람을 묶는 건 밧줄보다 빚이 더 세지.”'
   },
   kingEnraged:{
     knight:'에드란이 검끝을 세운다. “기사였으면 알겠지. 충성은 마지막에 어느 쪽을 향해 서느냐로 남는다.”',
@@ -2358,7 +2391,9 @@ const CLASS_REACTIONS = {
     gambler:'왕이 주사위를 내려다본다. “왕좌 앞에서 운을 시험하러 왔나? 실패한 판돈은 목으로 받겠다.”',
     spellsword:'왕은 마검을 보며 자리에서 일어난다. “말보다 저게 편하겠지. 나도 오늘은 그렇다.”',
     necromancer:'“내 병사들의 죽음까지 네 병력으로 셀 셈인가?” 왕의 분노가 한층 깊어진다.',
-    dictator:'에드란의 표정에서 모욕감이 번진다. “왕좌가 비어 보였나? 앉기 전에 무릎부터 꿇게 해주지.”'
+    dictator:'에드란의 표정에서 모욕감이 번진다. “왕좌가 비어 보였나? 앉기 전에 무릎부터 꿇게 해주지.”',
+    undead:'에드란이 당신을 노려본다. “죽음조차 네 죄를 끝내주지 못했나. 내가 두 번째 끝을 주겠다.”',
+    godfather:'왕이 주먹을 쥔다. “내 명령보다 네 부탁을 먼저 듣는 자가 생겼다더군. 그 관계도 오늘 끊겠다.”'
   }
 };
 function classReaction(part){const t=CLASS_REACTIONS[part]?.[state.classId];return t?`\n\n${t}`:'';}
@@ -3125,7 +3160,7 @@ function infApplyClassSuccess(action,nodeType){
   }
   if(r.classId==='godfather'&&action==='social'){r.atk+=4;infAddRecent('대부 · 처세 성공: 공격 +4');}
 }
-function infTryUndeadRevive(){if(infiniteRun.classId!=='undead'||!infiniteRun.reviveReady)return false;infiniteRun.reviveReady=false;infiniteRun.hp=infiniteRun.maxHp;infiniteRun.corruption=Math.max(0,infiniteRun.corruption-20);if(infiniteRun.current){infiniteRun.current.failed=[];if(infiniteRun.current.combat)infResetCombatOnRevive(infiniteRun.current);}infAddRecent('죽지 못한 자 · 실패를 거부하고 조우가 되감겼다.');return true;}
+function infTryUndeadRevive(){if(infiniteRun.classId!=='undead'||!infiniteRun.reviveReady)return false;infiniteRun.reviveReady=false;infiniteRun.hp=infiniteRun.maxHp;infiniteRun.corruption=Math.max(0,infiniteRun.corruption-20);if(infiniteRun.current){infiniteRun.current.failed=[];if(infiniteRun.current.combat)infResetCombatOnRevive(infiniteRun.current);}if(infiniteEliteSkinActive('undead'))eliteSkinFx('undead',true);infAddRecent(infiniteEliteSkinActive('undead')?'생전의 언데드 · 심장과 은빛 성광이 되돌아오며 조우가 되감겼다.':'죽지 못한 자 · 실패를 거부하고 조우가 되감겼다.');return true;}
 function infTakeDamage(v,action=''){
   const m=infMods();if(m.ward&&infiniteRun.wardFloor!==Math.floor(infiniteRun.floor/5)){infiniteRun.wardFloor=Math.floor(infiniteRun.floor/5);infAddRecent('멈춘 모래시계 · 이번 실패 피해 무효');return 0;}
   const sector=Math.floor((infiniteRun.floor-1)/5);
@@ -3370,7 +3405,9 @@ function infApplyCombatClassTurn(action,entity){
   if(r.classId==='dictator'&&(action==='attack'||action==='social')){
     r.tyranny=Number(r.tyranny||0)+1;
     if(r.tyranny>=8){
-      r.tyranny=0;r.atk++;r.social++;infAddRecent('독재자 · 압박 성공 8회: 공격/처세 +1');
+      r.tyranny=0;r.atk++;r.social++;
+      if(infiniteEliteSkinActive('dictator'))eliteSkinFx('dictator',true);
+      infAddRecent(infiniteEliteSkinActive('dictator')?'붉은 독재자 · 황권 인장 발동: 공격/처세 +1':'독재자 · 압박 성공 8회: 공격/처세 +1');
     }
   }
   if(r.classId==='godfather'&&action==='social'){
@@ -3553,6 +3590,7 @@ async function infResolveCombat(entity){
   const tier=infCombatTier(entity),method=infCombatOutcomeMethod(entity);
   infSetBusy(true);
   const result=infCombatReward(entity,method);
+  infRegisterUndeadEncounterClear();
   const methodLabel=method==='attack'?'공격으로 돌파':method==='social'?'처세로 돌파':method==='speed'?'도주로 돌파':'간신히 생존';
   const label=tier===3?`3턴 생존 · ${methodLabel}`:tier===2?`3턴 통과 · ${methodLabel}`:`2턴 통과 · ${methodLabel}`;
   infiniteRun.status=`${label} · 기록 +${result.amount}${result.rec?` · ${result.rec.title}`:''}`;
@@ -3683,10 +3721,11 @@ function infBossChance(b,action){return infCombatChance(b,action);}
 function infRegisterCombatKill(action){
   if(action!=='attack')return;
   const r=infiniteRun;r.kills=Number(r.kills||0)+1;
-  if(r.classId==='undead'){
-    r.undeadKills=Number(r.undeadKills||0)+1;
-    if(r.undeadKills>=2){r.undeadKills=0;r.reviveReady=true;infAddRecent('죽지 못한 자 · 2번째 처치로 부활 재충전');}
-  }
+}
+function infRegisterUndeadEncounterClear(){
+  const r=infiniteRun;if(!r||r.classId!=='undead')return;
+  r.undeadKills=Number(r.undeadKills||0)+1;
+  if(r.undeadKills>=2){r.undeadKills=0;r.reviveReady=true;infAddRecent('죽지 못한 자 · 적 조우 2회 통과: 부활 재충전');}
 }
 function infNodeChoices(){
   const hostile=['hunt','archive','guard','cult','aberration'],out=[];
@@ -3941,7 +3980,7 @@ function infRender(){
   showScreen('infiniteGameScreen');
   const r=infiniteRun;
 
-  $('infClass').textContent=`${CLASSES[r.classId]?.name||'기록자'}${r.classSkin==='elite'?' · ELITE':''}`;
+  $('infClass').textContent=`${CLASSES[r.classId]?.name||'기록자'}${r.classSkin==='elite'?` · ${classSkinLabel(r.classId,'elite')}`:''}`;
   $('infHpBar').style.width=`${infClamp(r.hp/r.maxHp*100,0,100)}%`;
   $('infHpText').textContent=`${r.hp}/${r.maxHp}`;
   $('infCorruptBar').style.width=`${r.corruption}%`;
@@ -4424,7 +4463,8 @@ const CLASS_ART_FILES = {
   undead:'/assets/classes/undead.png', godfather:'/assets/classes/godfather.png'
 };
 const CLASS_ELITE_ART_FILES={
-  knight:'/assets/classes/knight_elite.webp',noble:'/assets/classes/noble_elite.webp',thief:'/assets/classes/thief_elite.webp'
+  knight:'/assets/classes/knight_elite.webp',noble:'/assets/classes/noble_elite.webp',thief:'/assets/classes/thief_elite.webp',
+  undead:'/assets/classes/undead_elite.webp',dictator:'/assets/classes/dictator_elite.webp'
 };
 function classArtUrl(id,skin=null){
   const useSkin=skin||((state?.classId===id&&state?.flags?.classSkin)?state.flags.classSkin:preferredClassSkin(id));
@@ -4432,22 +4472,22 @@ function classArtUrl(id,skin=null){
 }
 
 function renderClasses() {
-  const skinUnlocked=eliteSkinsUnlocked();
   $('classGrid').innerHTML = Object.entries(CLASSES).map(([id,cl]) => {
     const unlocked=isClassUnlocked(id);
     const unlockText=classUnlockText(id);
     const grown=classGrowthStats(id,cl);
     const hasElite=ELITE_SKIN_CLASSES.has(id);
     const skin=hasElite?previewClassSkin(id):'base';
+    const skinUnlocked=hasElite?classSpecialSkinUnlocked(id):false;
     const elitePreviewLocked=hasElite&&skin==='elite'&&!skinUnlocked;
     const view=classSkinPresentation(id,cl,skin);
     const pageDots=hasElite?`<div class="skin-page-dots" aria-hidden="true"><i class="${skin==='base'?'on':''}"></i><i class="${skin==='elite'?'on':''}"></i></div>`:'';
-    const lockOverlay=elitePreviewLocked?`<div class="skin-preview-lock"><span>🔒</span><b>잠김</b></div>`:'';
+    const lockOverlay=elitePreviewLocked?`<div class="skin-preview-lock"><span>🔒</span><b>${escapeHtml(classSkinUnlockText(id))}</b></div>`:'';
     const canStart=unlocked&&!elitePreviewLocked;
     return `
     <article class="class-card ${unlocked?'':'locked'} ${skin==='elite'?'elite-skin-card':''} ${elitePreviewLocked?'elite-preview-locked':''}" data-class-id="${id}" data-skin="${skin}">
       <div class="class-portrait-wrap">
-        <img class="class-portrait" src="${classArtUrl(id,skin)}?v=0939" alt="${cl.name} 삽화" loading="lazy" decoding="async">
+        <img class="class-portrait" src="${classArtUrl(id,skin)}?v=0954" alt="${cl.name} 삽화" loading="lazy" decoding="async">
         ${lockOverlay}${pageDots}
       </div>
       <div class="class-info">
@@ -4469,11 +4509,11 @@ function render() {
   if (!sc || !state.p) return;
   const enemy = getEnemy(sc);
 
-  $('hudClass').textContent = `${state.p.className}${eliteSkinActive()?' · ELITE':''} · 공격 ${state.p.atk}`;
+  $('hudClass').textContent = `${state.p.className}${eliteSkinActive()?` · ${classSkinLabel(state.classId,'elite')}`:''} · 공격 ${state.p.atk}`;
   $('hudGold').textContent = `◆ ${state.p.gold}`;
   $('hpText').textContent = `${state.p.hp} / ${state.p.maxHp}`;
   $('hpBar').style.width = `${Math.max(0, Math.min(100, state.p.hp/state.p.maxHp*100))}%`;
-  const classExtra=state.classId==='necromancer'?` · 시체 ${state.stats.corpses||0}`:state.classId==='dictator'?` · 독재 ${state.stats.tyranny||0}/8`:state.classId==='merchant'?` · 장사 ${state.stats.merchantIncome||0}`:state.classId==='gambler'?` · 강화 눈 ${(state.stats.gamblerFaces||[]).length?(state.stats.gamblerFaces||[]).join('·'):'없음'}`:state.classId==='undead'?` · 부활 ${state.flags.undeadReviveReady===false?'소모':'준비'} · 충전 ${state.stats.undeadKillsSinceReset||0}/2`:state.classId==='godfather'?` · 영입 ${state.stats.godfatherSocialBoosts||0}`:'';
+  const classExtra=state.classId==='necromancer'?` · 시체 ${state.stats.corpses||0}`:state.classId==='dictator'?` · 독재 ${state.stats.tyranny||0}/8`:state.classId==='merchant'?` · 장사 ${state.stats.merchantIncome||0}`:state.classId==='gambler'?` · 강화 눈 ${(state.stats.gamblerFaces||[]).length?(state.stats.gamblerFaces||[]).join('·'):'없음'}`:state.classId==='undead'?` · 부활 ${state.flags.undeadReviveReady===false?'소모':'준비'} · 조우 충전 ${state.stats.undeadKillsSinceReset||0}/2`:state.classId==='godfather'?` · 영입 ${state.stats.godfatherSocialBoosts||0}`:'';
   $('hudStats').textContent = `처세 ${state.p.social} · 속도 ${state.p.speed} · 진행 ${state.stats.progress}${classExtra}`;
 
   $('chapter').textContent = sc.chapter || '';
@@ -4548,7 +4588,7 @@ const ART_FILES = {
 function art(kind) {
   const file=ART_FILES[kind]||ART_FILES.exile;
   const classFile=state?.classId?classArtUrl(state.classId,state.flags?.classSkin||'base'):'';
-  const cameo=classFile?`<div class="scene-class-cameo"><img src="${classFile}?v=0938" alt=""></div>`:'';
+  const cameo=classFile?`<div class="scene-class-cameo"><img src="${classFile}?v=0954" alt=""></div>`:'';
   return `<div class="scene-illustration art-${escapeHtml(kind||'exile')}">
     <img class="scene-illustration-bg" src="/assets/art/${file}.webp?v=0926" alt="" decoding="async">
     <div class="scene-illustration-vignette"></div>${cameo}
@@ -4558,7 +4598,7 @@ function art(kind) {
 // ---------- Gameplay ----------
 function selectClass(id) {
   const cl=CLASSES[id]; if(!cl || !isClassUnlocked(id)) return;
-  if(ELITE_SKIN_CLASSES.has(id)&&previewClassSkin(id)==='elite'&&!eliteSkinsUnlocked())return;
+  if(ELITE_SKIN_CLASSES.has(id)&&previewClassSkin(id)==='elite'&&!classSpecialSkinUnlocked(id))return;
   pendingClassId=id; pendingHardType=null;
   renderModeSelection();
   showScreen('modeScreen');
@@ -4766,6 +4806,7 @@ function gameAction(type) {
     const chance=socialChance(enemy,sc);
     if(Math.random()*100<chance){
       state.stats.socialSuccess++;
+      registerUndeadEncounterClear();
       grantSocialReward(enemy,chance);
       if(state.classId==='gambler')gamblerFortuneOnSocialSuccess();
       if(state.classId==='dictator')gainTyranny('social');
@@ -4807,7 +4848,7 @@ ${line}`:line;save();render();
     // 한 조우에서 도주 판정은 딱 한 번만 한다.
     setEscapeUsed();
     if(chance===100 || Math.random()*100<chance){
-      state.stats.runSuccess++;fx('good');floatText('도주 성공');
+      state.stats.runSuccess++;registerUndeadEncounterClear();fx('good');floatText('도주 성공');
       if(sc.runSuccess){
         sc.runSuccess();
       }else if(ESCAPE_ROUTES[state.sceneId]){
@@ -4888,7 +4929,8 @@ function tryUndeadRevive(reason='행동 실패'){
   state.escapeAttempted=false;
   if(state.encounterMods)delete state.encounterMods[state.sceneId];
   state.pending=null;
-  state.lastToast=`${reason}.\n\n몸이 바닥에 닿기 직전, 멎었던 숨이 다시 이어진다. 죽지 못한 자가 같은 조우의 시작으로 돌아왔다.`;
+  state.lastToast=`${reason}.\n\n몸이 바닥에 닿기 직전, 멎었던 숨이 다시 이어진다. 죽지 못한 자가 같은 조우의 시작으로 돌아왔다.${eliteSkinActive('undead')?'\n\n한 번 멎었던 심장이 강하게 뛰고, 생전의 은빛 성광이 갑옷 틈에서 폭발한다.':''}`;
+  if(eliteSkinActive('undead'))eliteSkinFx('undead');
   fx('good');floatText('부활');
   save();render();
   return true;
@@ -4907,16 +4949,20 @@ function gainTyranny(source){
   const claimed=Number(state.flags.tyrannyMilestones||0);
   if(current>claimed){
     state.flags.tyrannyMilestones=current;
+    if(eliteSkinActive('dictator'))eliteSkinFx('dictator');
     if(source==='social'){
-      state.p.social+=8;
-      floatText('처세 +8');
-      state.lastToast='사람을 굴복시키는 방식이 더 노골적으로 다듬어졌다. 처세 +8';
+      state.p.social+=8;floatText('처세 +8');
+      state.lastToast=eliteSkinActive('dictator')?'붉은 황권 인장이 허공에 찍힌다. 처세 +8':'사람을 굴복시키는 방식이 더 노골적으로 다듬어졌다. 처세 +8';
     }else{
-      state.p.atk+=8;
-      floatText('공격력 +8');
-      state.lastToast='저항을 꺾을수록 힘의 격차가 벌어진다. 공격력 +8';
+      state.p.atk+=8;floatText('공격력 +8');
+      state.lastToast=eliteSkinActive('dictator')?'붉은 명령선이 화면을 가르고 황권 인장이 내려찍힌다. 공격력 +8':'저항을 꺾을수록 힘의 격차가 벌어진다. 공격력 +8';
     }
   }
+}
+function registerUndeadEncounterClear(){
+  if(state.classId!=='undead')return;
+  state.stats.undeadKillsSinceReset=Number(state.stats.undeadKillsSinceReset||0)+1;
+  if(state.stats.undeadKillsSinceReset>=2){state.stats.undeadKillsSinceReset=0;state.flags.undeadReviveReady=true;floatText('부활 충전');state.lastToast='적 조우를 두 번 넘겼다. 죽지 못한 자의 부활이 다시 충전됐다.';}
 }
 function applyClassKillReward(){
   if(state.classId==='spellsword'){
@@ -4928,14 +4974,6 @@ function applyClassKillReward(){
     floatText('시체 +1');
   }else if(state.classId==='dictator'){
     gainTyranny('kill');
-  }else if(state.classId==='undead'){
-    state.stats.undeadKillsSinceReset=Number(state.stats.undeadKillsSinceReset||0)+1;
-    if(state.stats.undeadKillsSinceReset>=2){
-      state.stats.undeadKillsSinceReset=0;
-      state.flags.undeadReviveReady=true;
-      floatText('부활 충전');
-      state.lastToast='두 번째 적이 쓰러졌다. 죽지 못한 자의 부활이 다시 충전됐다.';
-    }
   }
 }
 function summonWraith(){
@@ -5026,6 +5064,7 @@ function finishBattleWin(sc,enemy,chance,comeback,comebackRoll=null){
   if(dmg>0){state.p.hp-=dmg;floatText(`HP -${dmg}`);}
   state.stats.kills++; if(enemy.elite)state.stats.eliteKills++;
   applyClassKillReward();
+  registerUndeadEncounterClear();
   hideBattleOverlay(); battleBusy=false;
   const prefix=comeback?`주사위가 ${comebackRoll??6}에 멈췄다. 끝났던 승부가 뒤집혔다.${dmg?`\n체력 ${dmg}을 잃었다.`:''}\n\n`:'';
   if(sc.attackWin){
@@ -5256,7 +5295,7 @@ function finish(name) {
   $('playStyle').textContent=`플레이 스타일 · ${playStyle()}`;
   $('endScore').textContent=clientScore().toLocaleString();
   const deathBlock=e.bad&&state.flags.deathReason?`<b>최후의 순간</b> · ${escapeHtml(state.flags.deathReason)}<br><b>사망 장소</b> · ${escapeHtml(SCENES[state.flags.deathScene]?.location||'알 수 없는 장소')}<br><br><br>`:'';
-  $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>협상 수익 <b>◆ ${state.stats.socialIncome||0}</b> · 고난도 협상 <b>${state.stats.riskySocial||0}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 과대화 <b>${state.stats.overTalks||0}</b> · 진영 전환 <b>${state.stats.teamSwitches||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>${state.classId==='merchant'?`<br>장사 수익 <b>${state.stats.merchantIncome||0}</b> · 새 조우 <b>${state.stats.merchantDeals||0}</b>`:state.classId==='gambler'?`<br>강화한 눈 <b>${(state.stats.gamblerFaces||[]).length?(state.stats.gamblerFaces||[]).join(' · '):'없음'}</b> · 강화 역전 <b>${state.stats.gamblerFaceHits||0}</b> · 중복 꽝 <b>${state.stats.gamblerDuplicates||0}</b>`:state.classId==='undead'?`<br>부활 사용 <b>${state.stats.undeadRevives||0}</b> · 다음 충전 <b>${state.stats.undeadKillsSinceReset||0}/2</b>`:state.classId==='godfather'?`<br>처세 영입 <b>${state.stats.godfatherSocialBoosts||0}</b> · 패시브 공격 증가 <b>+${(state.stats.godfatherSocialBoosts||0)*4}</b>`:''}`;
+  $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>협상 수익 <b>◆ ${state.stats.socialIncome||0}</b> · 고난도 협상 <b>${state.stats.riskySocial||0}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 과대화 <b>${state.stats.overTalks||0}</b> · 진영 전환 <b>${state.stats.teamSwitches||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>${state.classId==='merchant'?`<br>장사 수익 <b>${state.stats.merchantIncome||0}</b> · 새 조우 <b>${state.stats.merchantDeals||0}</b>`:state.classId==='gambler'?`<br>강화한 눈 <b>${(state.stats.gamblerFaces||[]).length?(state.stats.gamblerFaces||[]).join(' · '):'없음'}</b> · 강화 역전 <b>${state.stats.gamblerFaceHits||0}</b> · 중복 꽝 <b>${state.stats.gamblerDuplicates||0}</b>`:state.classId==='undead'?`<br>부활 사용 <b>${state.stats.undeadRevives||0}</b> · 조우 충전 <b>${state.stats.undeadKillsSinceReset||0}/2</b>`:state.classId==='godfather'?`<br>처세 영입 <b>${state.stats.godfatherSocialBoosts||0}</b> · 패시브 공격 증가 <b>+${(state.stats.godfatherSocialBoosts||0)*4}</b>`:''}`;
   if(name==='팬텀'&&state.flags.phantomOriginalEnding){
     $('endStats').innerHTML+=`<br><br><b>팬텀 생환</b> · 원래 도달한 결말 <b>${escapeHtml(state.flags.phantomOriginalEnding)}</b>`;
   }
@@ -5278,6 +5317,10 @@ function finish(name) {
     $('endStats').innerHTML+=growthResult.leveled
       ? `<br><br><b>직업 성장 · 전 능력치 +1</b><br>${escapeHtml(state.p.className)} 영구 성장 <b>+${level}</b> · ${progress}`
       : `<br><br>직업 성장 · ${escapeHtml(state.p.className)} <b>+${level}</b> · ${progress}`;
+    if(growthResult.leveled&&Number(growthResult.before||0)<3&&level>=3&&GROWTH3_SKIN_CLASSES.has(state.classId)){
+      const skinName=state.classId==='undead'?'생전의 언데드':'붉은 독재자';
+      $('endStats').innerHTML+=`<br><br><b>신규 스킨 해금 · ${skinName}</b>`;
+    }
   }
   resetRankSubmitUI();
   if($('nickname'))$('nickname').classList.toggle('hidden',pvpMode);
