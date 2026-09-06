@@ -7,7 +7,7 @@ const META_KEY = 'fallen_meta_v1';
 const PVP_SAVE_KEY = 'fallen_pvp_save_v1';
 const PVP_SESSION_KEY = 'fallen_pvp_session_v1';
 const PVP_NICK_KEY = 'fallen_pvp_nickname';
-const GAME_VERSION = 137;
+const GAME_VERSION = 138;
 
 const CLASS_UNLOCK_CLEAR_REQUIREMENTS = { spellsword:1, gambler:1, necromancer:3, dictator:5, godfather:7 };
 function loadMeta(){
@@ -21,11 +21,99 @@ function loadMeta(){
       endings:Array.isArray(raw.endings)?raw.endings:[],
       awardedRuns:Array.isArray(raw.awardedRuns)?raw.awardedRuns:[],
       classGrowth,
-      growthAwardedRuns:Array.isArray(raw.growthAwardedRuns)?raw.growthAwardedRuns:[]
+      growthAwardedRuns:Array.isArray(raw.growthAwardedRuns)?raw.growthAwardedRuns:[],
+      hiddenSkinClears:Math.max(0,Number(raw.hiddenSkinClears||0)),
+      hiddenSkinAwardedRuns:Array.isArray(raw.hiddenSkinAwardedRuns)?raw.hiddenSkinAwardedRuns:[],
+      skinPrefs:(raw.skinPrefs&&typeof raw.skinPrefs==='object'&&!Array.isArray(raw.skinPrefs))?raw.skinPrefs:{}
     };
-  }catch{return {normalClears:0,hardClears:0,endings:[],awardedRuns:[],classGrowth:{},growthAwardedRuns:[]};}
+  }catch{return {normalClears:0,hardClears:0,endings:[],awardedRuns:[],classGrowth:{},growthAwardedRuns:[],hiddenSkinClears:0,hiddenSkinAwardedRuns:[],skinPrefs:{}};}
 }
 function saveMeta(meta){localStorage.setItem(META_KEY,JSON.stringify(meta));}
+
+const ELITE_SKIN_CLASSES=new Set(['knight','noble','thief']);
+const ELITE_SKIN_REQUIRED_HIDDEN=3;
+function hiddenSkinHistoricalFloor(meta=loadMeta()){
+  const names=Array.isArray(meta.endings)?meta.endings:[];
+  let n=0;
+  for(const name of new Set(names)){
+    const e=typeof ENDINGS!=='undefined'?ENDINGS[name]:null;
+    if(e&&!e.bad&&/HIDDEN END/.test(String(e.kind||'')))n++;
+  }
+  return n;
+}
+function hiddenSkinClearCount(meta=loadMeta()){
+  return Math.max(Number(meta.hiddenSkinClears||0),hiddenSkinHistoricalFloor(meta));
+}
+function eliteSkinsUnlocked(meta=loadMeta()){return hiddenSkinClearCount(meta)>=ELITE_SKIN_REQUIRED_HIDDEN;}
+function preferredClassSkin(id,meta=loadMeta()){
+  if(!ELITE_SKIN_CLASSES.has(id)||!eliteSkinsUnlocked(meta))return 'base';
+  return meta.skinPrefs?.[id]==='elite'?'elite':'base';
+}
+function setPreferredClassSkin(id,skin){
+  if(!ELITE_SKIN_CLASSES.has(id))return false;
+  const meta=loadMeta();
+  if(skin==='elite'&&!eliteSkinsUnlocked(meta))return false;
+  meta.skinPrefs ||= {};
+  meta.skinPrefs[id]=skin==='elite'?'elite':'base';
+  saveMeta(meta);return true;
+}
+function recordHiddenSkinClear(name,e){
+  if(!e||e.bad||!/HIDDEN END/.test(String(e.kind||'')))return {eligible:false,unlockedNow:false};
+  const meta=loadMeta();const runId=String(state?.runId||'');
+  if(runId&&meta.hiddenSkinAwardedRuns.includes(runId))return {eligible:true,duplicate:true,unlockedNow:false,count:hiddenSkinClearCount(meta)};
+  const before=eliteSkinsUnlocked(meta);
+  meta.hiddenSkinClears=Math.max(Number(meta.hiddenSkinClears||0),hiddenSkinHistoricalFloor(meta))+1;
+  if(runId)meta.hiddenSkinAwardedRuns.push(runId);
+  meta.hiddenSkinAwardedRuns=meta.hiddenSkinAwardedRuns.slice(-250);
+  saveMeta(meta);
+  const after=eliteSkinsUnlocked(meta);
+  return {eligible:true,unlockedNow:!before&&after,count:hiddenSkinClearCount(meta)};
+}
+function activeClassSkin(){return state?.flags?.classSkin||'base';}
+function eliteSkinActive(id=state?.classId){return !!id&&ELITE_SKIN_CLASSES.has(id)&&activeClassSkin()==='elite';}
+function classSkinLabel(id,skin=preferredClassSkin(id)){return skin==='elite'?'ELITE':'기본';}
+function classSkinPresentation(id,cl,skin=preferredClassSkin(id)){
+  if(skin!=='elite')return {name:cl.name,passive:cl.passive,desc:cl.desc};
+  if(id==='knight')return {name:`${cl.name} · ELITE`,passive:'황금 독수리는 물러서지 않는다',desc:'처세나 도망으로 사건을 끝내지 않을 때마다 공격력이 1 오른다. 물러서지 않는 순간 황금 방패의 검광이 번쩍인다.'};
+  if(id==='noble')return {name:`${cl.name} · ELITE`,passive:'명령이 아니라 제안이지',desc:'처세 성공률이 상승하고 처세 보상이 더 커진다. 성공하는 순간 황실 인장이 짧게 드러난다.'};
+  if(id==='thief')return {name:`${cl.name} · ELITE`,passive:'눈을 떼지 말았어야지',desc:'상대보다 느려도 33~50% 확률로 도망칠 수 있다. 불가능한 도주를 시도할 때 검은 잔영이 남는다.'};
+  return {name:cl.name,passive:cl.passive,desc:cl.desc};
+}
+function eliteSkinTalkFlavor(){
+  if(!eliteSkinActive()||!getEnemy(SCENES[state.sceneId]))return '';
+  if(state.classId==='knight')return '상대의 시선이 갑옷의 황금 독수리 문장에 잠깐 멈춘다. “왕실의 그 갑옷을 여기서 볼 줄은 몰랐군.”';
+  if(state.classId==='noble')return '상대는 붉은 보석과 황실 문장을 확인하자 말끝을 조금 낮춘다. “평범한 귀족은 아니셨군요.”';
+  if(state.classId==='thief')return '상대가 후드 아래 눈을 확인하려 하지만 시선이 자꾸 손끝의 단검으로 끌린다. “그 장비… 어디 소속이지?”';
+  return '';
+}
+function eliteSkinFx(type){
+  if(!eliteSkinActive(type))return;
+  const el=document.createElement('div');
+  el.className=`elite-skin-fx elite-${type}`;
+  el.innerHTML='<i></i><b></b><span></span>';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),780);
+}
+function flashSkinHint(card,text){
+  if(!card)return;let el=card.querySelector('.skin-swipe-hint');
+  if(!el){el=document.createElement('div');el.className='skin-swipe-hint';card.querySelector('.class-portrait-wrap')?.appendChild(el);}
+  el.textContent=text;el.classList.remove('show');void el.offsetWidth;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1250);
+}
+function cycleClassSkin(id,dir=1,card=null){
+  if(!ELITE_SKIN_CLASSES.has(id))return;
+  const meta=loadMeta();
+  if(!eliteSkinsUnlocked(meta)){flashSkinHint(card||document.querySelector(`.class-card[data-class-id="${id}"]`),'히든 엔딩 3회 달성 후 해금');return;}
+  const current=preferredClassSkin(id,meta);const next=current==='elite'?'base':'elite';
+  setPreferredClassSkin(id,next);renderClasses();
+}
+function bindClassSkinSwipes(){
+  document.querySelectorAll('#classScreen .class-card[data-class-id]').forEach(card=>{
+    const id=card.dataset.classId;if(!ELITE_SKIN_CLASSES.has(id))return;
+    let sx=0,sy=0;
+    card.addEventListener('touchstart',e=>{const t=e.touches?.[0];if(!t)return;sx=t.clientX;sy=t.clientY;},{passive:true});
+    card.addEventListener('touchend',e=>{const t=e.changedTouches?.[0];if(!t)return;const dx=t.clientX-sx,dy=t.clientY-sy;if(Math.abs(dx)>=52&&Math.abs(dx)>Math.abs(dy)*1.25)cycleClassSkin(id,dx<0?1:-1,card);},{passive:true});
+  });
+}
 
 function classGrowthEntry(id,meta=loadMeta()){
   const row=(meta.classGrowth&&meta.classGrowth[id]&&typeof meta.classGrowth[id]==='object')?meta.classGrowth[id]:{};
@@ -2396,7 +2484,10 @@ ${p.end||'이제 상대는 결정을 요구한다.'}`,null);
   if(step.on)step.on();
   const risk=applyTalkRisk(false);
   const stepText=typeof step.text==='function'?step.text():step.text;
-  queueOutcome(`${stepText}${risk?`
+  const skinFlavor=done===0?eliteSkinTalkFlavor():'';
+  queueOutcome(`${stepText}${skinFlavor?`
+
+${skinFlavor}`:''}${risk?`
 
 ${risk.text}`:''}`,null);
 }
@@ -2431,6 +2522,7 @@ function beginHardMode(){
   state=freshState();state.classId=id;
   state.p={className:cl.name,maxHp:grown.hp,hp:grown.hp,atk:grown.atk,social:grown.social,speed:grown.speed,gold:30};
   state.flags.classGrowthBonus=grown.bonus;
+  state.flags.classSkin=preferredClassSkin(id);
   if(id==='undead')state.flags.undeadReviveReady=true;
   state.flags.gameMode='hard';state.flags.gameVariant='solo';state.flags.hardRoute='';state.sceneId='hardPrologue';
   save();showScreen('gameScreen');enter('hardPrologue');
@@ -2491,9 +2583,9 @@ function renderHardVariants(){
 }
 function renderModeSelection(){
   const cl=selectedClass(); if(!cl)return;
-  const grown=classGrowthStats(pendingClassId,cl);
-  $('modeClassLabel').textContent=`${cl.name}로 시작`;
-  $('modeClassSummary').innerHTML=`<div><span>선택한 직업</span><b>${escapeHtml(cl.name)}${grown.bonus?` · 성장 +${grown.bonus}`:''}</b></div><div class="selected-stats"><span>체력 ${grown.hp}</span><span>공격 ${grown.atk}</span><span>처세 ${grown.social}</span><span>속도 ${grown.speed}</span></div>`;
+  const grown=classGrowthStats(pendingClassId,cl);const skin=preferredClassSkin(pendingClassId);const view=classSkinPresentation(pendingClassId,cl,skin);
+  $('modeClassLabel').textContent=`${view.name}로 시작`;
+  $('modeClassSummary').innerHTML=`<div><span>선택한 직업</span><b>${escapeHtml(view.name)}${grown.bonus?` · 성장 +${grown.bonus}`:''}</b></div><div class="selected-stats"><span>체력 ${grown.hp}</span><span>공격 ${grown.atk}</span><span>처세 ${grown.social}</span><span>속도 ${grown.speed}</span></div>`;
   renderModeCards();
 }
 function openModeSelection(){
@@ -2524,6 +2616,7 @@ function beginNormalMode(variant='solo'){
   state=freshState(); state.classId=id;
   state.p={className:cl.name,maxHp:grown.hp,hp:grown.hp,atk:grown.atk,social:grown.social,speed:grown.speed,gold:10};
   state.flags.classGrowthBonus=grown.bonus;
+  state.flags.classSkin=preferredClassSkin(id);
   if(id==='undead')state.flags.undeadReviveReady=true;
   state.flags.gameMode='normal'; state.flags.gameVariant=variant==='pvp'?'pvp':'solo';
   state.sceneId='intro'; save(); showScreen('gameScreen'); enter('intro');
@@ -2592,7 +2685,7 @@ function cancelPvpQueue(){if(pvpClient.socket)pvpClient.socket.emit('pvp:cancel'
 function startPvpMatch(d){
   const cl=CLASSES[d?.you?.classId||pendingClassId];if(!cl)return;
   pvpClient.matchId=String(d.matchId||'');pvpClient.nickname=String(d.you?.nickname||pvpClient.nickname||'몰락자');pvpClient.opponent=d.opponent||null;pvpClient.queueing=false;pvpClient.finished=false;pvpClient.result=null;
-  state=freshState();state.classId=d.you?.classId||pendingClassId;state.p={className:cl.name,maxHp:cl.hp,hp:cl.hp,atk:cl.atk,social:cl.social,speed:cl.speed,gold:10};state.flags.gameMode='normal';state.flags.gameVariant='pvp';state.flags.pvpMatchId=pvpClient.matchId;state.sceneId='intro';
+  state=freshState();state.classId=d.you?.classId||pendingClassId;state.p={className:cl.name,maxHp:cl.hp,hp:cl.hp,atk:cl.atk,social:cl.social,speed:cl.speed,gold:10};state.flags.classSkin=preferredClassSkin(state.classId);state.flags.gameMode='normal';state.flags.gameVariant='pvp';state.flags.pvpMatchId=pvpClient.matchId;state.sceneId='intro';
   savePvpSession();save();showScreen('gameScreen');enter('intro');renderPvpOpponent();
 }
 function pvpSnapshot(){return {stats:{...state.stats,goldHeld:state.p?.gold||0},hp:state.p?.hp||0,gold:state.p?.gold||0,progress:state.stats?.progress||0,className:state.p?.className||'',ended:!!state.ended,ending:state.stats?.ending||''};}
@@ -2622,26 +2715,36 @@ const CLASS_ART_FILES = {
   necromancer:'/assets/classes/necromancer.webp', dictator:'/assets/classes/dictator.webp',
   undead:'/assets/classes/undead.png', godfather:'/assets/classes/godfather.png'
 };
-function classArtUrl(id){return CLASS_ART_FILES[id]||'';}
+const CLASS_ELITE_ART_FILES={
+  knight:'/assets/classes/knight_elite.webp',noble:'/assets/classes/noble_elite.webp',thief:'/assets/classes/thief_elite.webp'
+};
+function classArtUrl(id,skin=null){
+  const useSkin=skin||((state?.classId===id&&state?.flags?.classSkin)?state.flags.classSkin:preferredClassSkin(id));
+  return useSkin==='elite'&&CLASS_ELITE_ART_FILES[id]?CLASS_ELITE_ART_FILES[id]:(CLASS_ART_FILES[id]||'');
+}
 
 function renderClasses() {
+  const skinUnlocked=eliteSkinsUnlocked();
   $('classGrid').innerHTML = Object.entries(CLASSES).map(([id,cl]) => {
     const unlocked=isClassUnlocked(id);
     const unlockText=classUnlockText(id);
     const grown=classGrowthStats(id,cl);
+    const skin=preferredClassSkin(id),view=classSkinPresentation(id,cl,skin),hasElite=ELITE_SKIN_CLASSES.has(id);
+    const skinChip=hasElite?`<button type="button" class="skin-chip ${skin==='elite'?'elite':skinUnlocked?'':'locked'}" onclick="event.stopPropagation();cycleClassSkin('${id}',1,this.closest('.class-card'))">${skin==='elite'?'ELITE':skinUnlocked?'기본':'ELITE 잠김'}</button>`:'';
     return `
-    <article class="class-card ${unlocked?'':'locked'}">
-      <div class="class-portrait-wrap"><img class="class-portrait" src="${classArtUrl(id)}?v=0926" alt="${cl.name} 삽화" loading="lazy" decoding="async"></div>
+    <article class="class-card ${unlocked?'':'locked'} ${skin==='elite'?'elite-skin-card':''}" data-class-id="${id}" data-skin="${skin}">
+      <div class="class-portrait-wrap"><img class="class-portrait" src="${classArtUrl(id,skin)}?v=0938" alt="${cl.name} 삽화" loading="lazy" decoding="async">${skinChip}</div>
       <div class="class-info">
-        <div class="class-head"><div class="class-name">${unlocked?'':'🔒 '}${cl.name}</div><span class="tag">${unlocked?(grown.bonus?`성장 +${grown.bonus}`:'선택 가능'):unlockText}</span></div>
+        <div class="class-head"><div class="class-name">${unlocked?'':'🔒 '}${view.name}</div><span class="tag">${unlocked?(grown.bonus?`성장 +${grown.bonus}`:'선택 가능'):unlockText}</span></div>
         <div class="stats-row">
           ${statBox('체력',grown.hp)}${statBox('공격',grown.atk)}${statBox('처세',grown.social)}${statBox('속도',grown.speed)}
         </div>
-        <div class="passive"><strong>${unlocked?cl.passive:'???'}</strong><br><span>${unlocked?cl.desc:`노말 엔딩을 더 보면 기억이 열린다.`}</span></div>
+        <div class="passive"><strong>${unlocked?view.passive:'???'}</strong><br><span>${unlocked?view.desc:`노말 엔딩을 더 보면 기억이 열린다.`}</span></div>
       </div>
       <button class="btn ${unlocked?'primary':''}" ${unlocked?'':'disabled'} onclick="selectClass('${id}')">${unlocked?'이 직업으로 시작':'잠김'}</button>
     </article>`;
   }).join('');
+  bindClassSkinSwipes();
 }
 function statBox(nm,v){return `<div class="stat-box">${nm}<b>${v}</b></div>`;}
 
@@ -2650,7 +2753,7 @@ function render() {
   if (!sc || !state.p) return;
   const enemy = getEnemy(sc);
 
-  $('hudClass').textContent = `${state.p.className} · 공격 ${state.p.atk}`;
+  $('hudClass').textContent = `${state.p.className}${eliteSkinActive()?' · ELITE':''} · 공격 ${state.p.atk}`;
   $('hudGold').textContent = `◆ ${state.p.gold}`;
   $('hpText').textContent = `${state.p.hp} / ${state.p.maxHp}`;
   $('hpBar').style.width = `${Math.max(0, Math.min(100, state.p.hp/state.p.maxHp*100))}%`;
@@ -2728,8 +2831,8 @@ const ART_FILES = {
 };
 function art(kind) {
   const file=ART_FILES[kind]||ART_FILES.exile;
-  const classFile=state?.classId?classArtUrl(state.classId):'';
-  const cameo=classFile?`<div class="scene-class-cameo"><img src="${classFile}?v=0926" alt=""></div>`:'';
+  const classFile=state?.classId?classArtUrl(state.classId,state.flags?.classSkin||'base'):'';
+  const cameo=classFile?`<div class="scene-class-cameo"><img src="${classFile}?v=0938" alt=""></div>`:'';
   return `<div class="scene-illustration art-${escapeHtml(kind||'exile')}">
     <img class="scene-illustration-bg" src="/assets/art/${file}.webp?v=0926" alt="" decoding="async">
     <div class="scene-illustration-vignette"></div>${cameo}
@@ -2891,7 +2994,9 @@ function handleEscapeSuccess(){
   }
   state.flags.lastEscapeFrom=state.sceneId;
   state.flags.lastEscapeTo=target;
-  resolve('run',target,route.text||'도망에 성공했다.');
+  let escapeText=route.text||'도망에 성공했다.';
+  if(state.classId==='thief'&&eliteSkinActive('thief'))escapeText+='\n\n뒤늦게 고함이 들린다. “저게 어디로 사라진 거야?” 검은 잔영만 난간 너머에 남았다.';
+  resolve('run',target,escapeText);
 }
 
 function grantSocialReward(enemy,chance){
@@ -2948,9 +3053,16 @@ function gameAction(type) {
       if(state.classId==='gambler')gamblerFortuneOnSocialSuccess();
       if(state.classId==='dictator')gainTyranny('social');
       const godfatherNote=godfatherSocialSuccess();
+      if(state.classId==='noble'&&eliteSkinActive('noble'))eliteSkinFx('noble');
       fx('good');
       if(state.classId!=='gambler'&&state.classId!=='godfather')floatText('처세 성공');
       if(sc.socialSuccess)sc.socialSuccess();else resolve('social',null,'처세에 성공했다.');
+      if(state.classId==='noble'&&eliteSkinActive('noble')&&!state.ended){
+        const line='상대는 황실 인장이 빛나는 순간 표정을 고쳐 잡는다. “그 정도 격식이라면… 이야기를 더 들어보죠.”';
+        state.lastToast=state.lastToast?`${state.lastToast}
+
+${line}`:line;save();render();
+      }
       if(state.flags?.gamblerFortuneNote){
         const note=state.flags.gamblerFortuneNote;
         delete state.flags.gamblerFortuneNote;
@@ -2973,6 +3085,8 @@ function gameAction(type) {
     if(escapeWasUsed()) return;
     const chance=runChance(enemy);
     if(chance<=0) return;
+    const thiefPassiveUsed=state.classId==='thief'&&effectiveSpeed()<=Number(enemy?.speed||0);
+    if(thiefPassiveUsed&&eliteSkinActive('thief'))eliteSkinFx('thief');
     // 한 조우에서 도주 판정은 딱 한 번만 한다.
     setEscapeUsed();
     if(chance===100 || Math.random()*100<chance){
@@ -3208,7 +3322,12 @@ function finishBattleWin(sc,enemy,chance,comeback,comebackRoll=null){
 function resolve(method,next,msg,ending=null) {
   state.stats.progress++;
   markEncounterResolution(method,next,ending,false);
-  if(state.classId==='knight' && method!=='social' && method!=='run') { state.p.atk++; msg += '\n\n물러서지 않았다. 칼끝이 조금 더 단단해졌다. 공격력 +1'; floatText('공격력 +1'); }
+  if(state.classId==='knight' && method!=='social' && method!=='run') {
+    state.p.atk++;
+    if(eliteSkinActive('knight')){eliteSkinFx('knight');msg += '\n\n황금 독수리 문양이 번쩍인다. “물러설 이유가 없다.” 상대가 방패의 빛을 피해 한 걸음 물러난다. 공격력 +1';}
+    else msg += '\n\n물러서지 않았다. 칼끝이 조금 더 단단해졌다. 공격력 +1';
+    floatText('공격력 +1');
+  }
   queueOutcome(msg||'행동의 결과가 정해졌다.', next, ending);
 }
 function queueOutcome(msg,next=null,ending=null) {
@@ -3405,9 +3524,11 @@ function finish(name) {
   const e=endingProfile(name);
   state.stats.prideKept=!!state.flags.prideKept;
   state.stats.endingBonus=Math.floor(Number(e.bonus||0)*(state.flags.prideKept?1.5:1));
+  const skinUnlockResult=recordHiddenSkinClear(name,e);
   const newlyUnlocked=recordClearForUnlock(name,e);
   const classGrowthResult=recordClassGrowth(e);
   state.flags.newClassUnlocks=newlyUnlocked;
+  state.flags.skinUnlockResult=skinUnlockResult;
   state.flags.classGrowthResult=classGrowthResult;
   save();
   $('endingArt').classList.toggle('bad-ending-art', !!e.bad);
@@ -3419,6 +3540,9 @@ function finish(name) {
   $('endStats').innerHTML=`${deathBlock}진행도 <b>${state.stats.progress}</b><br>처치 <b>${state.stats.kills}</b> · 강적 <b>${state.stats.eliteKills}</b><br>대화 해결 <b>${state.stats.talkSolved}</b> · 처세 성공 <b>${state.stats.socialSuccess}</b> · 실패 <b>${state.stats.socialFail}</b><br>협상 수익 <b>◆ ${state.stats.socialIncome||0}</b> · 고난도 협상 <b>${state.stats.riskySocial||0}</b><br>도망 성공 <b>${state.stats.runSuccess}</b> · 역전승 <b>${state.stats.comebackWins||0}</b> · 비밀 발견 <b>${state.stats.secrets}</b><br>성장 횟수 <b>${state.stats.growths||0}</b> · 대화 횟수 <b>${state.stats.talkInteractions||0}</b> · 과대화 <b>${state.stats.overTalks||0}</b> · 진영 전환 <b>${state.stats.teamSwitches||0}</b> · 아이템 사용 <b>${state.stats.itemsUsed||0}</b><br>획득 골드 <b>${state.stats.goldEarned}</b> · 남은 골드 <b>${state.p.gold}</b>${state.classId==='merchant'?`<br>장사 수익 <b>${state.stats.merchantIncome||0}</b> · 새 조우 <b>${state.stats.merchantDeals||0}</b>`:state.classId==='gambler'?`<br>강화한 눈 <b>${(state.stats.gamblerFaces||[]).length?(state.stats.gamblerFaces||[]).join(' · '):'없음'}</b> · 강화 역전 <b>${state.stats.gamblerFaceHits||0}</b> · 중복 꽝 <b>${state.stats.gamblerDuplicates||0}</b>`:state.classId==='undead'?`<br>부활 사용 <b>${state.stats.undeadRevives||0}</b> · 다음 충전 <b>${state.stats.undeadKillsSinceReset||0}/4</b>`:state.classId==='godfather'?`<br>처세 영입 <b>${state.stats.godfatherSocialBoosts||0}</b> · 패시브 공격 증가 <b>+${(state.stats.godfatherSocialBoosts||0)*4}</b>`:''}`;
   if(name==='팬텀'&&state.flags.phantomOriginalEnding){
     $('endStats').innerHTML+=`<br><br><b>팬텀 생환</b> · 원래 도달한 결말 <b>${escapeHtml(state.flags.phantomOriginalEnding)}</b>`;
+  }
+  if(state.flags.skinUnlockResult?.unlockedNow){
+    $('endStats').innerHTML+=`<br><br><b>ELITE 스킨 해금 · 기사 / 귀족 / 도둑</b>`;
   }
   const meta=loadMeta();
   const pvpMode=isPvpMode();

@@ -176,3 +176,27 @@ button,input{font:inherit}button{color:inherit}button:disabled{opacity:.36}
 .transfer-status{min-height:14px;margin-top:6px;color:#777b82;font-size:9px;text-align:center}
 .transfer-status.good{color:#98b88f}.transfer-status.bad{color:#d69094}.transfer-status.wait{color:#b39a70}
 @media(max-width:390px){.device-transfer{max-width:100%}}
+
+
+/* v0.9.38 elite class skins */
+#classScreen .class-card[data-class-id]{touch-action:pan-y}
+#classScreen .class-card.elite-skin-card{border-color:#665739;box-shadow:0 18px 52px #000b,0 0 0 1px #b99a5530}
+.skin-chip{position:absolute;left:12px;top:12px;z-index:4;border:1px solid #6d6657;background:#0b0d11cc;color:#bbb2a1;border-radius:999px;padding:6px 9px;font-size:9px;letter-spacing:.13em;backdrop-filter:blur(6px)}
+.skin-chip.elite{border-color:#c9a85b;background:linear-gradient(135deg,#2d2516e8,#0b0d11e8);color:#efd58d;box-shadow:0 0 18px #c89c3930}
+.skin-chip.locked{border-color:#46484f;color:#777b83;background:#0b0d11d9}
+.skin-swipe-hint{position:absolute;left:50%;bottom:14px;z-index:5;transform:translate(-50%,8px);opacity:0;white-space:nowrap;border:1px solid #5a4b32;background:#090b0feb;color:#d7c28d;border-radius:999px;padding:7px 10px;font-size:9px;transition:.2s ease;pointer-events:none}
+.skin-swipe-hint.show{opacity:1;transform:translate(-50%,0)}
+.elite-skin-fx{position:fixed;inset:0;z-index:9999;pointer-events:none;overflow:hidden;animation:eliteFade .78s ease-out both}
+.elite-skin-fx i,.elite-skin-fx b,.elite-skin-fx span{position:absolute;display:block;pointer-events:none}
+.elite-skin-fx.elite-knight:before{content:"";position:absolute;left:50%;top:48%;width:64vmin;height:64vmin;border:3px solid #f0c864b8;border-radius:50%;transform:translate(-50%,-50%) scale(.28);box-shadow:0 0 45px #dca93e80,inset 0 0 60px #f1c95735;animation:eliteRing .65s cubic-bezier(.15,.8,.2,1) both}
+.elite-skin-fx.elite-knight i{left:50%;top:48%;width:22vmin;height:38vmin;transform:translate(-50%,-50%) rotate(45deg);border-left:5px solid #ffe08b;border-bottom:5px solid #ffe08b;filter:drop-shadow(0 0 12px #ffc84f)}
+.elite-skin-fx.elite-noble:before{content:"";position:absolute;left:50%;top:48%;width:46vmin;height:46vmin;border:2px solid #f0c86b;transform:translate(-50%,-50%) rotate(45deg) scale(.2);box-shadow:0 0 55px #8d183b88,inset 0 0 45px #b0224c55;animation:nobleSeal .72s ease-out both}
+.elite-skin-fx.elite-noble:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 48%,#c82b5538 0,#d6ab4e1c 20%,transparent 46%)}
+.elite-skin-fx.elite-thief:before,.elite-skin-fx.elite-thief:after{content:"";position:absolute;left:-15%;top:43%;width:130%;height:4px;background:linear-gradient(90deg,transparent,#e5c46a,#fff2bd,transparent);transform:rotate(-18deg) scaleX(.2);transform-origin:center;filter:drop-shadow(0 0 12px #cda64a);animation:thiefSlash .52s ease-out both}
+.elite-skin-fx.elite-thief:after{top:57%;transform:rotate(14deg) scaleX(.2);animation-delay:.08s}
+.elite-skin-fx.elite-thief i{inset:0;background:linear-gradient(90deg,#0000 0,#05060a9c 42%,#0000 75%);animation:shadowPass .6s ease-out both}
+@keyframes eliteFade{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
+@keyframes eliteRing{0%{opacity:0;transform:translate(-50%,-50%) scale(.18)}35%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.18)}}
+@keyframes nobleSeal{0%{opacity:0;transform:translate(-50%,-50%) rotate(45deg) scale(.18)}35%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) rotate(225deg) scale(1.02)}}
+@keyframes thiefSlash{0%{opacity:0;transform:rotate(-18deg) scaleX(.05)}25%{opacity:1}100%{opacity:0;transform:rotate(-18deg) scaleX(1)}}
+@keyframes shadowPass{0%{opacity:0;transform:translateX(-35%)}30%{opacity:.65}100%{opacity:0;transform:translateX(40%)}}
